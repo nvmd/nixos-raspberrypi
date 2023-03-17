@@ -259,11 +259,6 @@ in stdenv.mkDerivation rec {
 
   src = rpiFfmpegSrc;
 
-  # # as in https://github.com/NixOS/nixpkgs/blob/master/pkgs/applications/window-managers/hikari/default.nix#L54
-  # # see also https://github.com/NixOS/nixpkgs/blob/master/pkgs/servers/x11/xorg/overrides.nix#L734
-  # postPatch = ''
-  #   sed -i 's@<drm_fourcc.h>@<libdrm/drm_fourcc.h>@' libavcodec/*.c libavfilter/*.c
-  # '';
   preConfigure = ''
     export CCACHE_DIR=/nix/var/cache/ccache
     export CCACHE_UMASK=007
@@ -293,11 +288,6 @@ in stdenv.mkDerivation rec {
     ++ lib.optional vaapiSupport libva
     ++ lib.optional vdpauSupport libvdpau
     ++ lib.optional dav1dSupport dav1d;
-  # Supported dav1d version is 0.8.1 or 0.8.2:
-  # https://github.com/xbmc/xbmc/blob/19.5-Matrix/tools/depends/target/dav1d/DAV1D-VERSION
-  # https://github.com/LibreELEC/LibreELEC.tv/blob/10.0.4/packages/multimedia/dav1d/package.mk
-  # nix has 1.0.0:
-  # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/development/libraries/dav1d/default.nix#L13
 
   nativeBuildInputs = [
     pkg-config
