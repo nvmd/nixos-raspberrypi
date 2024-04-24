@@ -2,7 +2,7 @@
 , callPackage
 , ffmpeg
 , libepoxy  # for vout_egl
-, udev      # for v4l2-request
+, udev, systemd      # for v4l2-request
 , version ? null
 , source ? null
 }:
@@ -41,7 +41,7 @@ in (ffmpeg.overrideAttrs (old: {
   ];
   buildInputs = old.buildInputs ++ [
     libepoxy.dev  # for vout_egl
-    udev
+    udev systemd  # for v4l2-request
   ];
 })).override {
   version = (if version != null then version else ffmpegVersion) + "-rpi";

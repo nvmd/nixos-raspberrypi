@@ -289,7 +289,7 @@ in stdenv.mkDerivation rec {
     libepoxy.dev # for vout_egl
     x264 # --enable-libx264
   ] ++ lib.optional v4l2Support libdrm.dev
-    ++ lib.optional v4l2RequestSupport systemd
+    ++ lib.optionals v4l2RequestSupport [ udev systemd ]
     ++ lib.optional vaapiSupport libva
     ++ lib.optional vdpauSupport libvdpau
     ++ lib.optional dav1dSupport dav1d;
