@@ -1,6 +1,7 @@
 { lib, fetchFromGitHub
 , callPackage
 , ffmpeg
+, ffmpegVariant ? "small"
 }:
 
 let
@@ -24,7 +25,9 @@ let
   # see also for configure flags
   # https://github.com/jc-kynesim/rpi-ffmpeg/blob/test/6.0.1/main/pi-util/conf_native.sh#L110
 
-in (callPackage ./ffmpeg_4-rpi.nix {}).override {
+in callPackage ./ffmpeg-rpi.nix {
+  inherit ffmpeg;
   version = ffmpegVersion;
   source = rpiFfmpegSrc;
+  inherit ffmpegVariant;
 }
