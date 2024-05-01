@@ -2,12 +2,15 @@
 , callPackage
 , ffmpeg
 , libepoxy  # for vout_egl
-, udev, systemd      # for v4l2-request
+, withV4l2Request ? true, udev, systemd # v4l2-request
+, withVoutEgl ? true
+, withVoutDrm ? true
 , version ? null
 , source ? null
 }:
 
 let
+  extraVersion = "rpi";
   # https://github.com/jc-kynesim/rpi-ffmpeg/commits/release/4.4/rpi_import_1/
   ffmpegVersion = "4.4";
   rpiFfmpegSrc = fetchFromGitHub {
@@ -23,7 +26,7 @@ in (ffmpeg.overrideAttrs (old: {
   # see also
   # https://github.com/jc-kynesim/rpi-ffmpeg/blob/release/4.4/rpi_import_1/pi-util/conf_native.sh#L85
   configureFlags = old.configureFlags ++ [
-    "--extra-version=rpi"
+    "--extra-version=${extraVersion}"
     "--enable-logging"
     "--enable-asm"
   ] ++ [
@@ -31,18 +34,18 @@ in (ffmpeg.overrideAttrs (old: {
     "--enable-neon"
   ] ++ [
     "--enable-sand"
-  ] ++ [ # when withV4l2
-    "--enable-epoxy"  # for vout_egl
+  ] ++ lib.optionals withVoutEgl [
+    "--enable-epoxy"
     "--enable-vout-egl" #rpi
+  ] ++ lib.optionals withVoutDrm [ # when withV4l2
     "--enable-vout-drm" #rpi
-  ] ++ [ # v4l2-request support
+  ] ++ lib.optionals withV4l2Request [
     "--enable-v4l2-request"
     "--enable-libudev"
   ];
   buildInputs = old.buildInputs ++ [
     libepoxy.dev  # for vout_egl
-    udev systemd  # for v4l2-request
-  ];
+  ] ++ lib.optionals withV4l2Request [ udev systemd ];
 })).override {
   version = (if version != null then version else ffmpegVersion) + "-rpi";
   source = if source != null then source else rpiFfmpegSrc;
@@ -61,7 +64,8 @@ in (ffmpeg.overrideAttrs (old: {
   withManPages = false;
 
   # withV4l2 = true;  # default on linux
-  withXlib = true;  # for libepoxy
+  # withDrm = true;   # default on linux
+  withXlib = withVoutEgl;  # for libepoxy
 
   withVaapi = false;
   withVdpau = false;
