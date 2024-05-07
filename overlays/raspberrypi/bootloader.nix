@@ -3,7 +3,7 @@ self: super: {
   # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/misc/uboot/default.nix#L494
   # https://source.denx.de/u-boot/u-boot
   # https://github.com/u-boot/u-boot/
-  ubootRaspberryPi_64bit = super.unstable.buildUBoot rec {
+  ubootRaspberryPi_64bit = super.buildUBoot rec {
     defconfig = "rpi_arm64_defconfig";
     extraMeta.platforms = [ "aarch64-linux" ];
     filesToInstall = [ "u-boot.bin" ];
