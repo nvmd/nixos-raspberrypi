@@ -1,6 +1,6 @@
 self: super: { # final: prev:
 
-  libcec = self.libcec-rpi;
+  # libcec = self.libcec-rpi;
 
   # some packages depend on versioned naming, some on simple `ffmpeg`
   # for example retroarchBare – ffmpeg_4

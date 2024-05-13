@@ -1,8 +1,8 @@
 self: super: { # final: prev:
 
-  libcec = super.libcec.override {
-    withLibraspberrypi = true;
-  };
+  # libcec-rpi = super.libcec.override {
+  #   withLibraspberrypi = true;
+  # };
 
   # don't enable just yet because kodi-20-rpi-gbm still depends on older
   # nix kodi infrastructure present with version 20,
@@ -43,6 +43,7 @@ self: super: { # final: prev:
     # needs to be set explicitly, won't be pulled from scope automagically
     # inherit (self) ffmpeg;
     ffmpeg = self.ffmpeg_6-rpi;
+    # libcec = self.libcec-rpi;
     vdpauSupport = false;
   };
 
