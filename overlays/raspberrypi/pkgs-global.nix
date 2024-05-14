@@ -1,32 +1,32 @@
 self: super: { # final: prev:
 
-  # libcec = self.libcec-rpi;
+  # libcec = super.libcec-rpi;
 
   # some packages depend on versioned naming, some on simple `ffmpeg`
   # for example retroarchBare – ffmpeg_4
   #             kodi – ffmpeg (even though current version needs _6)
 
-  ffmpeg_4 = self.ffmpeg_4-rpi; # small
-  ffmpeg_4-headless = self.ffmpeg_4-rpi.override {
+  ffmpeg_4 = super.ffmpeg_4-rpi; # small
+  ffmpeg_4-headless = super.ffmpeg_4-rpi.override {
     ffmpegVariant = "headless";
   };
-  ffmpeg_4-full = self.ffmpeg_4-rpi.override {
+  ffmpeg_4-full = super.ffmpeg_4-rpi.override {
     ffmpegVariant = "full";
   };
 
-  ffmpeg_5 = self.ffmpeg_5-rpi; # small
-  ffmpeg_5-headless = self.ffmpeg_5-rpi.override {
+  ffmpeg_5 = super.ffmpeg_5-rpi; # small
+  ffmpeg_5-headless = super.ffmpeg_5-rpi.override {
     ffmpegVariant = "headless";
   };
-  ffmpeg_5-full = self.ffmpeg_5-rpi.override {
+  ffmpeg_5-full = super.ffmpeg_5-rpi.override {
     ffmpegVariant = "full";
   };
   
-  ffmpeg_6 = self.ffmpeg_6-rpi; # small
-  ffmpeg_6-headless = self.ffmpeg_6-rpi.override {
+  ffmpeg_6 = super.ffmpeg_6-rpi; # small
+  ffmpeg_6-headless = super.ffmpeg_6-rpi.override {
     ffmpegVariant = "headless";
   };
-  ffmpeg_6-full = self.ffmpeg_6-rpi.override {
+  ffmpeg_6-full = super.ffmpeg_6-rpi.override {
     ffmpegVariant = "full";
   };
 
