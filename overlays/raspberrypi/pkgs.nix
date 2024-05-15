@@ -59,6 +59,28 @@ self: super: { # final: prev:
   });
 
 
+  libcamera-rpi = super.libcamera.overrideAttrs (old: rec {
+    version = "0.2.0+rpt20240418";
+
+    src = super.fetchFromGitHub {
+      owner = "raspberrypi";
+      repo = "libcamera";
+      rev = "v${version}";
+      hash = "sha256-p0/inkHPRUkxSIsTmj7VI7sIaX7OXdqjMGZ31W7cnt4=";
+    };
+
+    buildInputs = old.buildInputs ++ (with super; [
+      libpisp
+      python3Packages.pybind11
+    ]);
+    # patches = [ ];
+  });
+
+  rpicam-apps = self.callPackage ../../pkgs/raspberrypi/rpicam-apps.nix {
+    libcamera = self.libcamera-rpi;
+  };
+
+
   # an attempt for `nixpkgs` with RPi4-specific compiler optimizations
   # enabled for all packages
   pkgs-rpi4 = import super {
