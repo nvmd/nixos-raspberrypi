@@ -19,7 +19,7 @@ self: super: { # final: prev:
     waylandSupport = true;
   };
 
-  kodi-rpi = (self.unstable.pkgs.kodi.overrideAttrs (old: {
+  kodi-rpi = (super.kodi.overrideAttrs (old: {
     pname = "kodi-rpi";
     buildInputs = old.buildInputs ++ [ self.dav1d ];
     cmakeFlags = let
