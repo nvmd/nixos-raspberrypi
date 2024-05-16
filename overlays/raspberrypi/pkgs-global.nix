@@ -2,6 +2,10 @@ self: super: { # final: prev:
 
   # libcec = super.libcec-rpi;
 
+  kodi = super.kodi-rpi;
+  kodi-gbm = super.kodi-rpi-gbm;
+  kodi-wayland = super.kodi-rpi-wayland;
+
   # some packages depend on versioned naming, some on simple `ffmpeg`
   # for example retroarchBare – ffmpeg_4
   #             kodi – ffmpeg (even though current version needs _6)
