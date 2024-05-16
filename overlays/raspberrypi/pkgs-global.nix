@@ -41,6 +41,8 @@ self: super: { # final: prev:
   ffmpeg-headless = self.ffmpeg_6-headless; # python3.11-matplotlib
   ffmpeg-full = self.ffmpeg_6-full;
 
+  vlc = self.vlc-rpi;
+
   # FIXME: libcamera build fails, disable for now
   # libcamera = self.libcamera-rpi;
 }
