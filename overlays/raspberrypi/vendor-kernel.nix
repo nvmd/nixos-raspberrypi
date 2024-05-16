@@ -56,6 +56,7 @@ let
 in self: super: (bundleOverlay (defaultBundle self)) // { # final: prev:
 
   linuxPackages_rpi5 = self.linuxPackagesFor self.linux_rpi5;
+  linuxPackages_rpi4 = self.linuxPackagesFor self.linux_rpi4;
 
   # in nixpkgs this is also in pkgs.linuxKernel.packages.<...>
   # see also https://github.com/NixOS/nixos-hardware/pull/927
