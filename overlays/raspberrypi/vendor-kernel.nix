@@ -38,7 +38,9 @@ let
     linux_rpi4 = self.linux_rpi4_v6_1_73;
     linux_rpi5 = self.linux_rpi5_v6_1_73;
     raspberrypifw = self.raspberrypifw_20240124;
-    raspberrypiWirelessFirmware = self.raspberrypiWirelessFirmware_20240117;
+    # raspberrypiWirelessFirmware = self.raspberrypiWirelessFirmware_20240117;
+    # as seen in https://github.com/NixOS/nixpkgs/pull/292880:
+    raspberrypiWirelessFirmware = self.raspberrypiWirelessFirmware_20240226;
   };
   linux_v6_1_63_fw = self: {
     linux_rpi4 = self.linux_rpi4_v6_1_63;
