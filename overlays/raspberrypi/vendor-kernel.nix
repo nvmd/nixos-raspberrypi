@@ -1,6 +1,7 @@
 let
-  linux_argsOverride = {modDirVersion,tag,srcHash}: super: rec {
-    inherit modDirVersion tag;
+  linux_argsOverride = { modDirVersion,tag,srcHash
+                       , structuredExtraConfig ? null }: super: rec {
+    inherit modDirVersion tag structuredExtraConfig;
 
     version = "${modDirVersion}-${tag}";
     src = super.fetchFromGitHub {
@@ -10,12 +11,15 @@ let
       hash = srcHash;
     };
   };
-  linux_v6_6_28_argsOverride = linux_argsOverride {
+  linux_v6_6_28_argsOverride = super: linux_argsOverride {
     # https://github.com/raspberrypi/linux/releases/tag/stable_20240423
     modDirVersion = "6.6.28";
     tag = "stable_20240423";
     srcHash = "sha256-mlsDuVczu0e57BlD/iq7IEEluOIgqbZ+W4Ju30E/zhw=";
-  };
+    structuredExtraConfig = with super.lib.kernel; {
+      GPIO_PWM = no;
+    };
+  } super;
   linux_v6_1_73_argsOverride = linux_argsOverride {
     # https://github.com/raspberrypi/linux/releases/tag/stable_20240124
     modDirVersion = "6.1.73";
