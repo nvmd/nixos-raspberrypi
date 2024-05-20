@@ -1,7 +1,30 @@
 let
+  drm-rp1-depends-on-instead-of-select-MFD_RP1 = super: {
+    # Fix "WARNING: unmet direct dependencies detected for MFD_RP1", and
+    # subsequent build failure.
+    # https://github.com/NixOS/nixpkgs/pull/268280#issuecomment-1911839809
+    # https://github.com/raspberrypi/linux/pull/5900
+    name = "drm-rp1-depends-on-instead-of-select-MFD_RP1.patch";
+    patch = super.lib.fetchpatch {
+      url = "https://github.com/peat-psuwit/rpi-linux/commit/6de0bb51929cd3ad4fa27b2a421a2af12e6468f5.patch";
+      hash = "sha256-9pHcbgWTiztu48SBaLPVroUnxnXMKeCGt5vEo9V8WGw=";
+    };
+  };
+  iommu-bcm2712-don-t-allow-building-as-module = super: {
+    # Fix `ERROR: modpost: missing MODULE_LICENSE() in <...>/bcm2712-iommu.o`
+    # by preventing such code from being built as module.
+    # https://github.com/NixOS/nixpkgs/pull/284035#issuecomment-1913015802
+    # https://github.com/raspberrypi/linux/pull/5910
+    name = "iommu-bcm2712-don-t-allow-building-as-module.patch";
+    patch = super.lib.fetchpatch {
+      url = "https://github.com/peat-psuwit/rpi-linux/commit/693a5e69bddbcbe1d1b796ebc7581c3597685b1b.patch";
+      hash = "sha256-8BYYQDM5By8cTk48ASYKJhGVQnZBIK4PXtV70UtfS+A=";
+    };
+  };
+
   linux_argsOverride = { modDirVersion,tag,srcHash
-                       , structuredExtraConfig ? null }: super: rec {
-    inherit modDirVersion tag structuredExtraConfig;
+                       , structuredExtraConfig ? null, kernelPatches ? [] }: super: rec {
+    inherit modDirVersion tag structuredExtraConfig kernelPatches;
 
     version = "${modDirVersion}-${tag}";
     src = super.fetchFromGitHub {
@@ -20,18 +43,26 @@ let
       GPIO_PWM = no;
     };
   } super;
-  linux_v6_1_73_argsOverride = linux_argsOverride {
+  linux_v6_1_73_argsOverride = super: linux_argsOverride {
     # https://github.com/raspberrypi/linux/releases/tag/stable_20240124
     modDirVersion = "6.1.73";
     tag = "stable_20240124";
     srcHash = "sha256-P4ExzxWqZj+9FZr9U2tmh7rfs/3+iHEv0m74PCoXVuM=";
-  };
-  linux_v6_1_63_argsOverride = linux_argsOverride {
+    kernelPatches = builtins.map (p: p super) [
+      drm-rp1-depends-on-instead-of-select-MFD_RP1
+      iommu-bcm2712-don-t-allow-building-as-module
+    ];
+  } super;
+  linux_v6_1_63_argsOverride = super: linux_argsOverride {
     # https://github.com/raspberrypi/linux/releases/tag/stable_20231123
     modDirVersion = "6.1.63";
     tag = "stable_20231123";
     srcHash = "sha256-4Rc57y70LmRFwDnOD4rHoHGmfxD9zYEAwYm9Wvyb3no=";
-  };
+    kernelPatches = builtins.map (p: p super) [
+      drm-rp1-depends-on-instead-of-select-MFD_RP1
+      iommu-bcm2712-don-t-allow-building-as-module
+    ];
+  } super;
   linux_v6_6_28_fw = self: {
     linux_rpi4 = self.linux_rpi4_v6_6_28;
     linux_rpi5 = self.linux_rpi5_v6_6_28;
@@ -57,8 +88,8 @@ let
       raspberrypifw raspberrypiWirelessFirmware;
   };
   # defaultBundle = linux_v6_1_63_fw;
-  defaultBundle = linux_v6_1_73_fw;
-  # defaultBundle = linux_v6_6_28_fw;
+  # defaultBundle = linux_v6_1_73_fw;
+  defaultBundle = linux_v6_6_28_fw;
 in self: super: (bundleOverlay (defaultBundle self)) // { # final: prev:
 
   linuxPackages_rpi5 = self.linuxPackagesFor self.linux_rpi5;
