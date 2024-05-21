@@ -72,6 +72,11 @@ self: super: { # final: prev:
     ffmpeg = self.ffmpeg_6-rpi;
   };
 
+  SDL2-rpi = super.SDL2.override {
+    # enough to have the effect of '--enable-video-kmsdrm' ?
+    drmSupport = true;
+  };
+
   libcamera-rpi = super.libcamera.overrideAttrs (old: rec {
     version = "0.2.0+rpt20240418";
 
