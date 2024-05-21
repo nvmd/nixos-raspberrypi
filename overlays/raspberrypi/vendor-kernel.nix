@@ -169,14 +169,16 @@ in self: super: (bundleOverlay (defaultBundle self)) // { # final: prev:
   # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/os-specific/linux/firmware/raspberrypi/default.nix
   # pkgs/os-specific/linux/firmware/raspberrypi/default.nix
   # https://github.com/raspberrypi/firmware/commits/stable/
-  raspberrypifw_20240424 = super.raspberrypifw.overrideAttrs (old: {
+  raspberrypifw_20240424 = super.raspberrypifw.overrideAttrs (old: rec {
     # they seem to got back to releases
     # https://github.com/raspberrypi/firmware/releases/tag/1.20240424
     version = "1.20240424";
     # release tarball contains only the files we need
-    src = super.fetchurl {
-      url = "https://github.com/raspberrypi/firmware/releases/download/1.20240424/raspi-firmware_1.20240424.orig.tar.xz";
-      hash = "sha256-Ffqzyuzi0fbrCRqD4xYC6yL64WGtDB5gLaK9f+uVH8Y=";
+    src = super.fetchFromGitHub {
+      owner = "raspberrypi";
+      repo = "firmware";
+      rev = "${version}";
+      hash = "sha256-X5OinkLh/+mx34DM8mCk4tqOGuJdYxkvygv3gA77NJI=";
     };
   });
 
