@@ -11,7 +11,7 @@ let
     owner = "jc-kynesim";
     repo  = "rpi-ffmpeg";
     rev   = "dev/${ffmpegVersion}/rpi_import_1";
-    hash  = "sha256-lTcX0C5PdKWch4nB+TCH51IIjvbSrsyyurGonYR8EFU=";
+    hash  = "sha256-A5+aGmYijEH+GPRCHpGpK742Bvu/cT6R2ZezIE8S6h4=";
     # hash  = lib.fakeHash;
   };
   # https://github.com/jc-kynesim/rpi-ffmpeg/commits/test/6.0.1/main
