@@ -17,6 +17,8 @@ self: super: { # final: prev:
   };
   kodi-rpi-wayland = self.kodi-rpi.override {
     waylandSupport = true;
+    # nixos defaults to "gl" for wayland, but libreelec uses "gles"
+    # renderSystem = "gles";
   };
 
   kodi-rpi = (super.kodi.overrideAttrs (old: {
