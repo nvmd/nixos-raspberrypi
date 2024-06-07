@@ -14,7 +14,7 @@ stdenv.mkDerivation (finalAttrs: {
     owner = "raspberrypi";
     repo = "utils";
     rev = "b9c63214c535d7df2b0fa6743b7b3e508363c25a";
-    hash = lib.fakeHash;
+    hash = "sha256-+z3nSILfI0YZHWKy90SV2Z2fziaAGEC4AKamEpf2+pQ=";
   };
 
   buildInputs = [
