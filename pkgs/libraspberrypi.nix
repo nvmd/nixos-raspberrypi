@@ -12,7 +12,7 @@ stdenv.mkDerivation (finalAttrs: {
     owner = "raspberrypi";
     repo = "userland";
     rev = "96a7334ae9d5fc9db7ac92e59852377df63f1848";
-    hash = lib.fakeHash;
+    hash = "sha256-H5wCsK7o4mBmTYpUchmumT4FyWN/cxdsmsYoRhkhOx8=";
   };
 
   nativeBuildInputs = [ cmake pkg-config ];
