@@ -131,9 +131,11 @@ in
 
       boot.loader.grub.enable = false;
 
-      system.build.installBootLoader = builder."rpiboot";
-      system.boot.loader.id = "raspberrypi";
-      system.boot.loader.kernelFile = pkgs.stdenv.hostPlatform.linux-kernel.target;
+      system = {
+        build.installBootLoader = builder."rpiboot";
+        boot.loader.id = "raspberrypi";
+        boot.loader.kernelFile = pkgs.stdenv.hostPlatform.linux-kernel.target;
+      };
     })
 
     (mkIf (cfg.enable && (cfg.bootloader == "uboot")) {
@@ -163,8 +165,10 @@ in
       # before setting up extlinux
       # `lib.mkOverride 60` to override the default, while still allowing
       # consuming modules to override with mkForce
-      system.build.installBootLoader = lib.mkOverride 60 (builder."uboot");
-      system.boot.loader.id = lib.mkOverride 60 ("uboot+extlinux");
+      system = {
+        build.installBootLoader = lib.mkOverride 60 (builder."uboot");
+        boot.loader.id = lib.mkOverride 60 ("uboot+extlinux");
+      };
     })
 
   ];
