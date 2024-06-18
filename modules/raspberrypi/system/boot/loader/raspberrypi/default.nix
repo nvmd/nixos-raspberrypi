@@ -38,8 +38,10 @@ let
     extlinuxConfBuilder = config.boot.loader.generic-extlinux-compatible.populateCmd;
   };
   builderGeneric = import ./raspberrypi-builder.nix {
-    inherit pkgs configTxt;
-    targetPath = cfg.firmwarePath;
+    inherit pkgs;
+    # or builderFirmware? old raspberrypi module uses
+    # populateFirmwareBuilder equivalent
+    firmwareBuilder = populateFirmwareBuilder;
   };
 
   # The builder used to write during system activation

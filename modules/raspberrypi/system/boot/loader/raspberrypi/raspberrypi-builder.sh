@@ -9,7 +9,7 @@ export PATH=/empty
 for i in @path@; do PATH=$PATH:$i/bin; done
 
 usage() {
-    echo "usage: $0 -c <path-to-default-configuration> [-d <boot-dir>]" >&2
+    echo "usage: $0 -c <path-to-default-configuration> [-d <boot-dir>] [-r]" >&2
     exit 1
 }
 
@@ -19,13 +19,16 @@ target=/boot            # Target directory
 # fwdir=@firmware@/share/raspberrypi/boot/
 SRC_FIRMWARE_DIR=@firmware@/share/raspberrypi/boot
 
-while getopts "c:d:" opt; do
+while getopts "c:d:r" opt; do
     case "$opt" in
         c) default="$OPTARG" ;;
         d) target="$OPTARG" ;;
-        \?) usage ;;
+        *) ;;
     esac
 done
+
+echo "copying firmware..."
+"@firmwareBuilder@" "$@"
 
 echo "updating the boot generations directory..."
 
@@ -78,7 +81,7 @@ addEntry() {
     local kernel=$(readlink -f $path/kernel)
     local initrd=$(readlink -f $path/initrd)
     # local dtb_path=$(readlink -f $path/dtbs)
-    local dtb_path=$SRC_FIRMWARE_DIR
+    # local dtb_path=$SRC_FIRMWARE_DIR
 
     if test -n "@copyKernels@"; then
         copyToKernelsDir $kernel; kernel=$result
@@ -95,22 +98,23 @@ addEntry() {
       copyForced $kernel $target/kernel.img
       copyForced $initrd $target/initrd
 
-      DTBS=("$dtb_path"/*.dtb)
-      for dtb in "${DTBS[@]}"; do
-          dst="$target/$(basename $dtb)"
-          copyForced $dtb "$dst"
-          filesCopied[$dst]=1
-      done
+    #   # Managed by firmware-builder
+    #   DTBS=("$dtb_path"/*.dtb)
+    #   for dtb in "${DTBS[@]}"; do
+    #       dst="$target/$(basename $dtb)"
+    #       copyForced $dtb "$dst"
+    #       filesCopied[$dst]=1
+    #   done
 
-      SRC_OVERLAYS_DIR="$dtb_path/overlays"
-      SRC_OVERLAYS=("$SRC_OVERLAYS_DIR"/*)
-      mkdir -p $target/overlays
-      for ovr in "${SRC_OVERLAYS[@]}"; do
-      # for ovr in $dtb_path/overlays/*; do
-          dst="$target/overlays/$(basename $ovr)"
-          copyForced $ovr "$dst"
-          filesCopied[$dst]=1
-      done
+    #   SRC_OVERLAYS_DIR="$dtb_path/overlays"
+    #   SRC_OVERLAYS=("$SRC_OVERLAYS_DIR"/*)
+    #   mkdir -p $target/overlays
+    #   for ovr in "${SRC_OVERLAYS[@]}"; do
+    #   # for ovr in $dtb_path/overlays/*; do
+    #       dst="$target/overlays/$(basename $ovr)"
+    #       copyForced $ovr "$dst"
+    #       filesCopied[$dst]=1
+    #   done
 
       cp "$(readlink -f "$path/init")" $target/nixos-init
       echo "`cat $path/kernel-params` init=$path/init" >$target/cmdline.txt
@@ -129,22 +133,26 @@ for generation in $(
     addEntry $link $generation
 done
 
-# Add the firmware files
-# # fwdir=@firmware@/share/raspberrypi/boot/
-# SRC_FIRMWARE_DIR=@firmware@/share/raspberrypi/boot
-STARTFILES=("$SRC_FIRMWARE_DIR"/start*.elf)
-BOOTCODE="$SRC_FIRMWARE_DIR/bootcode.bin"
-FIXUPS=("$SRC_FIRMWARE_DIR"/fixup*.dat)
-for SRC in "${STARTFILES[@]}" "$BOOTCODE" "${FIXUPS[@]}"; do
-    dst="$target/$(basename $SRC)"
-    copyForced "$SRC" "$dst"
-done
+# # Managed by firmware-builder
+# # Add the firmware files
+# # # fwdir=@firmware@/share/raspberrypi/boot/
+# # SRC_FIRMWARE_DIR=@firmware@/share/raspberrypi/boot
+# STARTFILES=("$SRC_FIRMWARE_DIR"/start*.elf)
+# BOOTCODE="$SRC_FIRMWARE_DIR/bootcode.bin"
+# FIXUPS=("$SRC_FIRMWARE_DIR"/fixup*.dat)
+# for SRC in "${STARTFILES[@]}" "$BOOTCODE" "${FIXUPS[@]}"; do
+#     dst="$target/$(basename $SRC)"
+#     copyForced "$SRC" "$dst"
+# done
 
-# Add the config.txt
-copyForced @configTxt@ $target/config.txt
+# # Managed by firmware-builder
+# # Add the config.txt
+# copyForced @configTxt@ $target/config.txt
 
+# # $target/*.dtb $target/overlays/* are managed by firmware-builder
 # Remove obsolete files from $target and $target/old.
-for fn in $target/old/*linux* $target/old/*initrd-initrd* $target/*.dtb $target/overlays/*; do
+# for fn in $target/old/*linux* $target/old/*initrd-initrd* $target/*.dtb $target/overlays/*; do
+for fn in $target/old/*linux* $target/old/*initrd-initrd*; do
     if ! test "${filesCopied[$fn]}" = 1; then
         rm -vf -- "$fn"
     fi
