@@ -44,7 +44,7 @@ let
 
   builder = {
     uboot = "${builderUboot} -f ${cfg.firmwarePath} -d /boot -c";
-    rpiboot = "${builderGeneric} -c";
+    rpiboot = "${builderGeneric} -d ${cfg.firmwarePath} -c";
   };
 
   configTxt = config.hardware.raspberry-pi.config-output;

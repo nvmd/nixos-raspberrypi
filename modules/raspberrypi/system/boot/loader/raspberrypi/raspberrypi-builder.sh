@@ -14,7 +14,7 @@ usage() {
 }
 
 default=                # Default configuration
-target=@targetPath@     # Target directory
+target=/boot            # Target directory
 
 # fwdir=@firmware@/share/raspberrypi/boot/
 SRC_FIRMWARE_DIR=@firmware@/share/raspberrypi/boot
