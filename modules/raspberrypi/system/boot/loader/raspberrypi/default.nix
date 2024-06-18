@@ -42,6 +42,21 @@ let
     targetPath = cfg.firmwarePath;
   };
 
+  # The builder used to write during system activation
+  builderFirmware = import ./firmware-builder.nix {
+    inherit pkgs configTxt;
+    firmware = cfg.firmwarePackage;
+  };
+  # The builder exposed in populateCmd, which runs on the build architecture
+  populateFirmwareBuilder = import  ./firmware-builder.nix {
+    inherit configTxt;
+    pkgs = pkgs.buildPackages;
+    firmware = cfg.firmwarePackage;
+  };
+  firmwareBuilderArgs = "-d ${cfg.firmwarePath}"
+    + lib.optionalString (!cfg.useGenerationDeviceTree) " -r";
+
+
   builder = {
     uboot = "${builderUboot} -f ${cfg.firmwarePath} -d /boot -c";
     rpiboot = "${builderGeneric} -d ${cfg.firmwarePath} -c";
@@ -68,12 +83,41 @@ in
         '';
       };
 
+      firmwarePackage = mkPackageOption pkgs "raspberrypifw" { };
+
       firmwarePath = mkOption {
         default = "/boot/firmware";
         type = types.str;
         description = ''
           Target path for system firmware and system generations.
           `<firmwarePath>/old` will hold files from old generations.
+        '';
+      };
+
+      useGenerationDeviceTree = mkOption {
+        default = false;  # generic-extlinux-compatible defaults to `true`
+        type = types.bool;
+        description = ''
+          Whether to use device tree supplied from the generation's kernel
+          or from the vendor's firmware package (usually `pkgs.raspberrypifw`).
+
+          When enabled, the device tree binaries will be copied to
+          `firmwarePath` from the generation's kernel.
+
+          Note that this affects all generations, regardless of the
+          setting value used in their configurations.
+        '';
+      };
+
+      firmwarePopulateCmd = mkOption {
+        type = types.str;
+        readOnly = true;
+        description = ''
+          Contains the builder command used to populate an image,
+          honoring all relevant module options except the
+          `-c <path-to-default-configuration>` argument, which can be specified
+          by the caller of firmwarePopulateCmd.
+          Useful to have for sdImage.populateFirmwareCommands
         '';
       };
 
@@ -111,6 +155,8 @@ in
           ${builtins.concatStringsSep ", " supportAarch64} support aarch64.
         '';
       };
+      system.build.installFirmware = "${builderFirmware} ${firmwareBuilderArgs} -c";
+      boot.loader.raspberryPi.firmwarePopulateCmd = "${populateFirmwareBuilder} ${firmwareBuilderArgs}";
     })
 
     (mkIf (cfg.enable && (cfg.bootloader == "rpi")) {
