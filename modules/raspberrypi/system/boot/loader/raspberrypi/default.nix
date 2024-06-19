@@ -122,12 +122,12 @@ in
       };
 
       bootloader = mkOption {
-        default = if cfg.variant == "5" then "rpi" else "uboot";
-        type = types.enum [ "rpi" "uboot" ];
+        default = if cfg.variant == "5" then "rpiboot" else "uboot";
+        type = types.enum [ "rpiboot" "uboot" ];
         description = ''
           Bootloader to use:
           - `"uboot"`: U-Boot
-          - `"rpi"`: The linux kernel is installed directly into the
+          - `"rpiboot"`: The linux kernel is installed directly into the
             firmware directory as expected by the Raspberry Pi boot
             process.
             This can be useful for newer hardware that doesn't yet have
@@ -186,7 +186,7 @@ in
       boot.loader.raspberryPi.firmwarePopulateCmd = firmwarePopulateCmd."${cfg.bootloader}";
     })
 
-    (mkIf (cfg.enable && (cfg.bootloader == "rpi")) {
+    (mkIf (cfg.enable && (cfg.bootloader == "rpiboot")) {
       hardware.raspberry-pi.config = {
         all = {
           options = {
