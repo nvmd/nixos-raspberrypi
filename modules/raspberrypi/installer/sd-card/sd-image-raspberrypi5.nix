@@ -15,7 +15,9 @@
     imageBaseName = "nixos-sd-image-${config.configuration-revision.revision.short}";
     firmwareSize = 1024;
     firmwarePartitionID = "0x2175794e";
-    populateFirmwareCommands = "${config.system.build.installBootLoader} ${config.system.build.toplevel} -d ./firmware";
+    populateFirmwareCommands = ''
+      ${config.boot.loader.raspberryPi.firmwarePopulateCmd} -c ${config.system.build.toplevel} -d ./firmware
+    '';
     populateRootCommands = "";
   };
 }

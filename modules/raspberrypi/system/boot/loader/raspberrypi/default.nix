@@ -36,32 +36,39 @@ let
         };
       }.${cfg.variant}.${if isAarch64 then "aarch64" else "armhf"};
     extlinuxConfBuilder = config.boot.loader.generic-extlinux-compatible.populateCmd;
-  };
-  builderGeneric = import ./raspberrypi-builder.nix {
-    inherit pkgs;
-    # or builderFirmware? old raspberrypi module uses
-    # populateFirmwareBuilder equivalent
     firmwareBuilder = populateFirmwareBuilder;
   };
 
-  # The builder used to write during system activation
-  builderFirmware = import ./firmware-builder.nix {
+  # Builders used to write during system activation
+  firmwareBuilder = import ./firmware-builder.nix {
     inherit pkgs configTxt;
     firmware = cfg.firmwarePackage;
   };
-  # The builder exposed in populateCmd, which runs on the build architecture
+  rpibootBuilder = import ./raspberrypi-builder.nix {
+    inherit pkgs;
+    firmwareBuilder = firmwareBuilder;
+  };
+  # Builders exposed via populateCmd, which run on the build architecture
   populateFirmwareBuilder = import  ./firmware-builder.nix {
     inherit configTxt;
     pkgs = pkgs.buildPackages;
     firmware = cfg.firmwarePackage;
   };
-  firmwareBuilderArgs = "-d ${cfg.firmwarePath}"
-    + lib.optionalString (!cfg.useGenerationDeviceTree) " -r";
+  populateRpibootBuilder = import ./raspberrypi-builder.nix {
+    pkgs = pkgs.buildPackages;
+    firmwareBuilder = populateFirmwareBuilder;
+  };
 
+
+  builderArgs = lib.optionalString (!cfg.useGenerationDeviceTree) " -r";
 
   builder = {
+    firmware = "${firmwareBuilder} -d ${cfg.firmwarePath} ${builderArgs} -c";
     uboot = "${builderUboot} -f ${cfg.firmwarePath} -d /boot -c";
-    rpiboot = "${builderGeneric} -d ${cfg.firmwarePath} -c";
+    rpiboot = "${rpibootBuilder} -d ${cfg.firmwarePath} ${builderArgs} -c";
+  };
+  firmwarePopulateCmd = {
+    rpiboot = "${populateRpibootBuilder} ${builderArgs}";
   };
 
   configTxt = config.hardware.raspberry-pi.config-output;
@@ -115,10 +122,14 @@ in
         type = types.str;
         readOnly = true;
         description = ''
-          Contains the builder command used to populate an image,
-          honoring all relevant module options except the
-          `-c <path-to-default-configuration>` argument, which can be specified
+          Contains the builder command used to populate an image with both
+          selected bootloader and firmware.
+
+          Honors all relevant module options except the
+          `-c <path-to-default-configuration>`
+          `-d <boot-dir>` arguments, which can be specified
           by the caller of firmwarePopulateCmd.
+
           Useful to have for sdImage.populateFirmwareCommands
         '';
       };
@@ -157,8 +168,7 @@ in
           ${builtins.concatStringsSep ", " supportAarch64} support aarch64.
         '';
       };
-      system.build.installFirmware = "${builderFirmware} ${firmwareBuilderArgs} -c";
-      boot.loader.raspberryPi.firmwarePopulateCmd = "${populateFirmwareBuilder} ${firmwareBuilderArgs}";
+      system.build.installFirmware = builder."firmware";
     })
 
     (mkIf (cfg.enable && (cfg.bootloader == "rpi")) {
@@ -184,6 +194,7 @@ in
         boot.loader.id = "raspberrypi";
         boot.loader.kernelFile = pkgs.stdenv.hostPlatform.linux-kernel.target;
       };
+      boot.loader.raspberryPi.firmwarePopulateCmd = firmwarePopulateCmd."rpiboot";
     })
 
     (mkIf (cfg.enable && (cfg.bootloader == "uboot")) {
