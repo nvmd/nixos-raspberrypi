@@ -15,11 +15,13 @@ let
     firmware = cfg.firmwarePackage;
   };
   rpibootBuilder = import ./raspberrypi-builder.nix {
-    inherit pkgs firmwareBuilder;
+    inherit pkgs;
+    firmwareBuilder = firmwarePopulateCmd.firmware;
   };
   ubootBuilder = import ./uboot-builder.nix {
-    inherit pkgs ubootBinName firmwareBuilder;
+    inherit pkgs ubootBinName;
     inherit (cfg) ubootPackage;
+    firmwareBuilder = firmwarePopulateCmd.firmware;
     extlinuxConfBuilder = config.boot.loader.generic-extlinux-compatible.populateCmd;
   };
   # Builders exposed via populateCmd, which run on the build architecture
@@ -30,28 +32,29 @@ let
   };
   populateRpibootBuilder = import ./raspberrypi-builder.nix {
     pkgs = pkgs.buildPackages;
-    firmwareBuilder = populateFirmwareBuilder;
+    firmwareBuilder = firmwarePopulateCmd.firmware;
   };
   populateUbootBuilder = import ./uboot-builder.nix {
     inherit ubootBinName;
     pkgs = pkgs.buildPackages;
     ubootPackage = cfg.ubootPackage;
-    firmwareBuilder = populateFirmwareBuilder;
+    firmwareBuilder = firmwarePopulateCmd.firmware;
     extlinuxConfBuilder = config.boot.loader.generic-extlinux-compatible.populateCmd;
   };
 
 
-  builderArgs = lib.optionalString (!cfg.useGenerationDeviceTree) " -r";
+  firmwareBuilderArgs = lib.optionalString (!cfg.useGenerationDeviceTree) " -r";
 
   builder = {
-    firmware = "${firmwareBuilder} -d ${cfg.firmwarePath} ${builderArgs} -c";
+    firmware = "${firmwareBuilder} -d ${cfg.firmwarePath} ${firmwareBuilderArgs} -c";
     # uboot = "${ubootBuilder} -f ${cfg.firmwarePath} -d /boot -c";
-    uboot = "${ubootBuilder} -d ${cfg.firmwarePath} ${builderArgs} -c";
-    rpiboot = "${rpibootBuilder} -d ${cfg.firmwarePath} ${builderArgs} -c";
+    uboot = "${ubootBuilder} -d ${cfg.firmwarePath} -c";
+    rpiboot = "${rpibootBuilder} -d ${cfg.firmwarePath} -c";
   };
   firmwarePopulateCmd = {
-    rpiboot = "${populateRpibootBuilder} ${builderArgs}";
-    uboot = "${populateUbootBuilder} ${builderArgs}";
+    firmware = "${populateFirmwareBuilder} ${firmwareBuilderArgs}";
+    rpiboot = "${populateRpibootBuilder}";
+    uboot = "${populateUbootBuilder}";
   };
 
   configTxt = config.hardware.raspberry-pi.config-output;

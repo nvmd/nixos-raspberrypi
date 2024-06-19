@@ -9,7 +9,7 @@ export PATH=/empty
 for i in @path@; do PATH=$PATH:$i/bin; done
 
 usage() {
-    echo "usage: $0 -c <path-to-default-configuration> [-d <boot-dir>] [-r]" >&2
+    echo "usage: $0 -c <path-to-default-configuration> [-d <boot-dir>]" >&2
     exit 1
 }
 
@@ -19,16 +19,16 @@ target=/boot            # Target directory
 # fwdir=@firmware@/share/raspberrypi/boot/
 SRC_FIRMWARE_DIR=@firmware@/share/raspberrypi/boot
 
-while getopts "c:d:r" opt; do
+while getopts "c:d:" opt; do
     case "$opt" in
         c) default="$OPTARG" ;;
         d) target="$OPTARG" ;;
-        *) ;;
+        \?) usage ;;
     esac
 done
 
 echo "copying firmware..."
-"@firmwareBuilder@" "$@"
+@firmwareBuilder@ -c $default -d $target
 
 echo "updating the boot generations directory..."
 

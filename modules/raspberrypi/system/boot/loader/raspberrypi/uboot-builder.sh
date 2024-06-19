@@ -19,11 +19,11 @@ default=               # Default configuration, needed for extlinux
 target=/boot/firmware  # firmware target directory
 
 echo "uboot-builder: $@"
-while getopts "c:d:r" opt; do   # "r" is needed for firmware builder
+while getopts "c:d:" opt; do
     case "$opt" in
         c) default="$OPTARG" ;;
         d) target="$OPTARG" ;;
-        *) ;;
+        \?) usage ;;
     esac
 done
 # # process arguments for this builder, then pass the remainder to extlinux'
@@ -44,7 +44,7 @@ copyForced() {
 }
 
 echo "copying firmware..."
-"@firmwareBuilder@" "$@"
+@firmwareBuilder@ -c $default -d $target
 
 echo "generating extlinux configuration..."
 # Call the extlinux builder
