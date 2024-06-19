@@ -1,7 +1,6 @@
-{ pkgs, configTxt
+{ pkgs
 , ubootPackage
 , ubootBinName ? "u-boot-rpi.bin"
-, firmware ? pkgs.raspberrypifw
 , extlinuxConfBuilder
 , firmwareBuilder
 }:
@@ -14,7 +13,6 @@ pkgs.substituteAll {
 
   uboot = ubootPackage;
   inherit ubootBinName;
-  inherit firmware configTxt;
   inherit extlinuxConfBuilder;
   inherit firmwareBuilder;
 }

@@ -8,36 +8,6 @@ let
 
   ubootBinName = if isAarch64 then "u-boot-rpi-arm64.bin" else "u-boot-rpi.bin";
 
-  builderUboot = import ./uboot-builder.nix {
-    inherit pkgs configTxt;
-    inherit ubootBinName;
-    ubootPackage = {
-        "0" = {
-          armhf = pkgs.ubootRaspberryPiZero;
-        };
-        "0_2" = {
-          aarch64 = pkgs.ubootRaspberryPi_64bit;
-        };
-        "1" = {
-          armhf = pkgs.ubootRaspberryPi;
-        };
-        "2" = {
-          armhf = pkgs.ubootRaspberryPi2;
-        };
-        "3" = {
-          armhf = pkgs.ubootRaspberryPi3_32bit;
-          aarch64 = pkgs.ubootRaspberryPi_64bit;
-        };
-        "4" = {
-          aarch64 = pkgs.ubootRaspberryPi_64bit;
-        };
-        "5" = {
-          aarch64 = pkgs.ubootRaspberryPi_64bit;
-        };
-      }.${cfg.variant}.${if isAarch64 then "aarch64" else "armhf"};
-    extlinuxConfBuilder = config.boot.loader.generic-extlinux-compatible.populateCmd;
-    firmwareBuilder = populateFirmwareBuilder;
-  };
 
   # Builders used to write during system activation
   firmwareBuilder = import ./firmware-builder.nix {
@@ -45,8 +15,12 @@ let
     firmware = cfg.firmwarePackage;
   };
   rpibootBuilder = import ./raspberrypi-builder.nix {
-    inherit pkgs;
-    firmwareBuilder = firmwareBuilder;
+    inherit pkgs firmwareBuilder;
+  };
+  ubootBuilder = import ./uboot-builder.nix {
+    inherit pkgs ubootBinName firmwareBuilder;
+    inherit (cfg) ubootPackage;
+    extlinuxConfBuilder = config.boot.loader.generic-extlinux-compatible.populateCmd;
   };
   # Builders exposed via populateCmd, which run on the build architecture
   populateFirmwareBuilder = import  ./firmware-builder.nix {
@@ -58,17 +32,26 @@ let
     pkgs = pkgs.buildPackages;
     firmwareBuilder = populateFirmwareBuilder;
   };
+  populateUbootBuilder = import ./uboot-builder.nix {
+    inherit ubootBinName;
+    pkgs = pkgs.buildPackages;
+    ubootPackage = cfg.ubootPackage;
+    firmwareBuilder = populateFirmwareBuilder;
+    extlinuxConfBuilder = config.boot.loader.generic-extlinux-compatible.populateCmd;
+  };
 
 
   builderArgs = lib.optionalString (!cfg.useGenerationDeviceTree) " -r";
 
   builder = {
     firmware = "${firmwareBuilder} -d ${cfg.firmwarePath} ${builderArgs} -c";
-    uboot = "${builderUboot} -f ${cfg.firmwarePath} -d /boot -c";
+    # uboot = "${ubootBuilder} -f ${cfg.firmwarePath} -d /boot -c";
+    uboot = "${ubootBuilder} -d ${cfg.firmwarePath} ${builderArgs} -c";
     rpiboot = "${rpibootBuilder} -d ${cfg.firmwarePath} ${builderArgs} -c";
   };
   firmwarePopulateCmd = {
     rpiboot = "${populateRpibootBuilder} ${builderArgs}";
+    uboot = "${populateUbootBuilder} ${builderArgs}";
   };
 
   configTxt = config.hardware.raspberry-pi.config-output;
@@ -155,6 +138,33 @@ in
         description = "";
       };
 
+      ubootPackage = mkOption {
+        default = {
+          "0" = {
+            armhf = pkgs.ubootRaspberryPiZero;
+          };
+          "0_2" = {
+            aarch64 = pkgs.ubootRaspberryPi_64bit;
+          };
+          "1" = {
+            armhf = pkgs.ubootRaspberryPi;
+          };
+          "2" = {
+            armhf = pkgs.ubootRaspberryPi2;
+          };
+          "3" = {
+            armhf = pkgs.ubootRaspberryPi3_32bit;
+            aarch64 = pkgs.ubootRaspberryPi_64bit;
+          };
+          "4" = {
+            aarch64 = pkgs.ubootRaspberryPi_64bit;
+          };
+          "5" = {
+            aarch64 = pkgs.ubootRaspberryPi_64bit;
+          };
+        }.${cfg.variant}.${if isAarch64 then "aarch64" else "armhf"};
+      };
+
     };
   };
 
@@ -170,6 +180,7 @@ in
         '';
       };
       system.build.installFirmware = builder."firmware";
+      boot.loader.raspberryPi.firmwarePopulateCmd = firmwarePopulateCmd."${cfg.bootloader}";
     })
 
     (mkIf (cfg.enable && (cfg.bootloader == "rpi")) {
@@ -195,7 +206,6 @@ in
         boot.loader.id = "raspberrypi";
         boot.loader.kernelFile = pkgs.stdenv.hostPlatform.linux-kernel.target;
       };
-      boot.loader.raspberryPi.firmwarePopulateCmd = firmwarePopulateCmd."rpiboot";
     })
 
     (mkIf (cfg.enable && (cfg.bootloader == "uboot")) {

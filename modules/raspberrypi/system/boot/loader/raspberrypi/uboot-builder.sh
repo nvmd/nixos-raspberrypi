@@ -9,23 +9,32 @@ export PATH=/empty
 for i in @path@; do PATH=$PATH:$i/bin; done
 
 usage() {
-    echo "usage: $0 -f <firmware-dir> -t <timeout> -c <path-to-default-configuration> [-d <boot-dir>] [-g <num-generations>] [-n <dtbName>] [-r]" >&2
-    echo "all options following '-f <firmware-dir>' are passed directly to generic-extlinux-compatible's builder" >&2
+    # echo "usage: $0 -f <firmware-dir> -t <timeout> -c <path-to-default-configuration> [-d <boot-dir>] [-g <num-generations>] [-n <dtbName>] [-r]" >&2
+    echo "usage: $0 -c <path-to-default-configuration> [-d <boot-dir>]" >&2
+    # echo "all options following '-f <firmware-dir>' are passed directly to generic-extlinux-compatible's builder" >&2
     exit 1
 }
 
+default=               # Default configuration, needed for extlinux
 target=/boot/firmware  # firmware target directory
 
-echo $@
-# process arguments for this builder, then pass the remainder to extlinux'
-while getopts ":f:" opt; do
+echo "uboot-builder: $@"
+while getopts "c:d:r" opt; do   # "r" is needed for firmware builder
     case "$opt" in
-        f) target="$OPTARG" ;;
+        c) default="$OPTARG" ;;
+        d) target="$OPTARG" ;;
         *) ;;
     esac
 done
-shift $((OPTIND-2))
-extlinuxBuilderExtraArgs="$@"
+# # process arguments for this builder, then pass the remainder to extlinux'
+# while getopts ":f:" opt; do
+#     case "$opt" in
+#         f) target="$OPTARG" ;;
+#         *) ;;
+#     esac
+# done
+# shift $((OPTIND-2))
+# extlinuxBuilderExtraArgs="$@"
 
 copyForced() {
     local src="$1"
@@ -34,10 +43,12 @@ copyForced() {
     mv $dst.tmp $dst
 }
 
-# Call the extlinux builder
-@extlinuxConfBuilder@ $extlinuxBuilderExtraArgs
+echo "copying firmware..."
+"@firmwareBuilder@" "$@"
 
-@firmwareBuilder@ "-d $target"
+echo "generating extlinux configuration..."
+# Call the extlinux builder
+@extlinuxConfBuilder@ -c $default -d $target
 
 # # Add the firmware files
 # # fwdir=@firmware@/share/raspberrypi/boot/
