@@ -86,9 +86,8 @@ in
         default = false;
         type = types.bool;
         description = ''
-          Whether to create files with the system generations and copy firmware
-          files to `firmwarePath`.
-          `<firmwarePath>/old` will hold files from old generations.
+          Whether to manage boot firmware, device trees and bootloader
+          with this module
         '';
       };
 
@@ -98,8 +97,10 @@ in
         default = "/boot/firmware";
         type = types.str;
         description = ''
-          Target path for system firmware and system generations.
-          `<firmwarePath>/old` will hold files from old generations.
+          Target path for system firmware and:
+          - rpi: system generations, `<firmwarePath>/old` will hold
+            files from old generations.
+          - uboot: uboot binary
         '';
       };
 
