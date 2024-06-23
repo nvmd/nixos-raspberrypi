@@ -54,7 +54,7 @@ self: super: { # final: prev:
     ffmpeg = super.ffmpeg_4;
   });
   ffmpeg_5-rpi = (super.callPackage ../../pkgs/ffmpeg_5-rpi.nix {
-    ffmpeg = super.ffmpeg_4;
+    ffmpeg = super.ffmpeg_5;
   });
   ffmpeg_6-rpi = (super.callPackage ../../pkgs/ffmpeg_6-rpi.nix {
     ffmpeg = super.ffmpeg_6;
