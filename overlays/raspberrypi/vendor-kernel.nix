@@ -24,14 +24,14 @@ let
 
   gpio-pwm_-_pwm_apply_might_sleep = super: {
     name = "gpio-pwm_-_pwm_apply_might_sleep.patch";
-    patch = super.lib.fetchpatch {
+    patch = super.fetchpatch {
       url = "https://github.com/peat-psuwit/rpi-linux/commit/879f34b88c60dd59765caa30576cb5bfb8e73c56.patch";
       hash = "sha256-HlOkM9EFmlzOebCGoj7lNV5hc0wMjhaBFFZvaRCI0lI=";
     };
   };
   ir-rx51_-_pwm_apply_might_sleep = super: {
     name = "ir-rx51_-_pwm_apply_might_sleep.patch";
-    patch = super.lib.fetchpatch {
+    patch = super.fetchpatch {
       url = "https://github.com/peat-psuwit/rpi-linux/commit/23431052d2dce8084b72e399fce82b05d86b847f.patch";
       hash = "sha256-UDX/BJCJG0WVndP/6PbPK+AZsfU3vVxDCrpn1kb1kqE=";
     };
@@ -96,6 +96,13 @@ let
       iommu-bcm2712-don-t-allow-building-as-module
     ];
   } super;
+
+  linux_v6_6_31_fw = self: {
+    linux_rpi4 = self.linux_rpi4_v6_6_31;
+    linux_rpi5 = self.linux_rpi5_v6_6_31;
+    raspberrypifw = self.raspberrypifw_20240529;
+    raspberrypiWirelessFirmware = self.raspberrypiWirelessFirmware_20240226;
+  };
   linux_v6_6_28_fw = self: {
     linux_rpi4 = self.linux_rpi4_v6_6_28;
     linux_rpi5 = self.linux_rpi5_v6_6_28;
