@@ -22,8 +22,23 @@ let
     };
   };
 
+  gpio-pwm_-_pwm_apply_might_sleep = super: {
+    name = "gpio-pwm_-_pwm_apply_might_sleep.patch";
+    patch = super.lib.fetchpatch {
+      url = "https://github.com/peat-psuwit/rpi-linux/commit/879f34b88c60dd59765caa30576cb5bfb8e73c56.patch";
+      hash = "sha256-HlOkM9EFmlzOebCGoj7lNV5hc0wMjhaBFFZvaRCI0lI=";
+    };
+  };
+  ir-rx51_-_pwm_apply_might_sleep = super: {
+    name = "ir-rx51_-_pwm_apply_might_sleep.patch";
+    patch = super.lib.fetchpatch {
+      url = "https://github.com/peat-psuwit/rpi-linux/commit/23431052d2dce8084b72e399fce82b05d86b847f.patch";
+      hash = "sha256-UDX/BJCJG0WVndP/6PbPK+AZsfU3vVxDCrpn1kb1kqE=";
+    };
+  };
+
   linux_argsOverride = { modDirVersion,tag,srcHash
-                       , structuredExtraConfig ? null, kernelPatches ? [] }: super: rec {
+                       , structuredExtraConfig ? {}, kernelPatches ? [] }: super: rec {
     inherit modDirVersion tag structuredExtraConfig kernelPatches;
 
     version = "${modDirVersion}-${tag}";
@@ -34,6 +49,24 @@ let
       hash = srcHash;
     };
   };
+  linux_v6_6_31_argsOverride = super: linux_argsOverride {
+    # https://github.com/raspberrypi/linux/releases/tag/stable_20240529
+    modDirVersion = "6.6.31";
+    tag = "stable_20240529";
+    srcHash = "sha256-UWUTeCpEN7dlFSQjog6S3HyEWCCnaqiUqV5KxCjYink=";
+    structuredExtraConfig = with super.lib.kernel; {
+      # Workaround https://github.com/raspberrypi/linux/issues/6198
+      # Needed because NixOS 24.05+ sets DRM_SIMPLEDRM=y which pulls in
+      # DRM_KMS_HELPER=y.
+      BACKLIGHT_CLASS_DEVICE = yes;
+    };
+    kernelPatches = builtins.map (p: p super) [
+      # Fix compilation errors due to incomplete patch backport.
+      # https://github.com/raspberrypi/linux/pull/6223
+      gpio-pwm_-_pwm_apply_might_sleep
+      ir-rx51_-_pwm_apply_might_sleep
+    ];
+  } super;
   linux_v6_6_28_argsOverride = super: linux_argsOverride {
     # https://github.com/raspberrypi/linux/releases/tag/stable_20240423
     modDirVersion = "6.6.28";
@@ -102,6 +135,24 @@ in self: super: (bundleOverlay (defaultBundle self)) // { # final: prev:
   # };
 
   # as in https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/linux-kernels.nix#L91
+
+  linux_rpi4_v6_6_31 = super.callPackage ../../pkgs/linux-rpi.nix {
+    argsOverride = linux_v6_6_31_argsOverride super;
+    kernelPatches = with super.kernelPatches; [
+      bridge_stp_helper
+      request_key_helper
+    ];
+    rpiVersion = 4;
+  };
+  linux_rpi5_v6_6_31 = super.callPackage ../../pkgs/linux-rpi.nix {
+    argsOverride = linux_v6_6_31_argsOverride super;
+    kernelPatches = with super.kernelPatches; [
+      bridge_stp_helper
+      request_key_helper
+    ];
+    rpiVersion = 5;
+  };
+
   linux_rpi4_v6_6_28 = super.callPackage ../../pkgs/linux-rpi.nix {
     argsOverride = linux_v6_6_28_argsOverride super;
     kernelPatches = with super.kernelPatches; [
