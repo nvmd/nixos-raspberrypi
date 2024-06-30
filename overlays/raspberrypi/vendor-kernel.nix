@@ -169,6 +169,18 @@ in self: super: (bundleOverlay (defaultBundle self)) // { # final: prev:
   # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/os-specific/linux/firmware/raspberrypi/default.nix
   # pkgs/os-specific/linux/firmware/raspberrypi/default.nix
   # https://github.com/raspberrypi/firmware/commits/stable/
+
+  raspberrypifw_20240529 = super.raspberrypifw.overrideAttrs (old: rec {
+    # https://github.com/raspberrypi/firmware/releases/tag/1.20240529
+    version = "1.20240529";
+    src = super.fetchFromGitHub {
+      owner = "raspberrypi";
+      repo = "firmware";
+      rev = "${version}";
+      hash = "sha256-KsCo7ZG6vKstxRyFljZtbQvnDSqiAPdUza32xTY/tlA=";
+    };
+  });
+
   raspberrypifw_20240424 = super.raspberrypifw.overrideAttrs (old: rec {
     # they seem to got back to releases
     # https://github.com/raspberrypi/firmware/releases/tag/1.20240424
