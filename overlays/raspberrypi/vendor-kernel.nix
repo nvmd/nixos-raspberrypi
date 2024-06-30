@@ -1,4 +1,7 @@
 let
+  # are drm-rp1-depends-on-instead-of-select-MFD_RP1 and
+  # iommu-bcm2712-don-t-allow-building-as-module relevant only for RPi3?
+  # see https://github.com/NixOS/nixpkgs/commit/bb51848e23465846f5823d1bacbed808a4469fcd
   drm-rp1-depends-on-instead-of-select-MFD_RP1 = super: {
     # Fix "WARNING: unmet direct dependencies detected for MFD_RP1", and
     # subsequent build failure.
