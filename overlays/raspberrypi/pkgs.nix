@@ -82,14 +82,14 @@ self: super: { # final: prev:
       hash = "sha256-p0/inkHPRUkxSIsTmj7VI7sIaX7OXdqjMGZ31W7cnt4=";
     };
 
-    buildInputs = old.buildInputs ++ (with super; [
+    buildInputs = old.buildInputs ++ (with self; [
       libpisp
       python3Packages.pybind11
     ]);
     # patches = [ ];
   });
 
-  rpicam-apps = self.callPackage ../../pkgs/raspberrypi/rpicam-apps.nix {
+  rpicam-apps = super.callPackage ../../pkgs/raspberrypi/rpicam-apps.nix {
     libcamera = self.libcamera-rpi;
   };
 
