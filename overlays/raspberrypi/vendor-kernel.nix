@@ -132,7 +132,7 @@ let
   };
   # defaultBundle = linux_v6_1_63_fw;
   # defaultBundle = linux_v6_1_73_fw;
-  defaultBundle = linux_v6_6_28_fw;
+  defaultBundle = linux_v6_6_31_fw;
 in self: super: (bundleOverlay (defaultBundle self)) // { # final: prev:
 
   linuxPackages_rpi5 = self.linuxPackagesFor self.linux_rpi5;
