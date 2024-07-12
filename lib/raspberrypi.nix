@@ -1,4 +1,4 @@
-{}:
+{ flib, ... }: # flake's library
 
 {
   mkRaspberrypiBootloader = variant: bootloader: ({ config, pkgs, ... }: {
