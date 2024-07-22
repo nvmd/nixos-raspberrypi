@@ -73,13 +73,13 @@ self: super: { # final: prev:
   };
 
   libcamera-rpi = super.libcamera.overrideAttrs (old: rec {
-    version = "0.2.0+rpt20240418";
+    version = "0.3.0+rpt20240617";
 
     src = super.fetchFromGitHub {
       owner = "raspberrypi";
       repo = "libcamera";
       rev = "v${version}";
-      hash = "sha256-p0/inkHPRUkxSIsTmj7VI7sIaX7OXdqjMGZ31W7cnt4=";
+      hash = "sha256-qqEMJzMotybf1nJp1dsz3zc910Qj0TmqCm1CwuSb1VY=";
     };
 
     buildInputs = old.buildInputs ++ (with self; [
