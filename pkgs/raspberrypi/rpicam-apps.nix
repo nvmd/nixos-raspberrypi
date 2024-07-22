@@ -15,14 +15,14 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "rpicam-apps";
-  version = "1.4.4";
+  version = "1.5.0";
 
-  # https://github.com/raspberrypi/rpicam-apps/tree/v1.4.4
+  # https://github.com/raspberrypi/rpicam-apps/tree/v1.5.0
   src = fetchFromGitHub {
     owner = "raspberrypi";
     repo = "rpicam-apps";
     rev = "v${finalAttrs.version}";
-    hash = "sha256-uoewZMGf3vsBoRDfRz8KBKl+J6st/J44SHvNRMBdaUI=";
+    hash = "sha256-s4zJh6r3VhiquO54KWZ78dVCH1BmlphY9zEB9BidNyo=";
   };
 
   nativeBuildInputs = [ meson pkg-config ];
