@@ -67,10 +67,17 @@ self: super: { # final: prev:
     ffmpeg = self.ffmpeg_6-rpi;
   };
 
-  SDL2-rpi = super.SDL2.override {
-    # enough to have the effect of '--enable-video-kmsdrm' ?
+  SDL2-rpi = (super.SDL2.override {
+    # enough to have the effect of '--enable-video-kmsdrm' (on by default) ?
     drmSupport = true;
-  };
+  }).overrideAttrs (old: {
+    configureFlags = old.configureFlags ++ [
+      # these are off by default
+      # https://github.com/libsdl-org/SDL/blob/SDL2/CMakeLists.txt#L417
+      "--enable-arm-simd"
+      "--enable-arm-neon"
+    ];
+  });
 
   libcamera-rpi = super.libcamera.overrideAttrs (old: rec {
     version = "0.3.0+rpt20240617";
