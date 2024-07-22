@@ -10,13 +10,13 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "libpisp";
-  version = "1.0.5";
+  version = "1.0.6";
 
   src = fetchFromGitHub {
     owner = "raspberrypi";
     repo = "libpisp";
     rev = "v${finalAttrs.version}";
-    hash = "sha256-CHd44CH5dBcZuK+5fZtONZ8HE/lwGKwK5U0BYUK8gG4=";
+    hash = "sha256-V/d4RrXoq8HNc8r/Kr1gH3E7YTZzfIdgbaJtq/Xi7uQ=";
   };
 
   nativeBuildInputs = [ pkg-config meson ninja ];
@@ -25,4 +25,11 @@ stdenv.mkDerivation (finalAttrs: {
   # https://github.com/NixOS/nixpkgs/issues/86131
   BOOST_INCLUDEDIR = "${lib.getDev boost}/include";
   BOOST_LIBRARYDIR = "${lib.getLib boost}/lib";
+
+  meta = with lib; {
+    description = "Helper library to generate run-time configuration for the Raspberry Pi ISP (PiSP)";
+    homepage = "https://github.com/raspberrypi/libpisp";
+    license = licenses.bsd2;
+    maintainers = with maintainers; [ kazenyuk ];
+  };
 })
