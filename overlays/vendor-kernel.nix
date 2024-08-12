@@ -146,7 +146,7 @@ in self: super: (bundleOverlay (defaultBundle self)) // { # final: prev:
 
   # as in https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/linux-kernels.nix#L91
 
-  linux_rpi4_v6_6_31 = super.callPackage ../../pkgs/linux-rpi.nix {
+  linux_rpi4_v6_6_31 = super.callPackage ../pkgs/linux-rpi.nix {
     argsOverride = linux_v6_6_31_argsOverride super;
     kernelPatches = with super.kernelPatches; [
       bridge_stp_helper
@@ -154,7 +154,7 @@ in self: super: (bundleOverlay (defaultBundle self)) // { # final: prev:
     ];
     rpiVersion = 4;
   };
-  linux_rpi5_v6_6_31 = super.callPackage ../../pkgs/linux-rpi.nix {
+  linux_rpi5_v6_6_31 = super.callPackage ../pkgs/linux-rpi.nix {
     argsOverride = linux_v6_6_31_argsOverride super;
     kernelPatches = with super.kernelPatches; [
       bridge_stp_helper
@@ -163,7 +163,7 @@ in self: super: (bundleOverlay (defaultBundle self)) // { # final: prev:
     rpiVersion = 5;
   };
 
-  linux_rpi4_v6_6_28 = super.callPackage ../../pkgs/linux-rpi.nix {
+  linux_rpi4_v6_6_28 = super.callPackage ../pkgs/linux-rpi.nix {
     argsOverride = linux_v6_6_28_argsOverride super;
     kernelPatches = with super.kernelPatches; [
       bridge_stp_helper
@@ -171,7 +171,7 @@ in self: super: (bundleOverlay (defaultBundle self)) // { # final: prev:
     ];
     rpiVersion = 4;
   };
-  linux_rpi5_v6_6_28 = super.callPackage ../../pkgs/linux-rpi.nix {
+  linux_rpi5_v6_6_28 = super.callPackage ../pkgs/linux-rpi.nix {
     argsOverride = linux_v6_6_28_argsOverride super;
     kernelPatches = with super.kernelPatches; [
       bridge_stp_helper
@@ -180,7 +180,7 @@ in self: super: (bundleOverlay (defaultBundle self)) // { # final: prev:
     rpiVersion = 5;
   };
 
-  linux_rpi4_v6_1_73 = super.callPackage ../../pkgs/linux-rpi.nix {
+  linux_rpi4_v6_1_73 = super.callPackage ../pkgs/linux-rpi.nix {
     argsOverride = linux_v6_1_73_argsOverride super;
     kernelPatches = with super.kernelPatches; [
       bridge_stp_helper
@@ -188,7 +188,7 @@ in self: super: (bundleOverlay (defaultBundle self)) // { # final: prev:
     ];
     rpiVersion = 4;
   };
-  linux_rpi5_v6_1_73 = super.callPackage ../../pkgs/linux-rpi.nix {
+  linux_rpi5_v6_1_73 = super.callPackage ../pkgs/linux-rpi.nix {
     argsOverride = linux_v6_1_73_argsOverride super;
     kernelPatches = with super.kernelPatches; [
       bridge_stp_helper
@@ -197,7 +197,7 @@ in self: super: (bundleOverlay (defaultBundle self)) // { # final: prev:
     rpiVersion = 5;
   };
 
-  linux_rpi4_v6_1_63 = super.callPackage ../../pkgs/linux-rpi.nix {
+  linux_rpi4_v6_1_63 = super.callPackage ../pkgs/linux-rpi.nix {
     argsOverride = linux_v6_1_63_argsOverride super;
     kernelPatches = with super.kernelPatches; [
       bridge_stp_helper
@@ -205,7 +205,7 @@ in self: super: (bundleOverlay (defaultBundle self)) // { # final: prev:
     ];
     rpiVersion = 4;
   };
-  linux_rpi5_v6_1_63 = super.callPackage ../../pkgs/linux-rpi.nix {
+  linux_rpi5_v6_1_63 = super.callPackage ../pkgs/linux-rpi.nix {
     argsOverride = linux_v6_1_63_argsOverride super;
     kernelPatches = with super.kernelPatches; [
       bridge_stp_helper

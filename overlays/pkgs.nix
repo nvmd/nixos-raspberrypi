@@ -43,13 +43,13 @@ self: super: { # final: prev:
   };
 
 
-  ffmpeg_4-rpi = (super.callPackage ../../pkgs/ffmpeg_4-rpi.nix {
+  ffmpeg_4-rpi = (super.callPackage ../pkgs/ffmpeg_4-rpi.nix {
     ffmpeg = super.ffmpeg_4;
   });
-  ffmpeg_5-rpi = (super.callPackage ../../pkgs/ffmpeg_5-rpi.nix {
+  ffmpeg_5-rpi = (super.callPackage ../pkgs/ffmpeg_5-rpi.nix {
     ffmpeg = super.ffmpeg_5;
   });
-  ffmpeg_6-rpi = (super.callPackage ../../pkgs/ffmpeg_6-rpi.nix {
+  ffmpeg_6-rpi = (super.callPackage ../pkgs/ffmpeg_6-rpi.nix {
     ffmpeg = super.ffmpeg_6;
   });
 
@@ -96,7 +96,7 @@ self: super: { # final: prev:
     # patches = [ ];
   });
 
-  rpicam-apps = super.callPackage ../../pkgs/raspberrypi/rpicam-apps.nix {
+  rpicam-apps = super.callPackage ../pkgs/raspberrypi/rpicam-apps.nix {
     libcamera = self.libcamera-rpi;
   };
 

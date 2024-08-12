@@ -2,7 +2,7 @@
 
 {
   imports = [
-    ./raspberrypi/system/boot/loader/raspberrypi
+    ./system/boot/loader/raspberrypi
     raspberry-pi-nix.nixosModules.udev
     # generate config.txt with raspberry-pi-nix' generator
     # config.txt is in `config.hardware.raspberry-pi.config-generated`
