@@ -43,5 +43,32 @@
       vendor-utils = import ./overlays/vendor-utils.nix;
     };
 
+    packages.${system} = let
+      pkgs = import nixpkgs { inherit system; overlays = [
+          self.overlays.pkgs
+          self.overlays.vendor-utils
+        ];
+      };
+    in {
+      ffmpeg_4 = pkgs.ffmpeg_4-rpi;
+      ffmpeg_5 = pkgs.ffmpeg_5-rpi;
+      ffmpeg_6 = pkgs.ffmpeg_6-rpi;
+
+      kodi = pkgs.kodi-rpi;
+      kodi-gbm = pkgs.kodi-rpi-gbm;
+      kodi-wayland = pkgs.kodi-rpi-wayland;
+
+      libcamera = pkgs.libcamera-rpi;
+      libpisp = pkgs.libpisp;
+      libraspberrypi = pkgs.libraspberrypi;
+
+      raspberrypi-utils = pkgs.raspberrypi-utils;
+      rpicam-apps = pkgs.rpicam-apps;
+
+      SDL2 = pkgs.SDL2-rpi;
+
+      vlc = pkgs.vlc-rpi;
+    };
+
   };
 }
