@@ -46,6 +46,7 @@
     packages.${system} = let
       pkgs = import nixpkgs { inherit system; overlays = [
           self.overlays.pkgs
+          self.overlays.vendor-kernel
           self.overlays.vendor-utils
         ];
       };
@@ -68,6 +69,11 @@
       SDL2 = pkgs.SDL2-rpi;
 
       vlc = pkgs.vlc-rpi;
+
+      # nested package sets aren't allowed in flakes
+      # use the nasty "zzz" prefix to make `nix flake show` fail at the end of 
+      # the evaluation, keeping all other packages visible
+      zzzlinuxAndFirmware = pkgs.linuxAndFirmware;
     };
 
   };

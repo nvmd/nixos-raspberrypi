@@ -127,6 +127,7 @@ let
     raspberrypiWirelessFirmware = self.raspberrypiWirelessFirmware_20231115;
   };
   bundleOverlay = bundle: {
+    linuxAndFirmware = bundle;
     inherit (bundle) linux_rpi4 linux_rpi5
       raspberrypifw raspberrypiWirelessFirmware;
   };
