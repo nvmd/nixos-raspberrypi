@@ -9,21 +9,26 @@
     raspberry-pi-nix.url = "github:nvmd/raspberry-pi-nix";
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, flake-utils, ... }: let
-    system = "aarch64-linux";
-    pkgs = nixpkgs.legacyPackages.${system};
-    pkgs-unstable = nixpkgs-unstable.legacyPackages.${system};
+  outputs = { self, nixpkgs, nixpkgs-unstable, ... }: let
+    rpiSystems = [ "aarch64-linux" "armv7l-linux" "armv6l-linux" ];
+    allSystems = nixpkgs.lib.systems.flakeExposed;
+    forSystems = systems: f: nixpkgs.lib.genAttrs systems (system: f system);
   in {
-    devShells.${system}.default = pkgs.mkShell {
-      name = "nixos-raspberrypi";
-      nativeBuildInputs = with pkgs-unstable; [
-        nil # lsp language server for nix
-        nixpkgs-fmt
-        nix-output-monitor
-        bash-language-server
-        shellcheck
-      ];
-    };
+
+    devShells = forSystems allSystems (system: let
+      pkgs = nixpkgs-unstable.legacyPackages.${system};
+    in {
+      default = pkgs.mkShell {
+        name = "nixos-raspberrypi";
+        nativeBuildInputs = with pkgs; [
+          nil # lsp language server for nix
+          nixpkgs-fmt
+          nix-output-monitor
+          bash-language-server
+          shellcheck
+        ];
+      };
+    });
 
     nixosModules = {
       default = import ./modules/raspberrypi.nix;
@@ -43,8 +48,9 @@
       vendor-utils = import ./overlays/vendor-utils.nix;
     };
 
-    packages.${system} = let
-      pkgs = import nixpkgs { inherit system; overlays = [
+    packages = forSystems rpiSystems (system: let
+      pkgs = import nixpkgs {
+        inherit system; overlays = [
           self.overlays.pkgs
           self.overlays.vendor-kernel
           self.overlays.vendor-utils
@@ -74,7 +80,7 @@
       # use the nasty "zzz" prefix to make `nix flake show` fail at the end of 
       # the evaluation, keeping all other packages visible
       zzzlinuxAndFirmware = pkgs.linuxAndFirmware;
-    };
+    });
 
   };
 }
