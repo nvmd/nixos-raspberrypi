@@ -45,7 +45,7 @@
       pkgs = import ./overlays/pkgs.nix;
       vendor-kernel-nixpkgs = import ./overlays/vendor-kernel-nixpkgs.nix;
       vendor-kernel = import ./overlays/vendor-kernel.nix;
-      vendor-utils = import ./overlays/vendor-utils.nix;
+      vendor-pkgs = import ./overlays/vendor-pkgs.nix;
     };
 
     packages = forSystems rpiSystems (system: let
@@ -53,7 +53,7 @@
         inherit system; overlays = [
           self.overlays.pkgs
           self.overlays.vendor-kernel
-          self.overlays.vendor-utils
+          self.overlays.vendor-pkgs
         ];
       };
     in {
