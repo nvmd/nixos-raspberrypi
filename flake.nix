@@ -41,19 +41,28 @@
 
     overlays = {
       bootloader = import ./overlays/bootloader.nix;
+
       pkgs-global = import ./overlays/pkgs-global.nix;
       pkgs = import ./overlays/pkgs.nix;
-      vendor-kernel-nixpkgs = import ./overlays/vendor-kernel-nixpkgs.nix;
-      vendor-kernel = import ./overlays/vendor-kernel.nix;
       vendor-pkgs = import ./overlays/vendor-pkgs.nix;
+
+      vendor-firmware = import ./overlays/vendor-firmware.nix;
+      vendor-kernel = import ./overlays/vendor-kernel.nix;
+      vendor-kernel-nixpkgs = import ./overlays/vendor-kernel-nixpkgs.nix;
+
+      kernel-and-firmware = import ./overlays/linux-and-firmware.nix;
     };
 
     packages = forSystems rpiSystems (system: let
       pkgs = import nixpkgs {
         inherit system; overlays = [
           self.overlays.pkgs
-          self.overlays.vendor-kernel
           self.overlays.vendor-pkgs
+
+          self.overlays.vendor-firmware
+          self.overlays.vendor-kernel
+
+          self.overlays.kernel-and-firmware
         ];
       };
     in {
