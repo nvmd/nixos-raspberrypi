@@ -76,10 +76,9 @@
 
       vlc = pkgs.vlc-rpi;
 
-      # nested package sets aren't allowed in flakes
-      # use the nasty "zzz" prefix to make `nix flake show` fail at the end of 
-      # the evaluation, keeping all other packages visible
-      zzzlinuxAndFirmware = pkgs.linuxAndFirmware;
+      # unfortunately nested package sets aren't allowed in flakes
+      # `nix flake show` will fail here
+      linuxAndFirmware = pkgs.linuxAndFirmware;
     });
 
   };
