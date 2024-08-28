@@ -89,13 +89,32 @@ self: super: { # final: prev:
       hash = "sha256-qqEMJzMotybf1nJp1dsz3zc910Qj0TmqCm1CwuSb1VY=";
     };
 
+    # not needed for nixpkgs-unstable
+    postPatch = ''
+      ${old.postPatch}
+      patchShebangs src/py/
+    '';
+
     buildInputs = old.buildInputs ++ (with self; [
       libpisp
-      python3Packages.pybind11
+      python3Packages.pybind11  # not needed for nixpkgs-unstable
     ]);
-    postPatch = ''
-      patchShebangs src/py/ utils/
-    '';
+
+    mesonFlags = old.mesonFlags ++ [
+      # add flags that raspberry suggests, but nixpkgs doesn't include
+      "--buildtype=release"
+      "-Dpipelines=rpi/vc4,rpi/pisp"
+      "-Dipas=rpi/vc4,rpi/pisp"
+      "-Dgstreamer=enabled"
+      "-Dtest=false"
+      "-Dcam=disabled"
+      "-Dpycamera=enabled"
+    ];
+
+    meta = old.meta // {
+      homepage = "https://github.com/raspberrypi/libcamera";
+      changelog = "https://github.com/raspberrypi/libcamera/releases";
+    };
   });
 
   rpicam-apps = super.callPackage ../pkgs/raspberrypi/rpicam-apps.nix {
