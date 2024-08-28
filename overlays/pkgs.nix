@@ -54,14 +54,14 @@ self: super: { # final: prev:
   });
 
   vlc-rpi = (super.vlc.overrideAttrs (old: {
-    version = "3.0.20-0+rpt6";
+    version = "3.0.21-0+rpt1";
 
     # https://github.com/RPi-Distro/vlc/commits/bookworm-rpt/
     src = super.fetchFromGitHub {
       owner = "RPi-Distro";
       repo = "vlc";
-      rev = "636141a3506e8de95683e3b0eb571bf9a9c19b96";
-      hash = "sha256-RjphP48pmHDEMBWMNWWPf/rL0/l0ZMXrXz7yVldwsP0=";
+      rev = "a9357f06c552c3983798c583bc40e55414088486";
+      hash = "sha256-Di3uJ3gMlhrcY4jU8XE9U2oOVsbXi0V7ZG7C/XKRHeE=";
     };
   })).override {
     ffmpeg = self.ffmpeg_6-rpi;
