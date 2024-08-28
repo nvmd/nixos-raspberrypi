@@ -93,7 +93,9 @@ self: super: { # final: prev:
       libpisp
       python3Packages.pybind11
     ]);
-    # patches = [ ];
+    postPatch = ''
+      patchShebangs src/py/ utils/
+    '';
   });
 
   rpicam-apps = super.callPackage ../pkgs/raspberrypi/rpicam-apps.nix {

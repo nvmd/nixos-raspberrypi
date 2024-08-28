@@ -45,6 +45,5 @@ self: super: { # final: prev:
 
   SDL2 = self.SDL2-rpi;
 
-  # FIXME: libcamera build fails, disable for now
-  # libcamera = self.libcamera-rpi;
+  libcamera = self.libcamera-rpi;
 }
