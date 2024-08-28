@@ -9,7 +9,7 @@
     raspberry-pi-nix.url = "github:nvmd/raspberry-pi-nix";
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, ... }: let
+  outputs = { self, nixpkgs, nixpkgs-unstable, ... }@inputs: let
     rpiSystems = [ "aarch64-linux" "armv7l-linux" "armv6l-linux" ];
     allSystems = nixpkgs.lib.systems.flakeExposed;
     forSystems = systems: f: nixpkgs.lib.genAttrs systems (system: f system);
@@ -29,6 +29,10 @@
         ];
       };
     });
+
+    lib = import ./lib ({
+      inherit (nixpkgs) lib;
+    } // inputs);
 
     nixosModules = {
       default = import ./modules/raspberrypi.nix;
