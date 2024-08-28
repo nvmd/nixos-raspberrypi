@@ -293,15 +293,14 @@ in self: super: (bundleOverlay (defaultBundle self)) // { # final: prev:
         hash = "sha256-KakKnOBeWxh0exu44beZ7cbr5ni4RA9vkWYb9sGMb8Q=";
       })
       # https://github.com/RPi-Distro/firmware-nonfree/commits/bookworm/
-      # https://github.com/RPi-Distro/firmware-nonfree/tree/223ccf3a3ddb11b3ea829749fbbba4d65b380897
-      # 1:20230625-2+rpt2 release – 20240226
-      # earlier same date: 1:20230625-2+rpt1 release, 1:20230210-5+rpt4 release
+      # https://github.com/RPi-Distro/firmware-nonfree/commit/4b356e134e8333d073bd3802d767a825adec3807
+      # 20230625-2+rpt3 release – 20240826
       (super.fetchFromGitHub {
         name = "firmware-nonfree";
         owner = "RPi-Distro";
         repo = "firmware-nonfree";
-        rev = "223ccf3a3ddb11b3ea829749fbbba4d65b380897";
-        hash = "sha256-BGq0+cr+xBRwQM/LqiQuRWuZpQsKM5jfcrNCqWMuVzM=";
+        rev = "4b356e134e8333d073bd3802d767a825adec3807";
+        hash = "sha256-T7eTKXqY9cxEMdab8Snda4CEOrEihy5uOhA6Fy+Mhnw=";
       })
     ];
   });
