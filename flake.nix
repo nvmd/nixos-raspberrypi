@@ -1,6 +1,16 @@
 {
   description = "Flake for RaspberryPi support on NixOS";
 
+  nixConfig = {
+    extra-substituters = [
+      "https://nixos-raspberrypi.cachix.org"
+    ];
+    extra-trusted-public-keys = [
+      "nixos-raspberrypi.cachix.org-1:4iMO9LXa8BqhU+Rpg6LQKiGa2lsNh/j2oiYLNOQ5sPI="
+    ];
+    connect-timeout = 5;
+  };
+
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -26,6 +36,7 @@
           nix-output-monitor
           bash-language-server
           shellcheck
+          (pkgs.callPackage ./pkgs/nix-build-to-cachix.nix {})
         ];
       };
     });
