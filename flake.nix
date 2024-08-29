@@ -73,6 +73,7 @@
       ffmpeg_4 = pkgs.ffmpeg_4-rpi;
       ffmpeg_5 = pkgs.ffmpeg_5-rpi;
       ffmpeg_6 = pkgs.ffmpeg_6-rpi;
+      ffmpeg_7 = pkgs.ffmpeg_7-rpi;
 
       kodi = pkgs.kodi-rpi;
       kodi-gbm = pkgs.kodi-rpi-gbm;

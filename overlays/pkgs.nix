@@ -52,6 +52,9 @@ self: super: { # final: prev:
   ffmpeg_6-rpi = (super.callPackage ../pkgs/ffmpeg_6-rpi.nix {
     ffmpeg = super.ffmpeg_6;
   });
+  ffmpeg_7-rpi = (super.callPackage ../pkgs/ffmpeg_7-rpi.nix {
+    ffmpeg = super.ffmpeg_7;
+  });
 
   vlc-rpi = (super.vlc.overrideAttrs (old: {
     version = "3.0.21-0+rpt1";
