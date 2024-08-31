@@ -14,8 +14,8 @@
         rpi = import rpi-nixpkgs-base {
           inherit (self) system config;
           overlays = [
-            self.overlays.pkgs-global
             self.overlays.pkgs
+            self.overlays.pkgs-global
             self.overlays.vendor-pkgs
           ];
         };
