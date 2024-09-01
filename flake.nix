@@ -47,6 +47,8 @@
 
     nixosModules = {
       default = import ./modules/raspberrypi.nix;
+      raspberry-pi-5 = import ./modules/raspberry-pi-5.nix;
+      raspberry-pi-4 = import ./modules/raspberry-pi-4.nix;
       bootloader = import ./modules/system/boot/loader/raspberrypi;
       rpi5 = {
         sd-image = import ./modules/installer/sd-card/sd-image-raspberrypi5.nix;
