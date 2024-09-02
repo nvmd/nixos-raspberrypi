@@ -260,5 +260,70 @@ in
       };
     })
 
+    (mkIf (cfg.enable && (cfg.bootloader == "uefi")) {
+      hardware.raspberry-pi.config = {
+        all = {
+          options = {
+            armstub = {
+              enable = true;
+              value = "RPI_EFI.fd";
+            };
+            device_tree_address = {
+              enable = true;
+              value = "0x1f0000";
+            };
+            device_tree_end = {
+              enable = true;
+              value = ({
+                "4" = "0x200000";
+                "5" = "0x210000";
+              }.${cfg.variant});
+            };
+            framebuffer_depth = {
+              # Force 32 bpp framebuffer allocation.
+              enable = lib.mkDefault (cfg.variant == "5");
+              value = 32;
+            };
+            disable_overscan = {
+              # Disable compensation for displays with overscan.
+              enable = true;
+              value = 1;
+            };
+            disable_commandline_tags = {
+              enable = lib.mkDefault (cfg.variant == "4");
+              value = 1;
+            };
+            enable_uart = {
+              enable = lib.mkDefault (cfg.variant == "4");
+              value = true;
+            };
+            uart_2ndstage = {
+              enable = lib.mkDefault (cfg.variant == "4");
+              value = 1;
+            };
+            enable_gic = {
+              enable = lib.mkDefault (cfg.variant == "4");
+              value = 1;
+            };
+          };
+          dt-overlays = {
+            miniuart-bt = {
+              enable = lib.mkDefault (cfg.variant == "4");
+              params = { };
+            };
+            upstream-pi4 = {
+              enable = lib.mkDefault (cfg.variant == "4");
+              params = { };
+            };
+          };
+        };
+      };
+
+      boot.loader.efi.canTouchEfiVariables = true;
+      boot.loader.systemd-boot = {
+        enable = true;
+      };
+    })
+
   ];
 }
