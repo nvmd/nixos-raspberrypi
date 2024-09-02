@@ -22,7 +22,7 @@ self: super: {
     stripRoot = false;
   };
   uefi_rpi4 = super.fetchzip {
-    url = "https://github.com/pftf/RPi4/releases/download/v1.37/RPi4_UEFI_Firmware_v1.37.zip";
+    url = "https://github.com/pftf/RPi4/releases/download/v1.38/RPi4_UEFI_Firmware_v1.38.zip";
     hash = super.lib.fakeHash;
     stripRoot = false;
   };
