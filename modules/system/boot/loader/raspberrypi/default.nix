@@ -24,6 +24,16 @@ let
     firmwareBuilder = firmwarePopulateCmd.firmware;
     extlinuxConfBuilder = config.boot.loader.generic-extlinux-compatible.populateCmd;
   };
+  uefiBuilder = pkgs.substituteAll {
+    src = ./uefi-builder.sh;
+    isExecutable = true;
+    inherit (pkgs) bash;
+    path = [pkgs.coreutils pkgs.gnused pkgs.gnugrep];
+
+    uefi = uefiPackage;
+    uefiBinName = "RPI_EFI.fd";
+    inherit configTxt;
+  };
   # Builders exposed via populateCmd, which run on the build architecture
   populateFirmwareBuilder = import  ./firmware-builder.nix {
     inherit configTxt;
@@ -48,12 +58,14 @@ let
   builder = {
     firmware = "${firmwareBuilder} -d ${cfg.firmwarePath} ${firmwareBuilderArgs} -c";
     uboot = "${ubootBuilder} -f ${cfg.firmwarePath} -d ${cfg.bootPath} -c";
+    uefi = "${uefiBuilder} -f ${cfg.firmwarePath} -d ${cfg.bootPath} -c";
     rpiboot = "${rpibootBuilder} -d ${cfg.firmwarePath} -c";
   };
   firmwarePopulateCmd = {
     firmware = "${populateFirmwareBuilder} ${firmwareBuilderArgs}";
     rpiboot = "${populateRpibootBuilder}";
     uboot = "${populateUbootBuilder}";
+    # uefi = "${populateUefiBuilder}";
   };
 
   configTxt = config.hardware.raspberry-pi.config-output;
@@ -322,7 +334,18 @@ in
       boot.loader.efi.canTouchEfiVariables = true;
       boot.loader.systemd-boot = {
         enable = true;
+        #   default_cfg=$(cat /boot/loader/loader.conf | grep default | awk '{print $2}')
+        #   init_value=$(cat /boot/loader/entries/$default_cfg | grep init= | awk '{print $2}')
+        #   sed -i "s|@INIT@|$init_value|g" /boot/custom/config_with_placeholder.conf
+        extraInstallCommands = ''
+          ${uefiBuilder}
+        '';
       };
+
+      # system = {
+      #   build.installBootLoader = lib.mkOverride 60 (builder."uefi-rpi");
+      #   boot.loader.id = lib.mkOverride 60 ("uefi-rpi");
+      # };
     })
 
   ];
