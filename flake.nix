@@ -23,6 +23,20 @@
     rpiSystems = [ "aarch64-linux" "armv7l-linux" "armv6l-linux" ];
     allSystems = nixpkgs.lib.systems.flakeExposed;
     forSystems = systems: f: nixpkgs.lib.genAttrs systems (system: f system);
+    mkRpiPkgs = nixpkgs: system: import nixpkgs {
+        inherit system; overlays = [
+          self.overlays.pkgs
+          self.overlays.pkgs-global
+
+          self.overlays.vendor-pkgs
+
+          self.overlays.vendor-firmware
+          self.overlays.vendor-kernel
+
+          self.overlays.kernel-and-firmware
+        ];
+      };
+    mkLegacyPackagesFor = nixpkgs: forSystems rpiSystems (mkRpiPkgs nixpkgs);
   in {
 
     devShells = forSystems allSystems (system: let
@@ -36,7 +50,7 @@
           nix-output-monitor
           bash-language-server
           shellcheck
-          (pkgs.callPackage ./pkgs/nix-build-to-cachix.nix {})
+          (pkgs.callPackage ./devshells/nix-build-to-cachix.nix {})
         ];
       };
     });
@@ -69,6 +83,11 @@
 
       kernel-and-firmware = import ./overlays/linux-and-firmware.nix;
     };
+
+    # "RPi world": nixpkgs with all overlays applied "globally", i.e.
+    # all packages here depend on rpi's/optimized versions of the dependencies
+    legacyPackages = mkLegacyPackagesFor nixpkgs;
+    legacyPackagesUnstable = mkLegacyPackagesFor nixpkgs-unstable;
 
     packages = forSystems rpiSystems (system: let
       pkgs = import nixpkgs {
@@ -103,9 +122,13 @@
 
       vlc = pkgs.vlc-rpi;
 
-      # unfortunately nested package sets aren't allowed in flakes
-      # `nix flake show` will fail here
-      linuxAndFirmware = pkgs.linuxAndFirmware;
+      # see legacyPackages.<system>.linuxAndFirmware for other versions of 
+      # the bundle
+      inherit (pkgs.linuxAndFirmware.latest)
+        linux_rpi5 linux_rpi4
+        linuxPackages_rpi5 linuxPackages_rpi4
+        raspberrypifw raspberrypiWirelessFirmware;
+
     });
 
   };
