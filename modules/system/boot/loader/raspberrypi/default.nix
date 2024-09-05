@@ -85,9 +85,11 @@ in
           Target path for:
           - uboot: extlinux configuration - (extlinux/extlinux.conf, initrd, 
               kernel Image)
+          - uefi: systemd configuration
           This partition must have set for the bootloader to work:
           - uboot: either GPT Legacy BIOS Bootable partition attribute, or 
                    MBR bootable flag
+          - uefi: GPT partition type EF00 (EFI System Partition)
         '';
       };
 
