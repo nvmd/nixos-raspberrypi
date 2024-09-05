@@ -9,4 +9,7 @@
   };
 
   boot.kernelPackages = pkgs.linuxPackages_rpi5;
+  boot.initrd.availableKernelModules = [
+    "nvme"  # nvme drive connected with pcie
+  ];
 }

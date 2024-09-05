@@ -18,13 +18,9 @@
   # https://github.com/raspberrypi/firmware/issues/1539#issuecomment-784498108
   boot.kernelParams = [ "console=serial0,115200n8" "console=tty1" ];
 
+  # https://github.com/NixOS/nixos-hardware/issues/631#issuecomment-1584100732
   boot.initrd.availableKernelModules = [
-    # result of the nixos' hardware scan on rpi5
-    # with nvme drive connected with pcie
-    "nvme" "usbhid"
-
-    # from raspberry-pi-nix
-    # "usbhid"
+    "usbhid"
     "usb_storage"
     "vc4"
     "pcie_brcmstb" # required for the pcie bus to work
