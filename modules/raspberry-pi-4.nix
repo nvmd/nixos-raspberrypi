@@ -5,7 +5,7 @@
 
   boot.loader.raspberryPi = {
     variant = "4";
-    bootloader = lib.mkDefault "rpiboot";
+    bootloader = lib.mkDefault "uboot";
   };
 
   boot.kernelPackages = pkgs.linuxPackages_rpi4;
