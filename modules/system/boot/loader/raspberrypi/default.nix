@@ -112,6 +112,8 @@ in
           When enabled, the device tree binaries will be copied to
           `firmwarePath` from the generation's kernel.
 
+          This affects `rpiboot` and `uboot` bootloaders.
+
           Note that this affects all generations, regardless of the
           setting value used in their configurations.
         '';
@@ -238,9 +240,9 @@ in
       # Enable to manage extlinux' options with its builder/populateCmd ...
       boot.loader.generic-extlinux-compatible = {
         enable = true;
-        # don't add FDTDIR to the extlinux conf file to use the device tree
-        # provided by firmware.
-        useGenerationDeviceTree = false;
+        # if false, don't add FDTDIR to the extlinux conf file to use the device tree
+        # provided by firmware. (we usually want this to be false)
+        useGenerationDeviceTree = cfg.useGenerationDeviceTree;
       };
 
       boot.loader.grub.enable = false;
