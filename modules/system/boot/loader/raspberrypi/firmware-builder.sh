@@ -40,6 +40,7 @@ copyForced() {
 SRC_FIRMWARE_DIR=@firmware@/share/raspberrypi/boot
 dtb_path=$SRC_FIRMWARE_DIR
 
+echo "copying firmware..."
 
 # Device Tree
 
@@ -88,5 +89,8 @@ for SRC in "${STARTFILES[@]}" "$BOOTCODE" "${FIXUPS[@]}"; do
     copyForced "$SRC" "$dst"
 done
 
+echo "copying config.txt..."
 # Add the config.txt
 copyForced @configTxt@ $target/config.txt
+
+echo "raspberry pi firmware installed"

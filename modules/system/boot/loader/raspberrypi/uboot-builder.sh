@@ -43,43 +43,14 @@ copyForced() {
     mv $dst.tmp $dst
 }
 
-echo "copying firmware..."
 @firmwareBuilder@ -c $default -d $fwtarget
 
 echo "generating extlinux configuration..."
 # Call the extlinux builder
 @extlinuxConfBuilder@ -c $default -d $boottarget
 
-# # Add the firmware files
-# # fwdir=@firmware@/share/raspberrypi/boot/
-# SRC_FIRMWARE_DIR=@firmware@/share/raspberrypi/boot
-
-# DTBS=("$SRC_FIRMWARE_DIR"/*.dtb)
-# for dtb in "${DTBS[@]}"; do
-# # for dtb in $dtb_path/broadcom/*.dtb; do
-#     dst="$target/$(basename $dtb)"
-#     copyForced $dtb "$dst"
-# done
-
-# SRC_OVERLAYS_DIR="$SRC_FIRMWARE_DIR/overlays"
-# SRC_OVERLAYS=("$SRC_OVERLAYS_DIR"/*)
-# mkdir -p $target/overlays
-# for ovr in "${SRC_OVERLAYS[@]}"; do
-# # for ovr in $dtb_path/overlays/*; do
-#     dst="$target/overlays/$(basename $ovr)"
-#     copyForced $ovr "$dst"
-# done
-
-# STARTFILES=("$SRC_FIRMWARE_DIR"/start*.elf)
-# BOOTCODE="$SRC_FIRMWARE_DIR/bootcode.bin"
-# FIXUPS=("$SRC_FIRMWARE_DIR"/fixup*.dat)
-# for SRC in "${STARTFILES[@]}" "$BOOTCODE" "${FIXUPS[@]}"; do
-#     dst="$target/$(basename $SRC)"
-#     copyForced "$SRC" "$dst"
-# done
-
-# # Add the config.txt
-# copyForced @configTxt@ $target/config.txt
-
+echo "copying u-boot binary..."
 # Add the uboot file
 copyForced @uboot@/u-boot.bin $fwtarget/@ubootBinName@
+
+echo "uboot+extlinux bootloader installed"
