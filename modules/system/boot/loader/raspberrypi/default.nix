@@ -47,8 +47,7 @@ let
 
   builder = {
     firmware = "${firmwareBuilder} -d ${cfg.firmwarePath} ${firmwareBuilderArgs} -c";
-    # uboot = "${ubootBuilder} -f ${cfg.firmwarePath} -d /boot -c";
-    uboot = "${ubootBuilder} -d ${cfg.firmwarePath} -c";
+    uboot = "${ubootBuilder} -f ${cfg.firmwarePath} -d ${cfg.bootPath} -c";
     rpiboot = "${rpibootBuilder} -d ${cfg.firmwarePath} -c";
   };
   firmwarePopulateCmd = {
@@ -78,6 +77,19 @@ in
       };
 
       firmwarePackage = mkPackageOption pkgs "raspberrypifw" { };
+
+      bootPath = mkOption {
+        default = "/boot";
+        type = types.str;
+        description = ''
+          Target path for:
+          - uboot: extlinux configuration - (extlinux/extlinux.conf, initrd, 
+              kernel Image)
+          This partition must have set for the bootloader to work:
+          - uboot: either GPT Legacy BIOS Bootable partition attribute, or 
+                   MBR bootable flag
+        '';
+      };
 
       firmwarePath = mkOption {
         default = "/boot/firmware";
@@ -114,7 +126,7 @@ in
 
           Honors all relevant module options except the
           `-c <path-to-default-configuration>`
-          `-d <boot-dir>` arguments, which can be specified
+          `-d <target-dir>` arguments, which can be specified
           by the caller of firmwarePopulateCmd.
 
           Useful to have for sdImage.populateFirmwareCommands

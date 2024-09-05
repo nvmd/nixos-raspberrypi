@@ -9,20 +9,20 @@ export PATH=/empty
 for i in @path@; do PATH=$PATH:$i/bin; done
 
 usage() {
-    # echo "usage: $0 -f <firmware-dir> -t <timeout> -c <path-to-default-configuration> [-d <boot-dir>] [-g <num-generations>] [-n <dtbName>] [-r]" >&2
-    echo "usage: $0 -c <path-to-default-configuration> [-d <boot-dir>]" >&2
-    # echo "all options following '-f <firmware-dir>' are passed directly to generic-extlinux-compatible's builder" >&2
+    echo "usage: $0 -f <firmware-dir> -d <boot-dir> -c <path-to-default-configuration>" >&2
     exit 1
 }
 
 default=               # Default configuration, needed for extlinux
-target=/boot/firmware  # firmware target directory
+fwtarget=/boot/firmware  # firmware target directory
+boottarget=/boot         # boot configuration target directory
 
 echo "uboot-builder: $@"
-while getopts "c:d:" opt; do
+while getopts "c:d:f:" opt; do
     case "$opt" in
         c) default="$OPTARG" ;;
-        d) target="$OPTARG" ;;
+        d) boottarget="$OPTARG" ;;
+        f) fwtarget="$OPTARG" ;;
         \?) usage ;;
     esac
 done
@@ -44,11 +44,11 @@ copyForced() {
 }
 
 echo "copying firmware..."
-@firmwareBuilder@ -c $default -d $target
+@firmwareBuilder@ -c $default -d $fwtarget
 
 echo "generating extlinux configuration..."
 # Call the extlinux builder
-@extlinuxConfBuilder@ -c $default -d $target
+@extlinuxConfBuilder@ -c $default -d $boottarget
 
 # # Add the firmware files
 # # fwdir=@firmware@/share/raspberrypi/boot/
@@ -82,4 +82,4 @@ echo "generating extlinux configuration..."
 # copyForced @configTxt@ $target/config.txt
 
 # Add the uboot file
-copyForced @uboot@/u-boot.bin $target/@ubootBinName@
+copyForced @uboot@/u-boot.bin $fwtarget/@ubootBinName@
