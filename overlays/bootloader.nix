@@ -23,7 +23,7 @@ self: super: {
   };
   uefi_rpi4 = super.fetchzip {
     url = "https://github.com/pftf/RPi4/releases/download/v1.38/RPi4_UEFI_Firmware_v1.38.zip";
-    hash = super.lib.fakeHash;
+    hash = "sha256-9tOr80jcmguFy2bSz+H3TfmG8BkKyBTFoUZkMy8x+0g=";
     stripRoot = false;
   };
   # https://github.com/worproject/rpi5-uefi/
