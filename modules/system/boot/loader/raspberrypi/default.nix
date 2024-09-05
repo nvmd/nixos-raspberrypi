@@ -24,15 +24,10 @@ let
     firmwareBuilder = firmwarePopulateCmd.firmware;
     extlinuxConfBuilder = config.boot.loader.generic-extlinux-compatible.populateCmd;
   };
-  uefiBuilder = pkgs.substituteAll {
-    src = ./uefi-builder.sh;
-    isExecutable = true;
-    inherit (pkgs) bash;
-    path = [pkgs.coreutils pkgs.gnused pkgs.gnugrep];
-
-    uefi = uefiPackage;
-    uefiBinName = "RPI_EFI.fd";
-    inherit configTxt;
+  uefiBuilder = import ./uefi-builder.nix {
+    inherit pkgs configTxt;
+    inherit (cfg) uefiPackage;
+    firmwareBuilder = firmwarePopulateCmd.firmware;
   };
   # Builders exposed via populateCmd, which run on the build architecture
   populateFirmwareBuilder = import  ./firmware-builder.nix {
@@ -47,25 +42,37 @@ let
   populateUbootBuilder = import ./uboot-builder.nix {
     inherit ubootBinName;
     pkgs = pkgs.buildPackages;
-    ubootPackage = cfg.ubootPackage;
+    inherit (cfg) ubootPackage;
     firmwareBuilder = firmwarePopulateCmd.firmware;
     extlinuxConfBuilder = config.boot.loader.generic-extlinux-compatible.populateCmd;
+  };
+  populateUefiBuilder = import ./uefi-builder.nix {
+    pkgs = pkgs.buildPackages;
+    inherit configTxt;
+    inherit (cfg) uefiPackage;
+    firmwareBuilder = firmwarePopulateCmd.firmware;
   };
 
 
   firmwareBuilderArgs = lib.optionalString (!cfg.useGenerationDeviceTree) " -r";
+  uefiBuilderArgs = builtins.concatStringsSep " " [
+    (lib.optionalString (cfg.uefiUseVendorFirmware) "-r")
+    (lib.optionalString (cfg.uefiUseUefiFirmware) "-u")
+  ];
 
   builder = {
     firmware = "${firmwareBuilder} -d ${cfg.firmwarePath} ${firmwareBuilderArgs} -c";
     uboot = "${ubootBuilder} -f ${cfg.firmwarePath} -d ${cfg.bootPath} -c";
-    uefi = "${uefiBuilder} -f ${cfg.firmwarePath} -d ${cfg.bootPath} -c";
+    # uefi = "${uefiBuilder} -f ${cfg.firmwarePath} -d ${cfg.bootPath} ${uefiBuilderArgs} -c";
+    # running from `extraInstallCommands` won't supply us with an argument for `-c`
+    uefi = "${uefiBuilder} -f ${cfg.firmwarePath} -d ${cfg.bootPath} ${uefiBuilderArgs}";
     rpiboot = "${rpibootBuilder} -d ${cfg.firmwarePath} -c";
   };
   firmwarePopulateCmd = {
     firmware = "${populateFirmwareBuilder} ${firmwareBuilderArgs}";
     rpiboot = "${populateRpibootBuilder}";
     uboot = "${populateUbootBuilder}";
-    # uefi = "${populateUefiBuilder}";
+    uefi = "${populateUefiBuilder} ${uefiBuilderArgs}";
   };
 
   configTxt = config.hardware.raspberry-pi.config-output;
@@ -113,6 +120,7 @@ in
           - rpi: system generations, `<firmwarePath>/old` will hold
             files from old generations.
           - uboot: uboot binary
+          - uefi: uefi firmware image, supplied dtbs
         '';
       };
 
@@ -151,10 +159,12 @@ in
 
       bootloader = mkOption {
         default = if cfg.variant == "5" then "rpiboot" else "uboot";
-        type = types.enum [ "rpiboot" "uboot" ];
+        type = types.enum [ "rpiboot" "uboot" "uefi" ];
         description = ''
           Bootloader to use:
-          - `"uboot"`: U-Boot
+          - `"uboot"`: U-Boot, uses extlinux to manage nixos boot configurations
+          - `"uefi"`: UEFI firmware image installed to firmware directory, 
+            allowing to use systemd-boot to manage boot configurations
           - `"rpiboot"`: The linux kernel is installed directly into the
             firmware directory as expected by the Raspberry Pi boot
             process.
@@ -195,21 +205,46 @@ in
           };
         }.${cfg.variant}.${if isAarch64 then "aarch64" else "armhf"};
       };
+      uefiPackage = mkOption {
+        default = {
+          "0_2" = {
+            aarch64 = pkgs.uefi_rpi3;
+          };
+          "3" = {
+            aarch64 = pkgs.uefi_rpi3;
+          };
+          "4" = {
+            aarch64 = pkgs.uefi_rpi4;
+          };
+          "5" = {
+            aarch64 = pkgs.uefi_rpi5;
+          };
+        }.${cfg.variant}.${if isAarch64 then "aarch64" else "armhf"};
+      };
+
+      uefiUseVendorFirmware = mkOption {
+        default = false;
+        type = types.bool;
+        description = ''
+          Use vendor's firmware package (usually `pkgs.raspberrypifw`)
+        '';
+      };
+      uefiUseUefiFirmware = mkOption {
+        default = true;
+        type = types.bool;
+        description = ''
+          Use firmware files provided with UEFI firmware image.
+
+          When enabled together with uefiUseVendorFirmware will 
+          merge with vendor firmware, overwriting conflicting files
+        '';
+      };
 
     };
   };
 
   config = mkMerge [
     (mkIf cfg.enable {
-      assertions = let supportAarch64 = [ "0_2" "3" "4" "5" ];
-      in singleton {
-        assertion = !pkgs.stdenv.hostPlatform.isAarch64
-                    || builtins.elem cfg.variant supportAarch64;
-        message = ''
-          Only Raspberry Pi versions
-          ${builtins.concatStringsSep ", " supportAarch64} support aarch64.
-        '';
-      };
       system.build.installFirmware = builder."firmware";
       boot.loader.raspberryPi.firmwarePopulateCmd = firmwarePopulateCmd."${cfg.bootloader}";
     })
@@ -273,6 +308,17 @@ in
     })
 
     (mkIf (cfg.enable && (cfg.bootloader == "uefi")) {
+      assertions = let supportAarch64 = [ "0_2" "3" "4" "5" ];
+      in singleton {
+        assertion = !pkgs.stdenv.hostPlatform.isAarch64
+                    || builtins.elem cfg.variant supportAarch64;
+        message = ''
+          UEFI is supported only on aarch64: (only Raspberry Pi boards 
+          ${builtins.concatStringsSep ", " supportAarch64} supported).
+        '';
+      };
+      # https://github.com/tianocore/edk2-platforms/tree/master/Platform/RaspberryPi/RPi4
+      # https://github.com/pftf/RPi4/tree/master
       hardware.raspberry-pi.config = {
         all = {
           options = {
@@ -334,18 +380,12 @@ in
       boot.loader.efi.canTouchEfiVariables = true;
       boot.loader.systemd-boot = {
         enable = true;
-        #   default_cfg=$(cat /boot/loader/loader.conf | grep default | awk '{print $2}')
-        #   init_value=$(cat /boot/loader/entries/$default_cfg | grep init= | awk '{print $2}')
-        #   sed -i "s|@INIT@|$init_value|g" /boot/custom/config_with_placeholder.conf
         extraInstallCommands = ''
-          ${uefiBuilder}
+          ${builder.uefi}
         '';
       };
+      # boot.initrd.systemd.enable = true;
 
-      # system = {
-      #   build.installBootLoader = lib.mkOverride 60 (builder."uefi-rpi");
-      #   boot.loader.id = lib.mkOverride 60 ("uefi-rpi");
-      # };
     })
 
   ];
