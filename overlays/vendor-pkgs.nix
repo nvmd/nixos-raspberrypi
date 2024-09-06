@@ -39,6 +39,7 @@ self: super: { # final: prev:
   });
 
   libraspberrypi = super.callPackage ../pkgs/raspberrypi/libraspberrypi.nix {};
+  rpi-userland = self.libraspberrypi;
 
   libpisp = self.callPackage ../pkgs/raspberrypi/libpisp.nix {};
 
