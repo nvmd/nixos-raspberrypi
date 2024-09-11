@@ -34,13 +34,13 @@ self: super: { # final: prev:
     ffmpegVariant = "full";
   };
 
-  # ffmpeg_7 = super.ffmpeg_7-rpi; # small
-  # ffmpeg_7-headless = super.ffmpeg_7-rpi.override {
-  #   ffmpegVariant = "headless";
-  # };
-  # ffmpeg_7-full = super.ffmpeg_7-rpi.override {
-  #   ffmpegVariant = "full";
-  # };
+  ffmpeg_7 = super.ffmpeg_7-rpi; # small
+  ffmpeg_7-headless = super.ffmpeg_7-rpi.override {
+    ffmpegVariant = "headless";
+  };
+  ffmpeg_7-full = super.ffmpeg_7-rpi.override {
+    ffmpegVariant = "full";
+  };
 
   # as in `...ffmpeg/default.nix`
   # need to override those because as well, because there
