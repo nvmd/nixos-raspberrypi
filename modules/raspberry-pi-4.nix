@@ -9,4 +9,7 @@
   };
 
   boot.kernelPackages = pkgs.linuxPackages_rpi4;
+  boot.initrd.availableKernelModules = [
+    "nvme"  # cm4 may have nvme drive connected with pcie
+  ];
 }
