@@ -65,23 +65,38 @@ nixpkgs.overlays = [
 
   # Raspberry's firmware and kernel combined in a compatible bundles, 
   # will also bring latest versions of the kernel and firmware into the global scope
-  self.overlays.kernel-and-firmware
+  nixos-raspberrypi.overlays.kernel-and-firmware
   # u-boot, uefi
-  self.overlays.bootloader
+  nixos-raspberrypi.overlays.bootloader
 
 
   # Packages:
 
   # Raspberry's utils and support packages: rpicam-apps, raspberrypi-utils, etc.
-  self.overlays.vendor-pkgs
+  nixos-raspberrypi.overlays.vendor-pkgs
 
   # 3rd-party optimised packages
   # ... with `-rpi` suffix
-  self.overlays.pkgs
+  nixos-raspberrypi.overlays.pkgs
   # ... in the global scope
-  self.overlays.pkgs-global
+  nixos-raspberrypi.overlays.pkgs-global
 ];
 ```
+
+#### Alternative ways to get individual packages
+
+An alternative ways to consume individual packages without overlays are:
+
+* to get it directly from the flake, it will based on stable `nixpkgs` _without_ any of other optimisations transitively applied (i.e. only this particular package is optimised):
+
+```nix
+  environment.systemPackages = [
+    nixos-raspberrypi.packages.aarch64-linux.vlc
+  ];
+```
+
+* to get it from `nixos-raspberrypi.legacyPackage.<system>` or `nixos-raspberrypi.legacyPackageUnstable.<system>`. Here all overlays are applied.
+
 
 ### Deploy
 
