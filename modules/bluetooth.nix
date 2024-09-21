@@ -1,13 +1,6 @@
-{ config, lib, pkgs, raspberry-pi-nix, ... }:
+{ config, lib, pkgs, ... }:
 
 {
-  imports = [
-    # generate config.txt with raspberry-pi-nix' generator
-    # config.txt is in `config.hardware.raspberry-pi.config-generated`
-    raspberry-pi-nix.nixosModules.config-txt.generator
-    raspberry-pi-nix.nixosModules.config-txt.default
-  ];
-
   environment.systemPackages = with pkgs; [
     bluez bluez-tools
   ];
