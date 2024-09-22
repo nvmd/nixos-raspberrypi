@@ -14,9 +14,6 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
-
-    # for `config.txt` generation
-    raspberry-pi-nix.url = "github:nvmd/raspberry-pi-nix";
   };
 
   outputs = { self, nixpkgs, nixpkgs-unstable, ... }@inputs: let

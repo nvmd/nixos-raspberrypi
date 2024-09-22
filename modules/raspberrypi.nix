@@ -1,13 +1,12 @@
-{ config, lib, pkgs, raspberry-pi-nix, ... }:
+{ config, lib, pkgs, ... }:
 
 {
   imports = [
     ./system/boot/loader/raspberrypi
     ./configtxt.nix
     ./udev.nix
-    # generate config.txt with raspberry-pi-nix' generator
     # config.txt is in `config.hardware.raspberry-pi.config-generated`
-    raspberry-pi-nix.nixosModules.config-txt.generator
+    ./configtxt-config.nix
   ];
 
   boot.loader.raspberryPi = {
