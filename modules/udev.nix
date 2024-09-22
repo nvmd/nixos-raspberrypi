@@ -21,7 +21,7 @@
 
 
     # https://github.com/RPi-Distro/raspberrypi-sys-mods/blob/bookworm/lib/udev/rules.d/60-backlight.rules
-    SUBSYSTEM=="backlight", ACTION=="add", RUN+="${chgrp} video $sys$devpath/brightness", RUN+="${chmod} g+w $sys$devpath/brightness"
+    # SUBSYSTEM=="backlight", ACTION=="add", RUN+="${chgrp} video $sys$devpath/brightness", RUN+="${chmod} g+w $sys$devpath/brightness"
 
 
     # https://github.com/RPi-Distro/raspberrypi-sys-mods/blob/bookworm/lib/udev/rules.d/60-dma-heap.rules
