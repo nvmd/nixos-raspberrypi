@@ -43,15 +43,6 @@
   ];
   hardware.enableRedistributableFirmware = true;
 
-  # suppress systemd-udevd's
-  # `...udev-rules/99-local.rules:33 Unknown group 'gpio', ignoring.` and
-  # `...udev-rules/99-local.rules:33 Unknown group 'spi', ignoring.` in logs
-  users.extraGroups = {
-    i2c = {};
-    spi = {};
-    gpio = {};
-  };
-
   environment.systemPackages = with pkgs; [
     raspberrypi-utils
   ];

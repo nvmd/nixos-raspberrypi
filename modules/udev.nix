@@ -1,6 +1,16 @@
 { config, lib, pkgs, ... }:
 
 {
+  # ensure these groups used by udev rules exist
+  users.extraGroups = {
+    gpio = {};
+    i2c = {};
+    input = {};
+    plugdev = {};
+    spi = {};
+    video = {};
+  };
+
   services.udev.extraRules = let
     sh = "${pkgs.bash}/bin/sh";  # /bin/sh
     grep = "${lib.getExe pkgs.gnugrep}"; # /bin/grep
