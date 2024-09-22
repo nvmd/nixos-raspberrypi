@@ -3,7 +3,7 @@
 {
   services.udev.extraRules = let
     sh = "${pkgs.bash}/bin/sh";  # /bin/sh
-    grep = "${lib.getExe pkgs.grep}"; # /bin/grep
+    grep = "${lib.getExe pkgs.gnugrep}"; # /bin/grep
     chgrp = "chgrp";  # /bin/chgrp
     chmod = "chmod";  # /bin/chmod
     test = "${pkgs.coreutils}/bin/test";  # /usr/bin/test
