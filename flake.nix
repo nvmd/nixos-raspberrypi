@@ -57,20 +57,23 @@
     } // inputs);
 
     nixosModules = {
+      bootloader = import ./modules/system/boot/loader/raspberrypi;
       default = import ./modules/raspberrypi.nix;
+
       raspberry-pi-5 = {
         base = import ./modules/raspberry-pi-5;
         display-vc4 = import ./modules/display-vc4.nix;
         display-rp1 = import ./modules/raspberry-pi-5/display-rp1.nix;
-      };
-      raspberry-pi-4 = {
-        base = import ./modules/raspberry-pi-4.nix;
-      };
-      bootloader = import ./modules/system/boot/loader/raspberrypi;
+        bluetooth = import ./modules/bluetooth.nix;
 
-      rpi5 = {
         sd-image = import ./modules/installer/sd-card/sd-image-raspberrypi5.nix;
         sd-image-installer = import ./modules/installer/sd-card/sd-image-raspberrypi5-installer.nix;
+      };
+
+      raspberry-pi-4 = {
+        base = import ./modules/raspberry-pi-4.nix;
+        display-vc4 = import ./modules/display-vc4.nix;
+        bluetooth = import ./modules/bluetooth.nix;
       };
     };
 
