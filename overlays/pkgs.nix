@@ -1,20 +1,17 @@
 self: super: { # final: prev:
 
-  # libcec-rpi = super.libcec.override {
-  #   withLibraspberrypi = true;
-  # };
-
-  kodi-rpi-gbm = self.kodi-rpi.override {
+  kodi-gbm = self.kodi.override {
     gbmSupport = true;
   };
-  kodi-rpi-wayland = self.kodi-rpi.override {
+
+  kodi-wayland = self.kodi.override {
     waylandSupport = true;
     # nixos defaults to "gl" for wayland, but libreelec uses "gles"
     # renderSystem = "gles";
   };
 
-  kodi-rpi = (super.kodi.overrideAttrs (old: {
-    pname = "kodi-rpi";
+  kodi = (super.kodi.overrideAttrs (old: {
+    pname = old.pname + "-rpi";
     buildInputs = old.buildInputs ++ [ self.dav1d ];
     cmakeFlags = let
       enableFeature = enable: feature:
@@ -35,28 +32,57 @@ self: super: { # final: prev:
       #-DAPP_RENDER_SYSTEM=
     ];
   })).override {
-    # needs to be set explicitly, won't be pulled from scope automagically
-    # inherit (self) ffmpeg;
-    ffmpeg = self.ffmpeg_6-rpi;
-    # libcec = self.libcec-rpi;
     vdpauSupport = false;
   };
 
 
-  ffmpeg_4-rpi = (super.callPackage ../pkgs/ffmpeg_4-rpi.nix {
-    ffmpeg = super.ffmpeg_4;
-  });
-  ffmpeg_5-rpi = (super.callPackage ../pkgs/ffmpeg_5-rpi.nix {
-    ffmpeg = super.ffmpeg_5;
-  });
-  ffmpeg_6-rpi = (super.callPackage ../pkgs/ffmpeg_6-rpi.nix {
-    ffmpeg = super.ffmpeg_6;
-  });
-  ffmpeg_7-rpi = (super.callPackage ../pkgs/ffmpeg_7-rpi.nix {
-    ffmpeg = super.ffmpeg_7;
-  });
+  ffmpeg_4 = (super.callPackage ../pkgs/ffmpeg_4-rpi.nix {
+    ffmpeg = super.ffmpeg;
+  }); # small
+  ffmpeg_4-headless = self.ffmpeg_4.override {
+    ffmpegVariant = "headless";
+  };
+  ffmpeg_4-full = self.ffmpeg_4.override {
+    ffmpegVariant = "full";
+  };
 
-  vlc-rpi = (super.vlc.overrideAttrs (old: {
+  ffmpeg_5 = (super.callPackage ../pkgs/ffmpeg_5-rpi.nix {
+    ffmpeg = super.ffmpeg;
+  }); # small
+  ffmpeg_5-headless = self.ffmpeg_5.override {
+    ffmpegVariant = "headless";
+  };
+  ffmpeg_5-full = self.ffmpeg_5.override {
+    ffmpegVariant = "full";
+  };
+
+  ffmpeg_6 = (super.callPackage ../pkgs/ffmpeg_6-rpi.nix {
+    ffmpeg = super.ffmpeg;
+  }); # small
+  ffmpeg_6-headless = self.ffmpeg_6.override {
+    ffmpegVariant = "headless";
+  };
+  ffmpeg_6-full = self.ffmpeg_6.override {
+    ffmpegVariant = "full";
+  };
+
+  ffmpeg_7 = (super.callPackage ../pkgs/ffmpeg_7-rpi.nix {
+    ffmpeg = super.ffmpeg;
+  }); # small
+  ffmpeg_7-headless = self.ffmpeg_7.override {
+    ffmpegVariant = "headless";
+  };
+  ffmpeg_7-full = self.ffmpeg_7.override {
+    ffmpegVariant = "full";
+  };
+
+  ffmpeg = self.ffmpeg_6;
+  ffmpeg-headless = self.ffmpeg_6-headless;
+  ffmpeg-full = self.ffmpeg_6-full;
+
+
+  vlc = super.vlc.overrideAttrs (old: {
+    pname = old.pname + "-rpi";
     version = "3.0.21-0+rpt1";
 
     # https://github.com/RPi-Distro/vlc/commits/bookworm-rpt/
@@ -66,14 +92,13 @@ self: super: { # final: prev:
       rev = "a9357f06c552c3983798c583bc40e55414088486";
       hash = "sha256-Di3uJ3gMlhrcY4jU8XE9U2oOVsbXi0V7ZG7C/XKRHeE=";
     };
-  })).override {
-    ffmpeg = self.ffmpeg_6-rpi;
-  };
+  });
 
-  SDL2-rpi = (super.SDL2.override {
+  SDL2 = (super.SDL2.override {
     # enough to have the effect of '--enable-video-kmsdrm' (on by default) ?
     drmSupport = true;
   }).overrideAttrs (old: {
+    pname = old.pname + "-rpi";
     configureFlags = old.configureFlags ++ [
       # these are off by default
       # https://github.com/libsdl-org/SDL/blob/SDL2/CMakeLists.txt#L417

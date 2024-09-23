@@ -15,7 +15,6 @@
           inherit (self) system config;
           overlays = [
             self.overlays.pkgs
-            self.overlays.pkgs-global
             self.overlays.vendor-pkgs
           ];
         };
@@ -36,7 +35,7 @@
   inject-raspberrypi-overlays-global = { lib, ... }: {
     nixpkgs.overlays = [
       # !!! causes _lots_ of rebuilds for graphical stuff via ffmpeg, SDL2
-      self.overlays.pkgs-global
+      self.overlays.pkgs
     ];
   };
 }
