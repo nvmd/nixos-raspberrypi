@@ -113,6 +113,7 @@
       libraspberrypi = pkgs.libraspberrypi;
 
       raspberrypi-utils = pkgs.raspberrypi-utils;
+      raspberrypi-udev-rules = (pkgs.callPackage ./pkgs/raspberrypi/udev-rules.nix {});
       rpicam-apps = pkgs.rpicam-apps;
 
       SDL2 = pkgs.SDL2-rpi;
