@@ -60,6 +60,8 @@ imports = with nixos-raspberrypi.nixosModules; [
 ];
 ```
 
+See `flake.nix`, `nixosModules` for a full of configuration modules for your hardware.
+
 ### Import overlays you want
 
 By default, modules use packages available in `pkgs`, i.e. they don't internally apply any of the overlays provided by this flake to avoid potential conflicts with what you may want to achieve in the future.
