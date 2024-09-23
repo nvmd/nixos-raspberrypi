@@ -102,6 +102,15 @@ An alternative ways to consume individual packages without overlays are:
 * to get it from `nixos-raspberrypi.legacyPackage.<system>` or `nixos-raspberrypi.legacyPackageUnstable.<system>`. Here all overlays are applied.
 
 
+### Configure
+
+Sane default configuration is provided by the base module for a corresponding Raspberry board, but further configuration is, of course, possible:
+
+Configuration options for the bootloader are in `boot.loader.raspberryPi` (defined in `modules/system/boot/loader/raspberrypi/default.nix`).
+
+Raspberry's `config.txt` can be configured with `hardware.raspberry-pi.config` options, see `modules/configtxt.nix` as an example (this is the default configuration as provided by RaspberryPi OS, but translated to nix format).
+
+
 ### Deploy
 
 for example, with `nixos-anywhere` to the system running installer image (will use [disko](https://github.com/nix-community/disko/) to set the disks up):
