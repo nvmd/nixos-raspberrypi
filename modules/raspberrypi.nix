@@ -46,19 +46,4 @@
   environment.systemPackages = with pkgs; [
     raspberrypi-utils
   ];
-
-  # RaspberryOS adds this "OutputClass" section by default for all RPis
-  #  https://forum.manjaro.org/t/switch-install-from-rpi4-to-rpi5/150632/56
-  # https://github.com/NixOS/nixos-hardware/blob/master/raspberry-pi/5/default.nix#L20
-  # Needed for Xorg to start (https://github.com/raspberrypi-ui/gldriver-test/blob/master/usr/lib/systemd/scripts/rp1_test.sh)
-  #  also as seen on: https://www.reddit.com/r/voidlinux/comments/19fdtyd/pi_5_and_kms_blank_screen_how_to_fix/
-  # This won't work for displays connected to the RP1 (DPI/composite/MIPI DSI), since I don't have one to test.
-  services.xserver.extraConfig = ''
-    Section "OutputClass"
-      Identifier "vc4"
-      MatchDriver "vc4"
-      Driver "modesetting"
-      Option "PrimaryGPU" "true"
-    EndSection
-  '';
 }

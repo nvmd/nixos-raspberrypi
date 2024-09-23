@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 
 {
-  imports = [ ./raspberrypi.nix ];
+  imports = [ ../raspberrypi.nix ];
 
   boot.loader.raspberryPi = {
     variant = "5";
