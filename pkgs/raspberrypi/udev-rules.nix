@@ -32,7 +32,11 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     rules_lib_src=lib/udev/rules.d
     declare -a rules_lib=(
       10-vc.rules
-      15-i2c-modprobe.rules
+
+      # disable until i know what to do with /usr/lib/raspberrypi-sys-mods/i2cprobe
+      # is it even still needed?
+      # 15-i2c-modprobe.rules
+
       60-backlight.rules
       60-dma-heap.rules
       60-gpiochip4.rules
