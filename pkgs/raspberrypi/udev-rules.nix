@@ -54,8 +54,8 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       substituteInPlace $i \
         --replace-quiet \"/bin/sh \"${bash}/bin/sh \
         --replace-quiet \"/bin/grep \"${lib.getExe gnugrep} \
-        --replace-quiet \"/bin/chgrp \"chgrp \
-        --replace-quiet \"/bin/chmod \"chmod \
+        --replace-quiet \"/bin/chgrp \"${coreutils}/bin/chgrp \
+        --replace-quiet \"/bin/chmod \"${coreutils}/bin/chmod \
         --replace-quiet /usr/bin/test ${coreutils}/bin/test
     done
   '';
