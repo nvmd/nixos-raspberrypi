@@ -45,10 +45,14 @@ nixConfig = {
 ### Import modules corresponding to your hardware
 
 ```nix
-imports = [
-  # choose one of the following board support modules
-  nixos-raspberrypi.nixosModules.raspberry-pi-4
-  nixos-raspberrypi.nixosModules.raspberry-pi-5
+imports = with nixos-raspberrypi.nixosModules; [
+  # choose one of the following base board support modules
+  raspberry-pi-4.base
+  raspberry-pi-5.base
+
+  # RPi5-specific, one of them for "PrimaryGPU" configuration:
+  raspberry-pi-5.display-vc4  # "regular" display connected
+  raspberry-pi-5.display-rp1  # for RP1-connected (DPI/composite/MIPI DSI) display
 ];
 ```
 
