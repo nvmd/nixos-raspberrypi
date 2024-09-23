@@ -1,10 +1,7 @@
 { config, lib, pkgs, ... }:
 
 {
-  imports = [
-    ./raspberrypi.nix
-    ./display-vc4.nix
-  ];
+  imports = [ ./raspberrypi.nix ];
 
   boot.loader.raspberryPi = {
     variant = "4";

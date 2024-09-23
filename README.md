@@ -50,6 +50,10 @@ imports = with nixos-raspberrypi.nixosModules; [
   raspberry-pi-4.base
   raspberry-pi-5.base
 
+  # RPi4:
+  # import this if you have the display, on rpi4 this is the only display configuration option
+  raspberry-pi-4.display-vc4
+
   # RPi5-specific, one of them for "PrimaryGPU" configuration:
   raspberry-pi-5.display-vc4  # "regular" display connected
   raspberry-pi-5.display-rp1  # for RP1-connected (DPI/composite/MIPI DSI) display
