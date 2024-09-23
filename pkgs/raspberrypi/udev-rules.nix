@@ -22,7 +22,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     mkdir -p $out/etc/udev/rules.d
     mkdir -p $out/lib/udev/rules.d
 
-    # Install only explicitly listed rules
+    # Note: Installing only explicitly listed rules
 
     rules_etc_src=etc.armhf/udev/rules.d
     declare -a rules_etc=(
@@ -42,7 +42,9 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       60-gpiochip4.rules
       60-pico.rules
       70-microbit.rules
-      80-noobs.rules
+
+      # doesn't seem to provide any value on nixos
+      # 80-noobs.rules
     )
 
     for i in "''${rules_lib[@]}"; do
