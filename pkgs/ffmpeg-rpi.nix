@@ -14,6 +14,8 @@ let
   extraVersion = "rpi";
 
 in (ffmpeg.overrideAttrs (old: {
+  pname = old.pname + "-rpi";
+
   doCheck = false;  # disabled because `imgutils` test fails
 
   # see also
@@ -40,8 +42,7 @@ in (ffmpeg.overrideAttrs (old: {
     libepoxy.dev
   ] ++ lib.optionals withV4l2Request [ udev systemd ];
 })).override {
-  version = version + "-rpi";
-  inherit source;
+  inherit version source;
   hash = source.hash;
 
 

@@ -11,19 +11,21 @@
     connect-timeout = 5;
   };
 
-  inputs = {
+  inputs = rec {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs-default = nixpkgs-unstable; # see legacyPackagesDefault below
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, ... }@inputs: let
+  outputs = { self
+            , nixpkgs, nixpkgs-unstable, nixpkgs-default
+            , ... }@inputs: let
     rpiSystems = [ "aarch64-linux" "armv7l-linux" "armv6l-linux" ];
     allSystems = nixpkgs.lib.systems.flakeExposed;
     forSystems = systems: f: nixpkgs.lib.genAttrs systems (system: f system);
     mkRpiPkgs = nixpkgs: system: import nixpkgs {
         inherit system; overlays = [
           self.overlays.pkgs
-          self.overlays.pkgs-global
 
           self.overlays.vendor-pkgs
 
@@ -80,7 +82,6 @@
     overlays = {
       bootloader = import ./overlays/bootloader.nix;
 
-      pkgs-global = import ./overlays/pkgs-global.nix;
       pkgs = import ./overlays/pkgs.nix;
       vendor-pkgs = import ./overlays/vendor-pkgs.nix;
 
@@ -95,30 +96,25 @@
     # all packages here depend on rpi's/optimized versions of the dependencies
     legacyPackages = mkLegacyPackagesFor nixpkgs;
     legacyPackagesUnstable = mkLegacyPackagesFor nixpkgs-unstable;
+    # variant chosen by the author as the "default":
+    # * used inside the modules, where a choice of "sane defaults" about the 
+    #   nixpkgs channel had to be made
+    # * binary cache is generated from this package set
+    legacyPackagesDefault = mkLegacyPackagesFor nixpkgs-default;
 
     packages = forSystems rpiSystems (system: let
-      pkgs = import nixpkgs {
-        inherit system; overlays = [
-          self.overlays.pkgs
-          self.overlays.vendor-pkgs
-
-          self.overlays.vendor-firmware
-          self.overlays.vendor-kernel
-
-          self.overlays.kernel-and-firmware
-        ];
-      };
+      pkgs = self.legacyPackagesDefault.${system};
     in {
-      ffmpeg_4 = pkgs.ffmpeg_4-rpi;
-      ffmpeg_5 = pkgs.ffmpeg_5-rpi;
-      ffmpeg_6 = pkgs.ffmpeg_6-rpi;
-      ffmpeg_7 = pkgs.ffmpeg_7-rpi;
+      ffmpeg_4 = pkgs.ffmpeg_4;
+      ffmpeg_5 = pkgs.ffmpeg_5;
+      ffmpeg_6 = pkgs.ffmpeg_6;
+      ffmpeg_7 = pkgs.ffmpeg_7;
 
-      kodi = pkgs.kodi-rpi;
-      kodi-gbm = pkgs.kodi-rpi-gbm;
-      kodi-wayland = pkgs.kodi-rpi-wayland;
+      kodi = pkgs.kodi;
+      kodi-gbm = pkgs.kodi-gbm;
+      kodi-wayland = pkgs.kodi-wayland;
 
-      libcamera = pkgs.libcamera-rpi;
+      libcamera = pkgs.libcamera;
       libpisp = pkgs.libpisp;
       libraspberrypi = pkgs.libraspberrypi;
 
@@ -126,9 +122,9 @@
       raspberrypi-udev-rules = (pkgs.callPackage ./pkgs/raspberrypi/udev-rules.nix {});
       rpicam-apps = pkgs.rpicam-apps;
 
-      SDL2 = pkgs.SDL2-rpi;
+      SDL2 = pkgs.SDL2;
 
-      vlc = pkgs.vlc-rpi;
+      vlc = pkgs.vlc;
 
       # see legacyPackages.<system>.linuxAndFirmware for other versions of 
       # the bundle

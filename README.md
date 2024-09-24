@@ -64,34 +64,25 @@ See `flake.nix`, `nixosModules` for a full of configuration modules for your har
 
 ### Import overlays you want
 
-By default, modules use packages available in `pkgs`, i.e. they don't internally apply any of the overlays provided by this flake to avoid potential conflicts with what you may want to achieve in the future.
+By default, modules use packages available in `pkgs`, i.e. they don't internally apply any of the overlays provided by this flake to avoid potential conflicts with what you may want to achieve.
 
-If you don't have any special needs, include `kernel-and-firmware` and `bootloader` overlays.
-Raspberry's packages and 3rd-party optimized packages are available in separate overlays.
-
+If you don't have any special needs, you may import helper modules to apply overlays for you
 ```nix
-nixpkgs.overlays = [
-  # Minimal set:
+imports = [
+  # Required: Bootloaders, linux kernel, firmware, raspberry's utils
+  # additionally, `nixpkgs.rpi` with _all_ overlays applied (see below)
+  nixos-raspberrypi.lib.inject-overlays
 
-  # Raspberry's firmware and kernel combined in a compatible bundles, 
-  # will also bring latest versions of the kernel and firmware into the global scope
-  nixos-raspberrypi.overlays.kernel-and-firmware
-  # u-boot, uefi
-  nixos-raspberrypi.overlays.bootloader
-
-
-  # Packages:
-
-  # Raspberry's utils and support packages: rpicam-apps, raspberrypi-utils, etc.
-  nixos-raspberrypi.overlays.vendor-pkgs
-
-  # 3rd-party optimised packages
-  # ... with `-rpi` suffix
-  nixos-raspberrypi.overlays.pkgs
-  # ... in the global scope
-  nixos-raspberrypi.overlays.pkgs-global
+  # Optional: Applies overlays with optimized packages to the global scope, 
+  # including ffmpeg_{4,6,7}, kodi, libcamera, SDL2, vlc
+  # Use with caution – this may cause lots of rebuilds (even though many 
+  #  packages should be available in a binary cache above)
+  nixos-raspberrypi.lib.inject-overlays-global
 ];
 ```
+
+For more fine-grained control and full overlay list see `overlays` in `flake.nix`, and overlay helpers (mentined above) in `lib`.
+
 
 #### Alternative ways to get individual packages
 

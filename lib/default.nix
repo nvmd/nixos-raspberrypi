@@ -8,35 +8,26 @@
     };
   });
 
-  inject-raspberrypi-overlays = rpi-nixpkgs-base: { lib, ... }: {
-    nixpkgs.overlays = lib.mkBefore [
-      (self: super: { # final: prev:
-        rpi = import rpi-nixpkgs-base {
-          inherit (self) system config;
-          overlays = [
-            self.overlays.pkgs
-            self.overlays.pkgs-global
-            self.overlays.vendor-pkgs
-          ];
-        };
+  inject-overlays = { config, lib, ... }: {
+    nixpkgs.overlays = [
+      (final: prev: {
+        rpi = self.legacyPackagesDefault.${config.nixpkgs.system};
       })
 
       self.overlays.bootloader
 
-      self.overlays.pkgs
-      self.overlays.vendor-pkgs
-
       self.overlays.vendor-kernel
       self.overlays.vendor-firmware
       # self.overlays.vendor-kernel-nixpkgs
-
       self.overlays.kernel-and-firmware
+
+      self.overlays.vendor-pkgs
     ];
   };
-  inject-raspberrypi-overlays-global = { lib, ... }: {
-    nixpkgs.overlays = [
-      # !!! causes _lots_ of rebuilds for graphical stuff via ffmpeg, SDL2
-      self.overlays.pkgs-global
+  inject-overlays-global = { lib, ... }: {
+    nixpkgs.overlays = lib.mkBefore [
+      # !!! causes _lots_ of rebuilds for graphical stuff via ffmpeg, SDL2, pipewire
+      self.overlays.pkgs
     ];
   };
 }
