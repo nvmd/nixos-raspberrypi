@@ -75,6 +75,7 @@
       raspberry-pi-4 = {
         base = import ./modules/raspberry-pi-4.nix;
         display-vc4 = import ./modules/display-vc4.nix;
+        case-argonone = import ./modules/case-argononev2.nix;
         bluetooth = import ./modules/bluetooth.nix;
       };
     };

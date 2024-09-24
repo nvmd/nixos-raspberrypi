@@ -53,6 +53,8 @@ imports = with nixos-raspberrypi.nixosModules; [
   # RPi4:
   # import this if you have the display, on rpi4 this is the only display configuration option
   raspberry-pi-4.display-vc4
+  # Fan control for ArgonOne V2 case
+  raspberry-pi-4.case-argonone
 
   # RPi5-specific, one of them for "PrimaryGPU" configuration:
   raspberry-pi-5.display-vc4  # "regular" display connected
