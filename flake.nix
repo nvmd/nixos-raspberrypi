@@ -95,7 +95,7 @@
     legacyPackagesUnstable = mkLegacyPackagesFor nixpkgs-unstable;
 
     packages = forSystems rpiSystems (system: let
-      pkgs = mkRpiPkgs nixpkgs system;
+      pkgs = mkRpiPkgs nixpkgs-unstable system;
     in {
       ffmpeg_4 = pkgs.ffmpeg_4;
       ffmpeg_5 = pkgs.ffmpeg_5;
