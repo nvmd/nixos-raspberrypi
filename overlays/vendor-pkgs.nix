@@ -1,46 +1,5 @@
 self: super: { # final: prev:
 
-  libcamera = self.libcamera_rpi;
-
-  libcamera_rpi = super.libcamera.overrideAttrs (old: rec {
-    pname = old.pname + "-rpi";
-    version = "0.3.1+rpt20240906";
-
-    src = super.fetchFromGitHub {
-      owner = "raspberrypi";
-      repo = "libcamera";
-      rev = "v${version}";
-      hash = "sha256-KH30jmHfxXq4j2CL7kv18DYECJRp9ECuWNPnqPZajPA=";
-    };
-
-    # not needed for nixpkgs-unstable
-    postPatch = ''
-      ${old.postPatch}
-      patchShebangs src/py/
-    '';
-
-    buildInputs = old.buildInputs ++ (with self; [
-      libpisp
-      python3Packages.pybind11  # not needed for nixpkgs-unstable
-    ]);
-
-    mesonFlags = old.mesonFlags ++ [
-      # add flags that raspberry suggests, but nixpkgs doesn't include
-      "--buildtype=release"
-      "-Dpipelines=rpi/vc4,rpi/pisp"
-      "-Dipas=rpi/vc4,rpi/pisp"
-      "-Dgstreamer=enabled"
-      "-Dtest=false"
-      "-Dcam=disabled"
-      "-Dpycamera=enabled"
-    ];
-
-    meta = old.meta // {
-      homepage = "https://github.com/raspberrypi/libcamera";
-      changelog = "https://github.com/raspberrypi/libcamera/releases";
-    };
-  });
-
   libpisp = self.callPackage ../pkgs/raspberrypi/libpisp.nix {};
 
   libraspberrypi = super.callPackage ../pkgs/raspberrypi/libraspberrypi.nix {};
