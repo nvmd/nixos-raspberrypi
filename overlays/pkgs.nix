@@ -1,14 +1,49 @@
 self: super: { # final: prev:
 
-  kodi-gbm = self.kodi.override {
-    gbmSupport = true;
+  ffmpeg = self.ffmpeg_6;
+  ffmpeg-headless = self.ffmpeg_6-headless;
+  ffmpeg-full = self.ffmpeg_6-full;
+
+  ffmpeg_4 = (super.callPackage ../pkgs/ffmpeg_4-rpi.nix {
+    ffmpeg = super.ffmpeg;
+  }); # small
+  ffmpeg_4-headless = self.ffmpeg_4.override {
+    ffmpegVariant = "headless";
+  };
+  ffmpeg_4-full = self.ffmpeg_4.override {
+    ffmpegVariant = "full";
   };
 
-  kodi-wayland = self.kodi.override {
-    waylandSupport = true;
-    # nixos defaults to "gl" for wayland, but libreelec uses "gles"
-    # renderSystem = "gles";
+  ffmpeg_5 = (super.callPackage ../pkgs/ffmpeg_5-rpi.nix {
+    ffmpeg = super.ffmpeg;
+  }); # small
+  ffmpeg_5-headless = self.ffmpeg_5.override {
+    ffmpegVariant = "headless";
   };
+  ffmpeg_5-full = self.ffmpeg_5.override {
+    ffmpegVariant = "full";
+  };
+
+  ffmpeg_6 = (super.callPackage ../pkgs/ffmpeg_6-rpi.nix {
+    ffmpeg = super.ffmpeg;
+  }); # small
+  ffmpeg_6-headless = self.ffmpeg_6.override {
+    ffmpegVariant = "headless";
+  };
+  ffmpeg_6-full = self.ffmpeg_6.override {
+    ffmpegVariant = "full";
+  };
+
+  ffmpeg_7 = (super.callPackage ../pkgs/ffmpeg_7-rpi.nix {
+    ffmpeg = super.ffmpeg;
+  }); # small
+  ffmpeg_7-headless = self.ffmpeg_7.override {
+    ffmpegVariant = "headless";
+  };
+  ffmpeg_7-full = self.ffmpeg_7.override {
+    ffmpegVariant = "full";
+  };
+
 
   kodi = (super.kodi.overrideAttrs (old: {
     pname = old.pname + "-rpi";
@@ -34,6 +69,17 @@ self: super: { # final: prev:
   })).override {
     vdpauSupport = false;
   };
+
+  kodi-gbm = self.kodi.override {
+    gbmSupport = true;
+  };
+
+  kodi-wayland = self.kodi.override {
+    waylandSupport = true;
+    # nixos defaults to "gl" for wayland, but libreelec uses "gles"
+    # renderSystem = "gles";
+  };
+
 
   libcamera = self.libcamera_rpi;
 
@@ -76,63 +122,6 @@ self: super: { # final: prev:
     };
   });
 
-  ffmpeg_4 = (super.callPackage ../pkgs/ffmpeg_4-rpi.nix {
-    ffmpeg = super.ffmpeg;
-  }); # small
-  ffmpeg_4-headless = self.ffmpeg_4.override {
-    ffmpegVariant = "headless";
-  };
-  ffmpeg_4-full = self.ffmpeg_4.override {
-    ffmpegVariant = "full";
-  };
-
-  ffmpeg_5 = (super.callPackage ../pkgs/ffmpeg_5-rpi.nix {
-    ffmpeg = super.ffmpeg;
-  }); # small
-  ffmpeg_5-headless = self.ffmpeg_5.override {
-    ffmpegVariant = "headless";
-  };
-  ffmpeg_5-full = self.ffmpeg_5.override {
-    ffmpegVariant = "full";
-  };
-
-  ffmpeg_6 = (super.callPackage ../pkgs/ffmpeg_6-rpi.nix {
-    ffmpeg = super.ffmpeg;
-  }); # small
-  ffmpeg_6-headless = self.ffmpeg_6.override {
-    ffmpegVariant = "headless";
-  };
-  ffmpeg_6-full = self.ffmpeg_6.override {
-    ffmpegVariant = "full";
-  };
-
-  ffmpeg_7 = (super.callPackage ../pkgs/ffmpeg_7-rpi.nix {
-    ffmpeg = super.ffmpeg;
-  }); # small
-  ffmpeg_7-headless = self.ffmpeg_7.override {
-    ffmpegVariant = "headless";
-  };
-  ffmpeg_7-full = self.ffmpeg_7.override {
-    ffmpegVariant = "full";
-  };
-
-  ffmpeg = self.ffmpeg_6;
-  ffmpeg-headless = self.ffmpeg_6-headless;
-  ffmpeg-full = self.ffmpeg_6-full;
-
-
-  vlc = super.vlc.overrideAttrs (old: {
-    pname = old.pname + "-rpi";
-    version = "3.0.21-0+rpt1";
-
-    # https://github.com/RPi-Distro/vlc/commits/bookworm-rpt/
-    src = super.fetchFromGitHub {
-      owner = "RPi-Distro";
-      repo = "vlc";
-      rev = "a9357f06c552c3983798c583bc40e55414088486";
-      hash = "sha256-Di3uJ3gMlhrcY4jU8XE9U2oOVsbXi0V7ZG7C/XKRHeE=";
-    };
-  });
 
   SDL2 = (super.SDL2.override {
     # enough to have the effect of '--enable-video-kmsdrm' (on by default) ?
@@ -145,6 +134,19 @@ self: super: { # final: prev:
       "--enable-arm-simd"
       "--enable-arm-neon"
     ];
+  });
+
+  vlc = super.vlc.overrideAttrs (old: {
+    pname = old.pname + "-rpi";
+    version = "3.0.21-0+rpt1";
+
+    # https://github.com/RPi-Distro/vlc/commits/bookworm-rpt/
+    src = super.fetchFromGitHub {
+      owner = "RPi-Distro";
+      repo = "vlc";
+      rev = "a9357f06c552c3983798c583bc40e55414088486";
+      hash = "sha256-Di3uJ3gMlhrcY4jU8XE9U2oOVsbXi0V7ZG7C/XKRHeE=";
+    };
   });
 
 }
