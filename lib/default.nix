@@ -11,7 +11,7 @@
   inject-overlays = { config, lib, ... }: {
     nixpkgs.overlays = [
       (final: prev: {
-        rpi = self.legacyPackagesUnstable.${config.nixpkgs.system};
+        rpi = self.legacyPackagesDefault.${config.nixpkgs.system};
       })
 
       self.overlays.bootloader

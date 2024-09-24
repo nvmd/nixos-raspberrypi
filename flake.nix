@@ -11,12 +11,15 @@
     connect-timeout = 5;
   };
 
-  inputs = {
+  inputs = rec {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs-default = nixpkgs-unstable; # see legacyPackagesDefault below
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, ... }@inputs: let
+  outputs = { self
+            , nixpkgs, nixpkgs-unstable, nixpkgs-default
+            , ... }@inputs: let
     rpiSystems = [ "aarch64-linux" "armv7l-linux" "armv6l-linux" ];
     allSystems = nixpkgs.lib.systems.flakeExposed;
     forSystems = systems: f: nixpkgs.lib.genAttrs systems (system: f system);
@@ -93,9 +96,14 @@
     # all packages here depend on rpi's/optimized versions of the dependencies
     legacyPackages = mkLegacyPackagesFor nixpkgs;
     legacyPackagesUnstable = mkLegacyPackagesFor nixpkgs-unstable;
+    # variant chosen by the author as the "default":
+    # * used inside the modules, where a choice of "sane defaults" about the 
+    #   nixpkgs channel had to be made
+    # * binary cache is generated from this package set
+    legacyPackagesDefault = mkLegacyPackagesFor nixpkgs-default;
 
     packages = forSystems rpiSystems (system: let
-      pkgs = mkRpiPkgs nixpkgs-unstable system;
+      pkgs = self.legacyPackagesDefault.${system};
     in {
       ffmpeg_4 = pkgs.ffmpeg_4;
       ffmpeg_5 = pkgs.ffmpeg_5;
