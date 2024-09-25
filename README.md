@@ -1,7 +1,8 @@
 # nixos-raspberrypi
 
-This Nix Flake will let you deploy [NixOS](https://nixos.org/) to Raspberry Pi
-devices fully declaratively in one step with tools like [nixos-anywhere](https://github.com/nix-community/nixos-anywhere/).
+Unopinionated Nix flake for infrastructure, vendor packages, kernel, and some optimized third-party packages for [NixOS](https://nixos.org/) running on Raspberry Pi devices.
+
+It will let you deploy [NixOS](https://nixos.org/) fully declaratively in one step with tools like [nixos-anywhere](https://github.com/nix-community/nixos-anywhere/).
 
 ## What does it do
 
