@@ -37,7 +37,7 @@
   # until there's better fix for "modprobe: FATAL: Module tpm-crb not found":
   # https://github.com/NixOS/nixpkgs/issues/344963
   # https://github.com/NixOS/nixos-hardware/issues/858
-  boot.initrd.systemd.enableTpm2 = false;
+  boot.initrd.systemd.tpm2.enable = false;
 
   # https://github.com/NixOS/nixos-hardware/issues/631#issuecomment-1584100732
   boot.initrd.availableKernelModules = [
