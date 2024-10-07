@@ -11,15 +11,11 @@
     connect-timeout = 5;
   };
 
-  inputs = rec {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
-    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nixpkgs-default = nixpkgs-unstable; # see legacyPackagesDefault below
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
 
-  outputs = { self
-            , nixpkgs, nixpkgs-unstable, nixpkgs-default
-            , ... }@inputs: let
+  outputs = { self, nixpkgs, ... }@inputs: let
     rpiSystems = [ "aarch64-linux" "armv7l-linux" "armv6l-linux" ];
     allSystems = nixpkgs.lib.systems.flakeExposed;
     forSystems = systems: f: nixpkgs.lib.genAttrs systems (system: f system);
@@ -39,7 +35,7 @@
   in {
 
     devShells = forSystems allSystems (system: let
-      pkgs = nixpkgs-unstable.legacyPackages.${system};
+      pkgs = nixpkgs.legacyPackages.${system};
     in {
       default = pkgs.mkShell {
         name = "nixos-raspberrypi";
@@ -95,16 +91,13 @@
 
     # "RPi world": nixpkgs with all overlays applied "globally", i.e.
     # all packages here depend on rpi's/optimized versions of the dependencies
-    legacyPackages = mkLegacyPackagesFor nixpkgs;
-    legacyPackagesUnstable = mkLegacyPackagesFor nixpkgs-unstable;
-    # variant chosen by the author as the "default":
     # * used inside the modules, where a choice of "sane defaults" about the 
     #   nixpkgs channel had to be made
     # * binary cache is generated from this package set
-    legacyPackagesDefault = mkLegacyPackagesFor nixpkgs-default;
+    legacyPackages = mkLegacyPackagesFor nixpkgs;
 
     packages = forSystems rpiSystems (system: let
-      pkgs = self.legacyPackagesDefault.${system};
+      pkgs = self.legacyPackages.${system};
     in {
       ffmpeg_4 = pkgs.ffmpeg_4;
       ffmpeg_5 = pkgs.ffmpeg_5;
