@@ -25,14 +25,13 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "rpicam-apps";
-  version = "1.5.1";
+  version = "1.5.2";
 
-  # https://github.com/raspberrypi/rpicam-apps/tree/v1.5.1
   src = fetchFromGitHub {
     owner = "raspberrypi";
     repo = "rpicam-apps";
     rev = "v${finalAttrs.version}";
-    hash = "sha256-rl5GVigiZWXkpfIteRWUMjtCaPweXRWrBrZOjQ1hiU8=";
+    hash = "sha256-qCYGrcibOeGztxf+sd44lD6VAOGoUNwRqZDdAmcTa/U=";
   };
 
   nativeBuildInputs = [
@@ -64,7 +63,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   meta = with lib; {
     description = "A small suite of libcamera-based applications to drive the cameras on a Raspberry Pi platform.";
-    homepage = "https://github.com/raspberrypi/libcamera-apps";
+    homepage = "https://github.com/raspberrypi/rpicam-apps";
     license = licenses.bsd2;
     platforms = [ "aarch64-linux" ];
   };
