@@ -52,6 +52,24 @@ let
       hash = srcHash;
     };
   };
+  linux_v6_6_51_argsOverride = super: linux_argsOverride {
+    # https://github.com/raspberrypi/linux/releases/tag/stable_20240529
+    modDirVersion = "6.6.51";
+    tag = "stable_20241008";
+    srcHash = "sha256-phCxkuO+jUGZkfzSrBq6yErQeO2Td+inIGHxctXbD5U=";
+    structuredExtraConfig = with super.lib.kernel; {
+      # Workaround https://github.com/raspberrypi/linux/issues/6198
+      # Needed because NixOS 24.05+ sets DRM_SIMPLEDRM=y which pulls in
+      # DRM_KMS_HELPER=y.
+      # BACKLIGHT_CLASS_DEVICE = yes;
+    };
+    kernelPatches = builtins.map (p: p super) [
+      # Fix compilation errors due to incomplete patch backport.
+      # https://github.com/raspberrypi/linux/pull/6223
+      # gpio-pwm_-_pwm_apply_might_sleep
+      # ir-rx51_-_pwm_apply_might_sleep
+    ];
+  } super;
   linux_v6_6_31_argsOverride = super: linux_argsOverride {
     # https://github.com/raspberrypi/linux/releases/tag/stable_20240529
     modDirVersion = "6.6.31";
@@ -109,6 +127,23 @@ in self: super: { # final: prev:
   # };
 
   # as in https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/linux-kernels.nix#L91
+
+  linux_rpi4_v6_6_51 = super.callPackage ../pkgs/linux-rpi.nix {
+    argsOverride = linux_v6_6_51_argsOverride super;
+    kernelPatches = with super.kernelPatches; [
+      bridge_stp_helper
+      request_key_helper
+    ];
+    rpiVersion = 4;
+  };
+  linux_rpi5_v6_6_51 = super.callPackage ../pkgs/linux-rpi.nix {
+    argsOverride = linux_v6_6_51_argsOverride super;
+    kernelPatches = with super.kernelPatches; [
+      bridge_stp_helper
+      request_key_helper
+    ];
+    rpiVersion = 5;
+  };
 
   linux_rpi4_v6_6_31 = super.callPackage ../pkgs/linux-rpi.nix {
     argsOverride = linux_v6_6_31_argsOverride super;

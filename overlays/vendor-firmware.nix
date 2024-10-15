@@ -4,6 +4,17 @@ self: super: { # final: prev:
   # pkgs/os-specific/linux/firmware/raspberrypi/default.nix
   # https://github.com/raspberrypi/firmware/commits/stable/
 
+  raspberrypifw_20241008 = super.raspberrypifw.overrideAttrs (old: rec {
+    # https://github.com/raspberrypi/firmware/releases/tag/1.20241008
+    version = "1.20241008";
+    src = super.fetchFromGitHub {
+      owner = "raspberrypi";
+      repo = "firmware";
+      rev = "${version}";
+      hash = "sha256-4gnK0KbqFnjBmWia9Jt2gveVWftmHrprpwBqYVqE/k0=";
+    };
+  });
+
   raspberrypifw_20240529 = super.raspberrypifw.overrideAttrs (old: rec {
     # https://github.com/raspberrypi/firmware/releases/tag/1.20240529
     version = "1.20240529";
