@@ -6,7 +6,7 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "libraspberrypi";
-  version = "unstable-2023-10-23";
+  version = "unstable-2023-10-20";
 
   src = fetchFromGitHub {
     owner = "raspberrypi";
