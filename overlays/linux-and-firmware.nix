@@ -21,7 +21,7 @@ in self: super: {
 
   linuxAndFirmware = super.lib.mergeAttrsList [
 
-    { latest = self.linuxAndFirmware.v6_6_31; }
+    { latest = self.linuxAndFirmware.v6_6_51; }
 
     (mkBundle self "v6_6_51" {
       fw = self.raspberrypifw_20241008;
