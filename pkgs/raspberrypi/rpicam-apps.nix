@@ -47,6 +47,7 @@ stdenv.mkDerivation (finalAttrs: {
     ++ lib.optionals withOpenCVPostProc [ opencv ];
 
   mesonFlags = [
+    # https://github.com/raspberrypi/rpicam-apps/blob/main/meson_options.txt
     # preview
     (lib.mesonEnable "enable_drm" withDrmPreview)
     (lib.mesonEnable "enable_egl" withEglPreview)
@@ -54,6 +55,12 @@ stdenv.mkDerivation (finalAttrs: {
     # postprocessing
     (lib.mesonEnable "enable_opencv" withOpenCVPostProc)
     "-Denable_hailo=disabled" #default=enabled, hailort (HailoRT)
+    # explicitly disable, fails with:
+    # FAILED: post_processing_stages/imx500/imx500-models
+    # /bin/sh: /build/source/utils/download-imx500-models.sh: not found
+    # Shouldn't it have been implicitly disabled
+    # because wrap_mode=nodownload?
+    "-Ddownload_imx500_models=false" #default=true
   ];
 
   # Meson is no longer able to pick up Boost automatically.
