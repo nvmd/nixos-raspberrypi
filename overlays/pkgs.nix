@@ -85,13 +85,13 @@ self: super: { # final: prev:
 
   libcamera_rpi = super.libcamera.overrideAttrs (old: rec {
     pname = old.pname + "-rpi";
-    version = "0.3.1+rpt20240906";
+    version = "0.3.2+rpt20240927";
 
     src = super.fetchFromGitHub {
       owner = "raspberrypi";
       repo = "libcamera";
       rev = "v${version}";
-      hash = "sha256-KH30jmHfxXq4j2CL7kv18DYECJRp9ECuWNPnqPZajPA=";
+      hash = "sha256-TNNIOtitwFBlQx/2bcU7EeWvrMQAzEg/dS1skPJ8FMM=";
     };
 
     # not needed for nixpkgs-unstable
@@ -118,7 +118,7 @@ self: super: { # final: prev:
 
     meta = old.meta // {
       homepage = "https://github.com/raspberrypi/libcamera";
-      changelog = "https://github.com/raspberrypi/libcamera/releases";
+      changelog = "https://github.com/raspberrypi/libcamera/releases/tag/v${version}";
     };
   });
 
