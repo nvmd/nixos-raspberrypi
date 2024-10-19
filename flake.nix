@@ -14,7 +14,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     argononed = {
-      url = "git+https://gitlab.com/DarkElvenAngel/argononed.git?tag=0.4.x";
+      url = "git+https://gitlab.com/DarkElvenAngel/argononed.git";
       flake = false;
     };
   };
@@ -130,6 +130,8 @@
         linux_rpi5 linux_rpi4
         linuxPackages_rpi5 linuxPackages_rpi4
         raspberrypifw raspberrypiWirelessFirmware;
+
+      argonone = pkgs.callPackage "${inputs.argononed}/OS/nixos/pkg.nix" {};
 
     });
 

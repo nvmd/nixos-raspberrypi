@@ -9,11 +9,11 @@
         "rev": "ed8f37f567c31645c5ca147f9a2ed9361abe5508",
         "revCount": 236,
         "type": "git",
-        "url": "https://gitlab.com/DarkElvenAngel/argononed.git?tag=0.4.x"
+        "url": "https://gitlab.com/DarkElvenAngel/argononed.git"
       },
       "original": {
         "type": "git",
-        "url": "https://gitlab.com/DarkElvenAngel/argononed.git?tag=0.4.x"
+        "url": "https://gitlab.com/DarkElvenAngel/argononed.git"
       }
     },
     "nixpkgs": {
