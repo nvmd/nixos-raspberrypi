@@ -13,9 +13,13 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    argononed = {
+      url = "git+https://gitlab.com/DarkElvenAngel/argononed.git?tag=0.4.x";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, ... }@inputs: let
+  outputs = { self, nixpkgs, argononed, ... }@inputs: let
     rpiSystems = [ "aarch64-linux" "armv7l-linux" "armv6l-linux" ];
     allSystems = nixpkgs.lib.systems.flakeExposed;
     forSystems = systems: f: nixpkgs.lib.genAttrs systems (system: f system);
@@ -71,7 +75,7 @@
       raspberry-pi-4 = {
         base = import ./modules/raspberry-pi-4.nix;
         display-vc4 = import ./modules/display-vc4.nix;
-        case-argonone = import ./modules/case-argononev2.nix;
+        case-argonone = import ./modules/case-argononev2.nix { inherit argononed; };
         bluetooth = import ./modules/bluetooth.nix;
       };
     };

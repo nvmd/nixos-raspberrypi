@@ -1,3 +1,4 @@
+{ argononed }:
 { config, pkgs, lib, ... }:
 
 {
@@ -7,13 +8,7 @@
   # and the package is even more outdated (Apr 2022, with version from March 2022)
   # https://github.com/NixOS/nixpkgs/blob/nixos-22.11/pkgs/misc/drivers/argononed/default.nix
 
-  imports = let
-    argononed = fetchGit {
-      # this is v0.4 (v0.5 doesn't support nixos)
-      url = "https://gitlab.com/DarkElvenAngel/argononed.git";
-      rev = "75b4ba7e80c12a29948721982b27c70f007f5ef4";
-    };
-  in [
+  imports = [
     "${argononed}/OS/nixos"
   ];
 

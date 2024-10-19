@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "argononed": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1713979801,
+        "narHash": "sha256-ND9KdhJe5llJf8y/TctPYl2ZejH0CwhLzY0nCG8cdSA=",
+        "ref": "refs/heads/master",
+        "rev": "ed8f37f567c31645c5ca147f9a2ed9361abe5508",
+        "revCount": 236,
+        "type": "git",
+        "url": "https://gitlab.com/DarkElvenAngel/argononed.git?tag=0.4.x"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://gitlab.com/DarkElvenAngel/argononed.git?tag=0.4.x"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1728888510,
@@ -18,6 +34,7 @@
     },
     "root": {
       "inputs": {
+        "argononed": "argononed",
         "nixpkgs": "nixpkgs"
       }
     }
