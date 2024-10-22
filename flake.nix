@@ -132,7 +132,7 @@
         linuxPackages_rpi5 linuxPackages_rpi4
         raspberrypifw raspberrypiWirelessFirmware;
 
-      argonone = pkgs.callPackage "${inputs.argononed}/OS/nixos/pkg.nix" {};
+      argononed = pkgs.callPackage "${inputs.argononed}/OS/nixos/pkg.nix" {};
 
     });
 
