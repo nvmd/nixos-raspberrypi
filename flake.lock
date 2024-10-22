@@ -3,17 +3,17 @@
     "argononed": {
       "flake": false,
       "locked": {
-        "lastModified": 1713979801,
-        "narHash": "sha256-ND9KdhJe5llJf8y/TctPYl2ZejH0CwhLzY0nCG8cdSA=",
-        "ref": "refs/heads/master",
-        "rev": "ed8f37f567c31645c5ca147f9a2ed9361abe5508",
-        "revCount": 236,
-        "type": "git",
-        "url": "https://gitlab.com/DarkElvenAngel/argononed.git"
+        "lastModified": 1729561473,
+        "narHash": "sha256-rc/uUUoCUEWE8bgHtW0y0MiwpWsQffdjiqi1cVQotAE=",
+        "owner": "nvmd",
+        "repo": "argononed",
+        "rev": "37f4093f065bd84b581144b27f0aff1800589599",
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "https://gitlab.com/DarkElvenAngel/argononed.git"
+        "owner": "nvmd",
+        "repo": "argononed",
+        "type": "github"
       }
     },
     "nixpkgs": {

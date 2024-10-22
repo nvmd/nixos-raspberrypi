@@ -14,7 +14,8 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     argononed = {
-      url = "git+https://gitlab.com/DarkElvenAngel/argononed.git";
+      # url = "git+https://gitlab.com/DarkElvenAngel/argononed.git";
+      url = "github:nvmd/argononed";
       flake = false;
     };
   };
