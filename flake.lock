@@ -3,11 +3,11 @@
     "argononed": {
       "flake": false,
       "locked": {
-        "lastModified": 1729561473,
-        "narHash": "sha256-rc/uUUoCUEWE8bgHtW0y0MiwpWsQffdjiqi1cVQotAE=",
+        "lastModified": 1729566243,
+        "narHash": "sha256-DPNI0Dpk5aym3Baf5UbEe5GENDrSmmXVdriRSWE+rgk=",
         "owner": "nvmd",
         "repo": "argononed",
-        "rev": "37f4093f065bd84b581144b27f0aff1800589599",
+        "rev": "16dbee54d49b66d5654d228d1061246b440ef7cf",
         "type": "github"
       },
       "original": {
