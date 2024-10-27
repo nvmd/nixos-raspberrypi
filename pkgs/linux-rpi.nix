@@ -1,4 +1,4 @@
-{ stdenv, lib, buildPackages, fetchFromGitHub, fetchpatch, perl, buildLinux, rpiVersion, ... } @ args:
+{ stdenv, lib, buildPackages, fetchFromGitHub, fetchpatch, perl, buildLinux, rpiModel, ... } @ args:
 
 let
   # NOTE: raspberrypifw & raspberryPiWirelessFirmware should be updated with this
@@ -8,7 +8,7 @@ in
 lib.overrideDerivation (buildLinux (args // {
   version = "${modDirVersion}-${tag}";
   inherit modDirVersion;
-  pname = "linux_rpi${toString rpiVersion}";
+  pname = "linux_rpi${rpiModel}";
 
   src = fetchFromGitHub {
     owner = "raspberrypi";
@@ -18,12 +18,23 @@ lib.overrideDerivation (buildLinux (args // {
   };
 
   defconfig = {
-    "1" = "bcmrpi_defconfig";
-    "2" = "bcm2709_defconfig";
-    "3" = if stdenv.hostPlatform.isAarch64 then "bcmrpi3_defconfig" else "bcm2709_defconfig";
-    "4" = "bcm2711_defconfig";
-    "5" = "bcm2712_defconfig";
-  }.${toString rpiVersion};
+    armv6l-linux = {
+      "0" = "bcmrpi_defconfig";
+      "1" = "bcmrpi_defconfig";
+    };
+    armv7l-linux = {
+      "02" = "bcm2709_defconfig";
+      "2" = "bcm2709_defconfig";
+      "3" = "bcm2709_defconfig";
+      "4" = "bcm2711_defconfig";
+    };
+    aarch64-linux = {
+      "02" = "bcm2711_defconfig";
+      "3" = "bcm2711_defconfig";
+      "4" = "bcm2711_defconfig";
+      "5" = "bcm2712_defconfig";
+    };
+  }.${stdenv.hostPlatform.system}.${rpiModel};
 
   features = {
     efiBootStub = false;
@@ -31,8 +42,7 @@ lib.overrideDerivation (buildLinux (args // {
 
   kernelPatches = (args.kernelPatches or []) ++ [
   ];
-
-  extraMeta = if (rpiVersion < 3) then {
+  extraMeta = if (lib.elem rpiModel [ "0" "1" "2" ]) then {
     platforms = with lib.platforms; arm;
     hydraPlatforms = [];
   } else {

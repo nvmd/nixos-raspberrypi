@@ -134,7 +134,7 @@ in self: super: { # final: prev:
       bridge_stp_helper
       request_key_helper
     ];
-    rpiVersion = 4;
+    rpiModel = "4";
   };
   linux_rpi5_v6_6_51 = super.callPackage ../pkgs/linux-rpi.nix {
     argsOverride = linux_v6_6_51_argsOverride super;
@@ -142,7 +142,7 @@ in self: super: { # final: prev:
       bridge_stp_helper
       request_key_helper
     ];
-    rpiVersion = 5;
+    rpiModel = "5";
   };
 
   linux_rpi4_v6_6_31 = super.callPackage ../pkgs/linux-rpi.nix {
@@ -151,7 +151,7 @@ in self: super: { # final: prev:
       bridge_stp_helper
       request_key_helper
     ];
-    rpiVersion = 4;
+    rpiModel = "4";
   };
   linux_rpi5_v6_6_31 = super.callPackage ../pkgs/linux-rpi.nix {
     argsOverride = linux_v6_6_31_argsOverride super;
@@ -159,7 +159,7 @@ in self: super: { # final: prev:
       bridge_stp_helper
       request_key_helper
     ];
-    rpiVersion = 5;
+    rpiModel = "5";
   };
 
   linux_rpi4_v6_6_28 = super.callPackage ../pkgs/linux-rpi.nix {
@@ -168,7 +168,7 @@ in self: super: { # final: prev:
       bridge_stp_helper
       request_key_helper
     ];
-    rpiVersion = 4;
+    rpiModel = "4";
   };
   linux_rpi5_v6_6_28 = super.callPackage ../pkgs/linux-rpi.nix {
     argsOverride = linux_v6_6_28_argsOverride super;
@@ -176,7 +176,7 @@ in self: super: { # final: prev:
       bridge_stp_helper
       request_key_helper
     ];
-    rpiVersion = 5;
+    rpiModel = "5";
   };
 
   linux_rpi4_v6_1_73 = super.callPackage ../pkgs/linux-rpi.nix {
@@ -185,7 +185,7 @@ in self: super: { # final: prev:
       bridge_stp_helper
       request_key_helper
     ];
-    rpiVersion = 4;
+    rpiModel = "4";
   };
   linux_rpi5_v6_1_73 = super.callPackage ../pkgs/linux-rpi.nix {
     argsOverride = linux_v6_1_73_argsOverride super;
@@ -193,7 +193,7 @@ in self: super: { # final: prev:
       bridge_stp_helper
       request_key_helper
     ];
-    rpiVersion = 5;
+    rpiModel = "5";
   };
 
   linux_rpi4_v6_1_63 = super.callPackage ../pkgs/linux-rpi.nix {
@@ -202,7 +202,7 @@ in self: super: { # final: prev:
       bridge_stp_helper
       request_key_helper
     ];
-    rpiVersion = 4;
+    rpiModel = "4";
   };
   linux_rpi5_v6_1_63 = super.callPackage ../pkgs/linux-rpi.nix {
     argsOverride = linux_v6_1_63_argsOverride super;
@@ -210,7 +210,7 @@ in self: super: { # final: prev:
       bridge_stp_helper
       request_key_helper
     ];
-    rpiVersion = 5;
+    rpiModel = "5";
   };
 
   # https://github.com/NixOS/nixpkgs/blob/master/pkgs/os-specific/linux/kernel/linux-rpi.nix
