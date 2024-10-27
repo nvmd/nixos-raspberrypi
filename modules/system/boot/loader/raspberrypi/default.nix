@@ -151,7 +151,7 @@ in
       };
 
       variant = mkOption {
-        type = types.enum [ "0" "0_2" "1" "2" "3" "4" "5" ];
+        type = types.enum [ "0" "02" "1" "2" "3" "4" "5" ];
         description = "";
       };
 
@@ -160,7 +160,7 @@ in
           "0" = {
             armhf = pkgs.ubootRaspberryPiZero;
           };
-          "0_2" = {
+          "02" = {
             aarch64 = pkgs.ubootRaspberryPi_64bit;
           };
           "1" = {
@@ -187,7 +187,8 @@ in
 
   config = mkMerge [
     (mkIf cfg.enable {
-      assertions = let supportAarch64 = [ "0_2" "3" "4" "5" ];
+      assertions = let
+        supportAarch64 = [ "02" "3" "4" "5" ];
       in singleton {
         assertion = !pkgs.stdenv.hostPlatform.isAarch64
                     || builtins.elem cfg.variant supportAarch64;

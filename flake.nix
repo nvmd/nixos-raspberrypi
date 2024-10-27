@@ -14,6 +14,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     argononed = {
+      # url = "git+file:../argononed?shallow=1";
       # url = "git+https://gitlab.com/DarkElvenAngel/argononed.git";
       url = "github:nvmd/argononed";
       flake = false;
@@ -79,6 +80,12 @@
         case-argonone = import ./modules/case-argononev2.nix { inherit argononed; };
         bluetooth = import ./modules/bluetooth.nix;
       };
+
+      raspberry-pi-02 = {
+        base = import ./modules/raspberry-pi-02.nix;
+        display-vc4 = import ./modules/display-vc4.nix;
+        bluetooth = import ./modules/bluetooth.nix;
+      };
     };
 
     overlays = {
@@ -128,8 +135,8 @@
       # see legacyPackages.<system>.linuxAndFirmware for other versions of 
       # the bundle
       inherit (pkgs.linuxAndFirmware.latest)
-        linux_rpi5 linux_rpi4
-        linuxPackages_rpi5 linuxPackages_rpi4
+        linux_rpi5 linux_rpi4 linux_rpi02
+        linuxPackages_rpi5 linuxPackages_rpi4 linuxPackages_rpi02
         raspberrypifw raspberrypiWirelessFirmware;
 
       argononed = pkgs.callPackage "${inputs.argononed}/OS/nixos/pkg.nix" {};

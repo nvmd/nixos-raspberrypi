@@ -4,9 +4,11 @@ let
     "${name}" = rec {
       linux_rpi5 = self."linux_rpi5_${name}";
       linux_rpi4 = self."linux_rpi4_${name}";
+      linux_rpi02 = self."linux_rpi02_${name}";
 
       linuxPackages_rpi5 = self.linuxPackagesFor linux_rpi5;
       linuxPackages_rpi4 = self.linuxPackagesFor linux_rpi4;
+      linuxPackages_rpi02 = self.linuxPackagesFor linux_rpi02;
     } // (with firmware; {
       raspberrypifw = fw;
       raspberrypiWirelessFirmware = wFw;
@@ -17,6 +19,7 @@ in self: super: {
   inherit (self.linuxAndFirmware.latest)
     linux_rpi5 linuxPackages_rpi5
     linux_rpi4 linuxPackages_rpi4
+    linux_rpi02 linuxPackages_rpi02
     raspberrypifw raspberrypiWirelessFirmware;
 
   linuxAndFirmware = super.lib.mergeAttrsList [

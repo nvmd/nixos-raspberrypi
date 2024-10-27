@@ -118,7 +118,24 @@ let
     ];
   } super;
 
-in self: super: { # final: prev:
+  linuxArgsOverride = {
+    "6_6_51" = linux_v6_6_51_argsOverride;
+  };
+
+  mkLinuxFor = super: rpiModel: version: {
+    "linux_rpi${rpiModel}_v${version}" = super.callPackage ../pkgs/linux-rpi.nix {
+      argsOverride = linuxArgsOverride.${version} super;
+      kernelPatches = with super.kernelPatches; [
+        bridge_stp_helper
+        request_key_helper
+      ];
+      inherit rpiModel;
+    };
+  };
+
+in self: super: super.lib.mergeAttrsList [
+  (mkLinuxFor super "02" "6_6_51")
+] // {
 
   # in nixpkgs this is also in pkgs.linuxKernel.packages.<...>
   # see also https://github.com/NixOS/nixos-hardware/pull/927
