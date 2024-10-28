@@ -120,126 +120,50 @@ let
 
   linuxArgsOverride = {
     "6_6_51" = linux_v6_6_51_argsOverride;
+    "6_6_31" = linux_v6_6_31_argsOverride;
+    "6_6_28" = linux_v6_6_28_argsOverride;
+    "6_1_73" = linux_v6_1_73_argsOverride;
+    "6_1_63" = linux_v6_1_63_argsOverride;
   };
 
-  mkLinuxFor = super: rpiModel: version: {
-    "linux_rpi${rpiModel}_v${version}" = super.callPackage ../pkgs/linux-rpi.nix {
-      argsOverride = linuxArgsOverride.${version} super;
-      kernelPatches = with super.kernelPatches; [
-        bridge_stp_helper
-        request_key_helper
-      ];
-      inherit rpiModel;
+  mkLinuxFor = super: version: models: let
+    linuxVersionForModel = rpiModel: {
+      # in nixpkgs this is also in pkgs.linuxKernel.packages.<...>
+      # see also https://github.com/NixOS/nixos-hardware/pull/927
+      # linux_rpi4_v6_6_28 = super.linux_rpi4.override {
+      #   argsOverride = linux_v6_6_28_argsOverride super;
+      # };
+
+      # as in https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/linux-kernels.nix#L91
+      "linux_rpi${rpiModel}_v${version}" = super.callPackage ../pkgs/linux-rpi.nix {
+        argsOverride = linuxArgsOverride.${version} super;
+        kernelPatches = with super.kernelPatches; [
+          bridge_stp_helper
+          request_key_helper
+        ];
+        inherit rpiModel;
+      };
+
+      # https://github.com/NixOS/nixpkgs/blob/master/pkgs/os-specific/linux/kernel/linux-rpi.nix
+      # overriding other override like this doesn't work
+      # linux_rpi5 = self.linux_rpi4.override {
+      #   rpiVersion = 5;
+      #   argsOverride.defconfig = "bcm2712_defconfig";
+      # };
+      # linux_rpi5_v6_6_28 = self.linux_rpi4_v6_6_28.override {
+      #   rpiVersion = 5;
+      #   argsOverride = (linux_v6_6_28_argsOverride super) // {
+      #     defconfig = "bcm2712_defconfig";
+      #   };
+      # };
     };
-  };
+  in map linuxVersionForModel models;
 
-in self: super: super.lib.mergeAttrsList [
-  (mkLinuxFor super "02" "6_6_51")
-] // {
-
-  # in nixpkgs this is also in pkgs.linuxKernel.packages.<...>
-  # see also https://github.com/NixOS/nixos-hardware/pull/927
-  # linux_rpi4_v6_6_28 = super.linux_rpi4.override {
-  #   argsOverride = linux_v6_6_28_argsOverride super;
-  # };
-
-  # as in https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/linux-kernels.nix#L91
-
-  linux_rpi4_v6_6_51 = super.callPackage ../pkgs/linux-rpi.nix {
-    argsOverride = linux_v6_6_51_argsOverride super;
-    kernelPatches = with super.kernelPatches; [
-      bridge_stp_helper
-      request_key_helper
-    ];
-    rpiModel = "4";
-  };
-  linux_rpi5_v6_6_51 = super.callPackage ../pkgs/linux-rpi.nix {
-    argsOverride = linux_v6_6_51_argsOverride super;
-    kernelPatches = with super.kernelPatches; [
-      bridge_stp_helper
-      request_key_helper
-    ];
-    rpiModel = "5";
-  };
-
-  linux_rpi4_v6_6_31 = super.callPackage ../pkgs/linux-rpi.nix {
-    argsOverride = linux_v6_6_31_argsOverride super;
-    kernelPatches = with super.kernelPatches; [
-      bridge_stp_helper
-      request_key_helper
-    ];
-    rpiModel = "4";
-  };
-  linux_rpi5_v6_6_31 = super.callPackage ../pkgs/linux-rpi.nix {
-    argsOverride = linux_v6_6_31_argsOverride super;
-    kernelPatches = with super.kernelPatches; [
-      bridge_stp_helper
-      request_key_helper
-    ];
-    rpiModel = "5";
-  };
-
-  linux_rpi4_v6_6_28 = super.callPackage ../pkgs/linux-rpi.nix {
-    argsOverride = linux_v6_6_28_argsOverride super;
-    kernelPatches = with super.kernelPatches; [
-      bridge_stp_helper
-      request_key_helper
-    ];
-    rpiModel = "4";
-  };
-  linux_rpi5_v6_6_28 = super.callPackage ../pkgs/linux-rpi.nix {
-    argsOverride = linux_v6_6_28_argsOverride super;
-    kernelPatches = with super.kernelPatches; [
-      bridge_stp_helper
-      request_key_helper
-    ];
-    rpiModel = "5";
-  };
-
-  linux_rpi4_v6_1_73 = super.callPackage ../pkgs/linux-rpi.nix {
-    argsOverride = linux_v6_1_73_argsOverride super;
-    kernelPatches = with super.kernelPatches; [
-      bridge_stp_helper
-      request_key_helper
-    ];
-    rpiModel = "4";
-  };
-  linux_rpi5_v6_1_73 = super.callPackage ../pkgs/linux-rpi.nix {
-    argsOverride = linux_v6_1_73_argsOverride super;
-    kernelPatches = with super.kernelPatches; [
-      bridge_stp_helper
-      request_key_helper
-    ];
-    rpiModel = "5";
-  };
-
-  linux_rpi4_v6_1_63 = super.callPackage ../pkgs/linux-rpi.nix {
-    argsOverride = linux_v6_1_63_argsOverride super;
-    kernelPatches = with super.kernelPatches; [
-      bridge_stp_helper
-      request_key_helper
-    ];
-    rpiModel = "4";
-  };
-  linux_rpi5_v6_1_63 = super.callPackage ../pkgs/linux-rpi.nix {
-    argsOverride = linux_v6_1_63_argsOverride super;
-    kernelPatches = with super.kernelPatches; [
-      bridge_stp_helper
-      request_key_helper
-    ];
-    rpiModel = "5";
-  };
-
-  # https://github.com/NixOS/nixpkgs/blob/master/pkgs/os-specific/linux/kernel/linux-rpi.nix
-  # overriding other override like this doesn't work
-  # linux_rpi5 = self.linux_rpi4.override {
-  #   rpiVersion = 5;
-  #   argsOverride.defconfig = "bcm2712_defconfig";
-  # };
-  # linux_rpi5_v6_6_28 = self.linux_rpi4_v6_6_28.override {
-  #   rpiVersion = 5;
-  #   argsOverride = (linux_v6_6_28_argsOverride super) // {
-  #     defconfig = "bcm2712_defconfig";
-  #   };
-  # };
-}
+in self: super: super.lib.mergeAttrsList (
+  builtins.concatLists [
+    (mkLinuxFor super "6_6_51" [ "02" "4" "5" ])
+    (mkLinuxFor super "6_6_31" [ "4" "5" ])
+    (mkLinuxFor super "6_6_28" [ "4" "5" ])
+    (mkLinuxFor super "6_1_73" [ "4" "5" ])
+    (mkLinuxFor super "6_1_63" [ "4" "5" ])
+  ])
