@@ -8,7 +8,7 @@ let
     # https://github.com/NixOS/nixpkgs/pull/268280#issuecomment-1911839809
     # https://github.com/raspberrypi/linux/pull/5900
     name = "drm-rp1-depends-on-instead-of-select-MFD_RP1.patch";
-    patch = super.lib.fetchpatch {
+    patch = super.fetchpatch {
       url = "https://github.com/peat-psuwit/rpi-linux/commit/6de0bb51929cd3ad4fa27b2a421a2af12e6468f5.patch";
       hash = "sha256-9pHcbgWTiztu48SBaLPVroUnxnXMKeCGt5vEo9V8WGw=";
     };
@@ -19,7 +19,7 @@ let
     # https://github.com/NixOS/nixpkgs/pull/284035#issuecomment-1913015802
     # https://github.com/raspberrypi/linux/pull/5910
     name = "iommu-bcm2712-don-t-allow-building-as-module.patch";
-    patch = super.lib.fetchpatch {
+    patch = super.fetchpatch {
       url = "https://github.com/peat-psuwit/rpi-linux/commit/693a5e69bddbcbe1d1b796ebc7581c3597685b1b.patch";
       hash = "sha256-8BYYQDM5By8cTk48ASYKJhGVQnZBIK4PXtV70UtfS+A=";
     };
