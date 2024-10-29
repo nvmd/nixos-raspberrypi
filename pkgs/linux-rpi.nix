@@ -5,10 +5,10 @@ let
   modDirVersion = "6.6.28";
   tag = "stable_20240423";
 in
-lib.overrideDerivation (buildLinux (args // {
+lib.overrideDerivation (buildLinux (args // rec {
   version = "${modDirVersion}-${tag}";
   inherit modDirVersion;
-  pname = "linux_rpi${rpiModel}";
+  pname = "linux_rpi-${builtins.elemAt (lib.splitString "_" defconfig) 0}";
 
   src = fetchFromGitHub {
     owner = "raspberrypi";
