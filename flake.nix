@@ -64,14 +64,15 @@
       bootloader = import ./modules/system/boot/loader/raspberrypi;
       default = import ./modules/raspberrypi.nix;
 
+      sd-image = import ./modules/installer/sd-card/sd-image-raspberrypi.nix;
+      sd-image-installer = import ./modules/installer/sd-card/sd-image-raspberrypi-installer.nix;
+
       raspberry-pi-5 = {
         base = import ./modules/raspberry-pi-5;
         display-vc4 = import ./modules/display-vc4.nix;
         display-rp1 = import ./modules/raspberry-pi-5/display-rp1.nix;
         bluetooth = import ./modules/bluetooth.nix;
 
-        sd-image = import ./modules/installer/sd-card/sd-image-raspberrypi5.nix;
-        sd-image-installer = import ./modules/installer/sd-card/sd-image-raspberrypi5-installer.nix;
       };
 
       raspberry-pi-4 = {

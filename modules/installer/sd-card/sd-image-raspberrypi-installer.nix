@@ -3,7 +3,7 @@
 { config, pkgs, modulesPath, ... }: {
   imports = [
     (modulesPath + "/profiles/installation-device.nix")
-    ./sd-image-raspberrypi5.nix
+    ./sd-image-raspberrypi.nix
   ];
 
   # the installation media is also the installation target,
