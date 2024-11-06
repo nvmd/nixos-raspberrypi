@@ -16,8 +16,11 @@
     firmwareSize = 1024;
     firmwarePartitionID = "0x2175794e";
     populateFirmwareCommands = ''
-      ${config.boot.loader.raspberryPi.firmwarePopulateCmd} -c ${config.system.build.toplevel} -d ./firmware
+      ${config.boot.loader.raspberryPi.firmwarePopulateCmd} -c ${config.system.build.toplevel} -f ./firmware
     '';
-    populateRootCommands = "";
+    populateRootCommands = ''
+      mkdir -p ./files/boot
+      ${config.boot.loader.raspberryPi.bootPopulateCmd} -c ${config.system.build.toplevel} -b ./files/boot
+    '';
   };
 }

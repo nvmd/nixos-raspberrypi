@@ -16,14 +16,15 @@ let
   };
   rpibootBuilder = import ./raspberrypi-builder.nix {
     inherit pkgs;
-    firmwareBuilder = firmwarePopulateCmd.firmware;
+    firmwareBuilder = firmwarePopulateCmd;
   };
   ubootBuilder = import ./uboot-builder.nix {
     inherit pkgs ubootBinName;
     inherit (cfg) ubootPackage;
-    firmwareBuilder = firmwarePopulateCmd.firmware;
+    firmwareBuilder = firmwarePopulateCmd;
     extlinuxConfBuilder = config.boot.loader.generic-extlinux-compatible.populateCmd;
   };
+
   # Builders exposed via populateCmd, which run on the build architecture
   populateFirmwareBuilder = import  ./firmware-builder.nix {
     inherit configTxt;
@@ -32,17 +33,17 @@ let
   };
   populateRpibootBuilder = import ./raspberrypi-builder.nix {
     pkgs = pkgs.buildPackages;
-    firmwareBuilder = firmwarePopulateCmd.firmware;
+    firmwareBuilder = firmwarePopulateCmd;
   };
   populateUbootBuilder = import ./uboot-builder.nix {
     inherit ubootBinName;
     pkgs = pkgs.buildPackages;
     ubootPackage = cfg.ubootPackage;
-    firmwareBuilder = firmwarePopulateCmd.firmware;
+    firmwareBuilder = firmwarePopulateCmd;
     extlinuxConfBuilder = config.boot.loader.generic-extlinux-compatible.populateCmd;
   };
 
-
+  firmwarePopulateCmd = "${populateFirmwareBuilder} ${firmwareBuilderArgs}";
   firmwareBuilderArgs = lib.optionalString (!cfg.useGenerationDeviceTree) " -r";
 
   builder = {
@@ -50,10 +51,16 @@ let
     uboot = "${ubootBuilder} -f ${cfg.firmwarePath} -d ${cfg.bootPath} -c";
     rpiboot = "${rpibootBuilder} -d ${cfg.firmwarePath} -c";
   };
-  firmwarePopulateCmd = {
-    firmware = "${populateFirmwareBuilder} ${firmwareBuilderArgs}";
-    rpiboot = "${populateRpibootBuilder}";
-    uboot = "${populateUbootBuilder}";
+
+  populateCmds = {
+    uboot = {
+      firmware = "${populateUbootBuilder}"; # call with `-f <firmware target path>`
+      boot = "${populateUbootBuilder}";     # call with `-b <boot-dir>`
+    };
+    rpiboot = {
+      firmware = "${populateRpibootBuilder}";
+      boot = "";
+    };
   };
 
   configTxt = config.hardware.raspberry-pi.config-output;
@@ -123,8 +130,10 @@ in
         type = types.str;
         readOnly = true;
         description = ''
-          Contains the builder command used to populate an image with both
-          selected bootloader and firmware.
+          Contains the builder command used to populate image of the firmware partition.
+
+          Copies boards' firmware.
+          Depending on the chosen bootloader, may also copy bootloader image.
 
           Honors all relevant module options except the
           `-c <path-to-default-configuration>`
@@ -132,6 +141,18 @@ in
           by the caller of firmwarePopulateCmd.
 
           Useful to have for sdImage.populateFirmwareCommands
+        '';
+      };
+
+      bootPopulateCmd = mkOption {
+        type = types.str;
+        readOnly = true;
+        description = ''
+          Contains the builder command used to populate /boot
+
+          May or may not do anything depending on chosen the bootloader.
+
+          Useful to have for sdImage.populateRootCommands
         '';
       };
 
@@ -198,7 +219,8 @@ in
         '';
       };
       system.build.installFirmware = builder."firmware";
-      boot.loader.raspberryPi.firmwarePopulateCmd = firmwarePopulateCmd."${cfg.bootloader}";
+      boot.loader.raspberryPi.firmwarePopulateCmd = populateCmds."${cfg.bootloader}".firmware;
+      boot.loader.raspberryPi.bootPopulateCmd = populateCmds."${cfg.bootloader}".boot;
     })
 
     (mkIf (cfg.enable && (cfg.bootloader == "rpiboot")) {

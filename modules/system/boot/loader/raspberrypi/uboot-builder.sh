@@ -9,23 +9,29 @@ export PATH=/empty
 for i in @path@; do PATH=$PATH:$i/bin; done
 
 usage() {
-    echo "usage: $0 -f <firmware-dir> -d <boot-dir> -c <path-to-default-configuration>" >&2
+    echo "usage: $0 -f <firmware-dir> -b <boot-dir> -c <path-to-default-configuration>" >&2
     exit 1
 }
 
 default=               # Default configuration, needed for extlinux
-fwtarget=/boot/firmware  # firmware target directory
-boottarget=/boot         # boot configuration target directory
+# fwtarget=/boot/firmware  # firmware target directory
+# boottarget=/boot         # boot configuration target directory
 
 echo "uboot-builder: $@"
-while getopts "c:d:f:" opt; do
+while getopts "c:b:f:" opt; do
     case "$opt" in
         c) default="$OPTARG" ;;
-        d) boottarget="$OPTARG" ;;
+        b) boottarget="$OPTARG" ;;
         f) fwtarget="$OPTARG" ;;
         \?) usage ;;
     esac
 done
+
+if [ -z "$boottarget" ] && [ -z "$fwtarget" ]; then
+    echo "Error: at least one of \`-b <boot-dir>\` and \`-f <firmware-dir>\` must be set"
+    usage
+fi
+
 # # process arguments for this builder, then pass the remainder to extlinux'
 # while getopts ":f:" opt; do
 #     case "$opt" in
@@ -43,14 +49,23 @@ copyForced() {
     mv $dst.tmp $dst
 }
 
-@firmwareBuilder@ -c $default -d $fwtarget
+if [ -n "$fwtarget" ]; then
+    @firmwareBuilder@ -c $default -d $fwtarget
 
-echo "generating extlinux configuration..."
-# Call the extlinux builder
-@extlinuxConfBuilder@ -c $default -d $boottarget
+    echo "copying u-boot binary..."
+    copyForced @uboot@/u-boot.bin $fwtarget/@ubootBinName@
+fi
 
-echo "copying u-boot binary..."
-# Add the uboot file
-copyForced @uboot@/u-boot.bin $fwtarget/@ubootBinName@
+if [ -n "$boottarget" ]; then
+    echo "generating extlinux configuration..."
+    @extlinuxConfBuilder@ -c $default -d $boottarget
+fi
 
-echo "uboot+extlinux bootloader installed"
+msg=""
+if [ -n "$fwtarget" ]; then
+    msg="uboot"
+fi
+if [ -n "$boottarget" ]; then
+    msg="$msg+extlinux"
+fi
+echo "$msg bootloader installed"

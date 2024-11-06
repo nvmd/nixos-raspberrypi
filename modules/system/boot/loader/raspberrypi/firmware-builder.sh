@@ -9,7 +9,7 @@ export PATH=/empty
 for i in @path@; do PATH=$PATH:$i/bin; done
 
 usage() {
-    echo "usage: $0 -c <path-to-default-configuration> [-d <boot-dir>] [-r]" >&2
+    echo "usage: $0 -c <path-to-default-configuration> [-d <firmware-dir>] [-r]" >&2
     exit 1
 }
 
