@@ -64,7 +64,7 @@ imports = with nixos-raspberrypi.nixosModules; [
 ];
 ```
 
-See `flake.nix`, `nixosModules` for a full of configuration modules for your hardware.
+See `flake.nix`, `nixosModules` for a full list of configuration modules for your hardware.
 
 ### Import overlays you want
 
@@ -100,7 +100,7 @@ An alternative ways to consume individual packages without overlays are:
   ];
 ```
 
-* to get it from `nixos-raspberrypi.legacyPackage.<system>`. Here all overlays are applied.
+* to get it from `nixos-raspberrypi.legacyPackages.<system>`. Here all overlays are applied.
 
 
 ### Configure
