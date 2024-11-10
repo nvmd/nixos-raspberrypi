@@ -9,7 +9,7 @@ export PATH=/empty
 for i in @path@; do PATH=$PATH:$i/bin; done
 
 usage() {
-    echo "usage: $0 -c <path-to-default-configuration> [-b <boot-dir>]" >&2
+    echo "usage: $0 -c <path-to-default-configuration> [-d <boot-dir>]" >&2
     exit 1
 }
 
@@ -19,10 +19,10 @@ target=/boot/firmware   # Target directory
 # fwdir=@firmware@/share/raspberrypi/boot/
 SRC_FIRMWARE_DIR=@firmware@/share/raspberrypi/boot
 
-while getopts "c:b:" opt; do
+while getopts "c:d:" opt; do
     case "$opt" in
         c) default="$OPTARG" ;;
-        b) target="$OPTARG" ;;
+        d) target="$OPTARG" ;;
         \?) usage ;;
     esac
 done

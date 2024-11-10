@@ -48,7 +48,7 @@ let
 
   builder = {
     firmware = "${firmwareBuilder} -d ${cfg.firmwarePath} ${firmwareBuilderArgs} -c";
-    uboot = "${ubootBuilder} -f ${cfg.firmwarePath} -d ${cfg.bootPath} -c";
+    uboot = "${ubootBuilder} -f ${cfg.firmwarePath} -b ${cfg.bootPath} -c";
     rpiboot = "${rpibootBuilder} -d ${cfg.firmwarePath} -c";
   };
 
