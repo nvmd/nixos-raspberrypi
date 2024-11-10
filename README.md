@@ -23,7 +23,6 @@ inputs = {
       # optionally follow your own `nixpkgs` inputs
       # this may make binary cache unavailable!
       nixpkgs.follows = "nixpkgs";
-      nixpkgs-unstable.follows = "nixpkgs-unstable";
     };
   };
 };
@@ -31,7 +30,9 @@ inputs = {
 
 ### Optional: Use binary cache
 
-Pre-built packages are provided for `nixpkgs` and `nixpkgs-unstable` locked with `flake.lock`
+Pre-built packages are provided for `nixpkgs` version locked with `flake.lock`.
+Depending on the circumstances, it may be either stable `nixpkgs` or `nixpkgs-unstable`. Check `inputs.nixpkgs` in `flake.nix` if it's important for you.
+
 ```flake.nix
 nixConfig = {
   extra-substituters = [
@@ -99,7 +100,7 @@ An alternative ways to consume individual packages without overlays are:
   ];
 ```
 
-* to get it from `nixos-raspberrypi.legacyPackage.<system>` or `nixos-raspberrypi.legacyPackageUnstable.<system>`. Here all overlays are applied.
+* to get it from `nixos-raspberrypi.legacyPackage.<system>`. Here all overlays are applied.
 
 
 ### Configure
