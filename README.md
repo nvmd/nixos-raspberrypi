@@ -22,7 +22,8 @@ inputs = {
     inputs = {
       # optionally follow your own `nixpkgs` inputs
       # this may make binary cache unavailable!
-      nixpkgs.follows = "nixpkgs";
+      # this flake may follow different channel, check `flake.nix` to avoid unexpected rebuilds!
+      nixpkgs.follows = "nixpkgs-unstable";
     };
   };
 };
