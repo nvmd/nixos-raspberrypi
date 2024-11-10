@@ -27,6 +27,8 @@
     forSystems = systems: f: nixpkgs.lib.genAttrs systems (system: f system);
     mkRpiPkgs = nixpkgs: system: import nixpkgs {
         inherit system; overlays = [
+          self.overlays.bootloader
+
           self.overlays.pkgs
 
           self.overlays.vendor-pkgs
