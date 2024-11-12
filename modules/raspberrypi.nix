@@ -33,12 +33,6 @@
   # https://github.com/RPi-Distro/pi-gen/blob/master/stage1/00-boot-files/files/cmdline.txt
   boot.kernelParams = [ "console=serial0,115200n8" "console=tty1" ];
 
-  # Explicitly disable TPM2 even though boot.initrd.systemd isn't enabled, 
-  # until there's better fix for "modprobe: FATAL: Module tpm-crb not found":
-  # https://github.com/NixOS/nixpkgs/issues/344963
-  # https://github.com/NixOS/nixos-hardware/issues/858
-  boot.initrd.systemd.tpm2.enable = false;
-
   # https://github.com/NixOS/nixos-hardware/issues/631#issuecomment-1584100732
   boot.initrd.availableKernelModules = [
     "usbhid"
