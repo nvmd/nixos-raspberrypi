@@ -8,14 +8,14 @@
 
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "raspberrypi-udev-rules";
-  version = "20240911";
+  version = "20241111";
 
   # https://github.com/RPi-Distro/raspberrypi-sys-mods/tree/bookworm/
   src = fetchFromGitHub {
     owner = "RPi-Distro";
     repo = "raspberrypi-sys-mods";
-    rev = "22b66366ef9bdcdc83de5be883931b7af9c55904";
-    hash = "sha256-an8oS62KJZyyU6jTnnoGW5WOm3UD4JZ/leR4jyeIlU8=";
+    rev = "7114c0d6665e2fa86f993db842caf2d7518db69b";
+    hash = "sha256-prOmHr+exluX/J7wr2QAvF5qHPEoeGExHSJyWoMO08Y=";
   };
 
   installPhase = ''
@@ -40,7 +40,9 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       60-backlight.rules
       60-dma-heap.rules
       60-gpiochip4.rules
+      60-i2c-aliases.rules
       60-pico.rules
+      61-drm.rules
       70-microbit.rules
 
       # doesn't seem to provide any value on nixos
