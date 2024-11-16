@@ -33,8 +33,9 @@
   # https://github.com/RPi-Distro/pi-gen/blob/master/stage1/00-boot-files/files/cmdline.txt
   boot.kernelParams = [ "console=serial0,115200n8" "console=tty1" ];
 
-  # https://github.com/NixOS/nixos-hardware/issues/631#issuecomment-1584100732
   boot.initrd.availableKernelModules = [
+    "xhci_pci"
+    # https://github.com/NixOS/nixos-hardware/issues/631#issuecomment-1584100732
     "usbhid"
     "usb_storage"
     "vc4"
