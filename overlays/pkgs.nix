@@ -85,13 +85,13 @@ self: super: { # final: prev:
 
   libcamera_rpi = super.libcamera.overrideAttrs (old: rec {
     pname = old.pname + "-rpi";
-    version = "0.3.2+rpt20240927";
+    version = "0.3.2+rpt20241112";
 
     src = super.fetchFromGitHub {
       owner = "raspberrypi";
       repo = "libcamera";
       rev = "v${version}";
-      hash = "sha256-TNNIOtitwFBlQx/2bcU7EeWvrMQAzEg/dS1skPJ8FMM=";
+      hash = "sha256-HDLSRylRn/siR2HMTHLkH20QLjzH1R2iKWPca7eSWiU=";
     };
 
     # not needed for nixpkgs-unstable
