@@ -145,6 +145,10 @@
 
       argononed = pkgs.callPackage "${inputs.argononed}/OS/nixos/pkg.nix" {};
 
+      pisugar3-kmod = let
+        targetKernel = pkgs.linux_rpi02;
+      in (pkgs.linuxPackagesFor targetKernel).callPackage ./pkgs/pisugar3-kmod.nix {};
+
     });
 
   };
