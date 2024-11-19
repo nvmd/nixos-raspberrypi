@@ -4,7 +4,9 @@
   nixpkgs.overlays = [
     (self: super: {
       linuxPackages = super.linuxPackages.extend (lpself: lpsuper: {
-        pisugar3 = super.linuxPackages.callPackage ../pkgs/pisugar3-kmod.nix {};
+        pisugar3 = super.linuxPackages.callPackage ../pkgs/pisugar-kmod.nix {
+          pisugarVersion = "3";
+        };
       });
     })
   ];

@@ -149,7 +149,14 @@
 
       pisugar3-kmod = let
         targetKernel = pkgs.linux_rpi02;
-      in (pkgs.linuxPackagesFor targetKernel).callPackage ./pkgs/pisugar3-kmod.nix {};
+      in (pkgs.linuxPackagesFor targetKernel).callPackage ./pkgs/pisugar-kmod.nix {
+        pisugarVersion = "3";
+      };
+      pisugar2-kmod = let
+        targetKernel = pkgs.linux_rpi02;
+      in (pkgs.linuxPackagesFor targetKernel).callPackage ./pkgs/pisugar-kmod.nix {
+        pisugarVersion = "2";
+      };
 
       pisugar-power-manager-rs = pkgs.callPackage ./pkgs/pisugar-power-manager-rs.nix {};
 

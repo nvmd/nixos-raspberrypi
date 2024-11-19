@@ -1,7 +1,7 @@
-{ stdenv, lib, fetchFromGitHub, kernel, kmod }:
+{ stdenv, lib, fetchFromGitHub, kernel, kmod, pisugarVersion }:
 
 stdenv.mkDerivation (finalAttrs: {
-  pname = "pisugar3-kmod";
+  pname = "pisugar${pisugarVersion}-kmod";
   version = "unstable-2024-11-19";
 
   src = fetchFromGitHub {
@@ -11,7 +11,7 @@ stdenv.mkDerivation (finalAttrs: {
     sha256 = "sha256-GwRLu779O4POiqxqzAQO9PhDC8ll5cFRidHIg13sC1s=";
   };
 
-  sourceRoot = "${finalAttrs.src.name}/pisugar-module/pisugar-3";
+  sourceRoot = "${finalAttrs.src.name}/pisugar-module/pisugar-${pisugarVersion}";
 
   hardeningDisable = [ "pic" ];
   nativeBuildInputs = kernel.moduleBuildDependencies;
@@ -34,14 +34,14 @@ stdenv.mkDerivation (finalAttrs: {
 
   installPhase = ''
     runHook preInstall
-    install -vD "$KERNEL_MODULE_SRC/pisugar_3_battery.ko" -t $out/lib/modules/${kernel.modDirVersion}/kernel/drivers/power/supply
+    install -vD "$KERNEL_MODULE_SRC/pisugar_${pisugarVersion}_battery.ko" -t $out/lib/modules/${kernel.modDirVersion}/kernel/drivers/power/supply
     runHook postInstall
   '';
 
   enableParallelBuilding = true;
 
   meta = with lib; {
-    description = "Kernel module for PiSugar3 battery module";
+    description = "Kernel module for PiSugar${pisugarVersion} battery module";
     homepage = "https://github.com/PiSugar/pisugar-power-manager-rs.git";
     license = licenses.gpl3Only;
     maintainers = with maintainers; [ kazenyuk ];
