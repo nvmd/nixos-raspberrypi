@@ -69,6 +69,8 @@
       sd-image = import ./modules/installer/sd-card/sd-image-raspberrypi.nix;
       sd-image-installer = import ./modules/installer/sd-card/sd-image-raspberrypi-installer.nix;
 
+      pisugar-3 = import ./modules/pisugar-3.nix;
+
       raspberry-pi-5 = {
         base = import ./modules/raspberry-pi-5;
         display-vc4 = import ./modules/display-vc4.nix;
