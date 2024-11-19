@@ -151,6 +151,8 @@
         targetKernel = pkgs.linux_rpi02;
       in (pkgs.linuxPackagesFor targetKernel).callPackage ./pkgs/pisugar3-kmod.nix {};
 
+      pisugar-power-manager-rs = pkgs.callPackage ./pkgs/pisugar-power-manager-rs.nix {};
+
     });
 
   };
