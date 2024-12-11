@@ -8,7 +8,7 @@ It will let you deploy [NixOS](https://nixos.org/) fully declaratively in one st
 
 Provisions and manages Raspberry Pi firmware partition `/boot/firmware`. Partition is being provisioned on nixos generation switch (integrated with bootloader activation scripts, as opposed to oneshot systemd services, for example), enabling to use deployment tools like `nixos-anywhere` without any interactive intervention.
 
-Supported boot methods: `rpiboot`, `uboot`. Also mostly-working `uefi` in a separate branch.
+Supported boot methods: `kernelboot`, `uboot`. Also mostly-working `uefi` in a separate branch.
 
 ## How to use
 

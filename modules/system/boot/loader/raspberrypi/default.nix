@@ -14,7 +14,7 @@ let
     inherit pkgs configTxt;
     firmware = cfg.firmwarePackage;
   };
-  rpibootBuilder = import ./raspberrypi-builder.nix {
+  kernelbootBuilder = import ./raspberrypi-builder.nix {
     inherit pkgs;
     firmwareBuilder = firmwarePopulateCmd;
   };
@@ -31,7 +31,7 @@ let
     pkgs = pkgs.buildPackages;
     firmware = cfg.firmwarePackage;
   };
-  populateRpibootBuilder = import ./raspberrypi-builder.nix {
+  populateKernelbootBuilder = import ./raspberrypi-builder.nix {
     pkgs = pkgs.buildPackages;
     firmwareBuilder = firmwarePopulateCmd;
   };
@@ -49,7 +49,7 @@ let
   builder = {
     firmware = "${firmwareBuilder} -d ${cfg.firmwarePath} ${firmwareBuilderArgs} -c";
     uboot = "${ubootBuilder} -f ${cfg.firmwarePath} -b ${cfg.bootPath} -c";
-    rpiboot = "${rpibootBuilder} -d ${cfg.firmwarePath} -c";
+    kernelboot = "${kernelbootBuilder} -d ${cfg.firmwarePath} -c";
   };
 
   populateCmds = {
@@ -57,8 +57,8 @@ let
       firmware = "${populateUbootBuilder}"; # call with `-f <firmware target path>`
       boot = "${populateUbootBuilder}";     # call with `-b <boot-dir>`
     };
-    rpiboot = {
-      firmware = "${populateRpibootBuilder}";
+    kernelboot = {
+      firmware = "${populateKernelbootBuilder}";
       boot = "";
     };
   };
@@ -124,7 +124,7 @@ in
           When enabled, the device tree binaries will be copied to
           `firmwarePath` from the generation's kernel.
 
-          This affects `rpiboot` and `uboot` bootloaders.
+          This affects `kernelboot` and `uboot` bootloaders.
 
           Note that this affects all generations, regardless of the
           setting value used in their configurations.
@@ -162,12 +162,12 @@ in
       };
 
       bootloader = mkOption {
-        default = if cfg.variant == "5" then "rpiboot" else "uboot";
-        type = types.enum [ "rpiboot" "uboot" ];
+        default = if cfg.variant == "5" then "kernelboot" else "uboot";
+        type = types.enum [ "kernelboot" "uboot" ];
         description = ''
           Bootloader to use:
           - `"uboot"`: U-Boot
-          - `"rpiboot"`: The linux kernel is installed directly into the
+          - `"kernelboot"`: The linux kernel is installed directly into the
             firmware directory as expected by the Raspberry Pi boot
             process.
             This can be useful for newer hardware that doesn't yet have
@@ -224,11 +224,11 @@ in
         '';
       };
       system.build.installFirmware = builder."firmware";
-      boot.loader.raspberryPi.firmwarePopulateCmd = populateCmds."${cfg.bootloader}".firmware;
-      boot.loader.raspberryPi.bootPopulateCmd = populateCmds."${cfg.bootloader}".boot;
+      boot.loader.raspberryPi.firmwarePopulateCmd = populateCmds.${cfg.bootloader}.firmware;
+      boot.loader.raspberryPi.bootPopulateCmd = populateCmds.${cfg.bootloader}.boot;
     })
 
-    (mkIf (cfg.enable && (cfg.bootloader == "rpiboot")) {
+    (mkIf (cfg.enable && (cfg.bootloader == "kernelboot")) {
       hardware.raspberry-pi.config = {
         all = {
           options = {
@@ -247,7 +247,7 @@ in
       boot.loader.grub.enable = false;
 
       system = {
-        build.installBootLoader = builder."rpiboot";
+        build.installBootLoader = builder.${cfg.bootloader};
         boot.loader.id = "raspberrypi";
         boot.loader.kernelFile = pkgs.stdenv.hostPlatform.linux-kernel.target;
       };
@@ -281,8 +281,8 @@ in
       # `lib.mkOverride 60` to override the default, while still allowing
       # consuming modules to override with mkForce
       system = {
-        build.installBootLoader = lib.mkOverride 60 (builder."uboot");
-        boot.loader.id = lib.mkOverride 60 ("uboot+extlinux");
+        build.installBootLoader = lib.mkOverride 60 (builder.${cfg.bootloader});
+        boot.loader.id = lib.mkOverride 60 ("${cfg.bootloader}+extlinux");
       };
     })
 
