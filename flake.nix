@@ -12,7 +12,11 @@
   };
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    # use fork to allow disabling modules introduced by mkRemovedOptionModule
+    # and similar functions
+    nixpkgs.url = "github:nvmd/nixpkgs/modules-with-keys";
+    # nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+
     argononed = {
       # url = "git+file:../argononed?shallow=1";
       # url = "git+https://gitlab.com/DarkElvenAngel/argononed.git";

@@ -68,8 +68,13 @@ let
 in
 
 {
-  disabledModules = [ "system/boot/loader/raspberrypi/raspberrypi.nix" ];
-
+  disabledModules = [
+    # the module has been remove in nixpkgs, but that shouldn't prevent us
+    # from using the now free (!) name for our module
+    # mkRemovedOptionModule in `"modulesPath + rename.nix"`, unfortunately,
+    # prevents us from doing so in upstream nixpkgs
+    { key = "removedOptionModule#boot_loader_raspberryPi"; }
+  ];
 
   options = {
 
