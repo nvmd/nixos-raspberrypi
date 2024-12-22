@@ -66,6 +66,10 @@ writeShellApplication {
       "linux_rpi5"
       "raspberrypifw"
       "raspberrypiWirelessFirmware"
+
+      pisugar3-kmod
+      pisugar2-kmod
+      pisugar-power-manager-rs
     )
 
     for i in "''${packages[@]}"; do
