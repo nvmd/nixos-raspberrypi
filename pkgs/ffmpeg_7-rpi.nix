@@ -6,12 +6,12 @@
 
 let
   # https://github.com/jc-kynesim/rpi-ffmpeg/tree/dev/7.0/rpi_import_1
-  ffmpegVersion = "7.0";
+  ffmpegVersion = "7.1";
   rpiFfmpegSrc = fetchFromGitHub {
     owner = "jc-kynesim";
     repo  = "rpi-ffmpeg";
-    rev   = "dev/${ffmpegVersion}/rpi_import_1";
-    hash  = "sha256-3t4FmFFi8eH8V196SkZ/mpopQtfxaasFPQ+GRuW/NBs=";
+    rev   = "test/${ffmpegVersion}/main";
+    hash  = "sha256-PIoN38zD6OHuEEuH/Pma3hLzMppl0lX3voX8K/G+drs=";
   };
 
 in callPackage ./ffmpeg-rpi.nix {
