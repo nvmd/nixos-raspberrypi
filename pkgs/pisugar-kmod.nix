@@ -2,13 +2,13 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "pisugar${pisugarVersion}-kmod";
-  version = "unstable-2024-11-19";
+  version = "2.0.0-preview2";
 
   src = fetchFromGitHub {
     owner = "PiSugar";
     repo = "pisugar-power-manager-rs";
-    rev = "dd33fe8171a607b0f5605e360bb8ecc85aab47f6";
-    sha256 = "sha256-GwRLu779O4POiqxqzAQO9PhDC8ll5cFRidHIg13sC1s=";
+    rev = "v${finalAttrs.version}";
+    sha256 = "sha256-dKyCBD4+/0NiN28/0aYhUtGyYQcT9ze0fI/Vlw9LxPI=";
   };
 
   sourceRoot = "${finalAttrs.src.name}/pisugar-module/pisugar-${pisugarVersion}";
