@@ -39,7 +39,7 @@ writeShellApplication {
     # thus, the following boilerplate
 
     declare -a packages=(
-      "ffmpeg_4"
+      # "ffmpeg_4"
       "ffmpeg_6"
       "ffmpeg_6-headless"
       # "ffmpeg_7"
