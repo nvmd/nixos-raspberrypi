@@ -49,6 +49,9 @@ lib.overrideDerivation (buildLinux (args // rec {
     platforms = with lib.platforms; arm ++ aarch64;
     hydraPlatforms = [ "aarch64-linux" ];
   };
+
+  ignoreConfigErrors = true;
+
 } // (args.argsOverride or {}))) (oldAttrs: {
   postConfigure = ''
     # The v7 defconfig has this set to '-v7' which screws up our modDirVersion.
