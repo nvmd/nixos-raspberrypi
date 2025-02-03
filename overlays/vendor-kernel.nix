@@ -52,6 +52,24 @@ let
       hash = srcHash;
     };
   };
+  linux_v6_6_74_argsOverride = super: linux_argsOverride {
+    # https://github.com/raspberrypi/linux/releases/tag/stable_20250127
+    modDirVersion = "6.6.74";
+    tag = "stable_20250127";
+    srcHash = "sha256-17PrkPUGBKU+nO40OP+O9dzZeCfRPlKnnk/PJOGamU8=";
+    structuredExtraConfig = with super.lib.kernel; {
+      # Workaround https://github.com/raspberrypi/linux/issues/6198
+      # Needed because NixOS 24.05+ sets DRM_SIMPLEDRM=y which pulls in
+      # DRM_KMS_HELPER=y.
+      # BACKLIGHT_CLASS_DEVICE = yes;
+    };
+    kernelPatches = builtins.map (p: p super) [
+      # Fix compilation errors due to incomplete patch backport.
+      # https://github.com/raspberrypi/linux/pull/6223
+      # gpio-pwm_-_pwm_apply_might_sleep
+      # ir-rx51_-_pwm_apply_might_sleep
+    ];
+  } super;
   linux_v6_6_51_argsOverride = super: linux_argsOverride {
     # https://github.com/raspberrypi/linux/releases/tag/stable_20240529
     modDirVersion = "6.6.51";
@@ -119,6 +137,7 @@ let
   } super;
 
   linuxArgsOverride = {
+    "6_6_74" = linux_v6_6_74_argsOverride;
     "6_6_51" = linux_v6_6_51_argsOverride;
     "6_6_31" = linux_v6_6_31_argsOverride;
     "6_6_28" = linux_v6_6_28_argsOverride;
@@ -161,6 +180,7 @@ let
 
 in self: super: super.lib.mergeAttrsList (
   builtins.concatLists [
+    (mkLinuxFor super "6_6_74" [ "02" "4" "5" ])
     (mkLinuxFor super "6_6_51" [ "02" "4" "5" ])
     (mkLinuxFor super "6_6_31" [ "4" "5" ])
     (mkLinuxFor super "6_6_28" [ "4" "5" ])

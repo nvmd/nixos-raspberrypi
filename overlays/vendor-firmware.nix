@@ -4,6 +4,17 @@ self: super: { # final: prev:
   # pkgs/os-specific/linux/firmware/raspberrypi/default.nix
   # https://github.com/raspberrypi/firmware/commits/stable/
 
+  raspberrypifw_20250127 = super.raspberrypifw.overrideAttrs (old: rec {
+    # https://github.com/raspberrypi/firmware/releases/tag/1.20250127
+    version = "1.20250127";
+    src = super.fetchFromGitHub {
+      owner = "raspberrypi";
+      repo = "firmware";
+      rev = "${version}";
+      hash = "sha256-gdZt9xS3X1Prh+TU0DLy6treFoJjiUUUiZ3IoDbopzI=";
+    };
+  });
+
   raspberrypifw_20241008 = super.raspberrypifw.overrideAttrs (old: rec {
     # https://github.com/raspberrypi/firmware/releases/tag/1.20241008
     version = "1.20241008";
@@ -58,6 +69,29 @@ self: super: { # final: prev:
       rev = "524247ac6d8b1f4ddd53730e978a70c76a320bd6";
       hash = "sha256-rESwkR7pc5MTwIZ8PaMUPXuzxfv+jVpdRp8ijvxHGcg=";
     };
+  });
+
+    raspberrypiWirelessFirmware_20241223 = super.raspberrypiWirelessFirmware.overrideAttrs (old: {
+    version = "2024-12-23";
+    srcs = [
+      # https://github.com/RPi-Distro/bluez-firmware/commits/bookworm
+      # 1.2-9+rpt3 release – 20240226
+      (super.fetchFromGitHub {
+        name = "bluez-firmware";
+        owner = "RPi-Distro";
+        repo = "bluez-firmware";
+        rev = "78d6a07730e2d20c035899521ab67726dc028e1c";
+        hash = "sha256-KakKnOBeWxh0exu44beZ7cbr5ni4RA9vkWYb9sGMb8Q=";
+      })
+      # https://github.com/RPi-Distro/firmware-nonfree/commits/bookworm/
+      (super.fetchFromGitHub {
+        name = "firmware-nonfree";
+        owner = "RPi-Distro";
+        repo = "firmware-nonfree";
+        rev = "a6ed59a078d52ad72f0f2b99e68f324e7411afa1";
+        hash = "sha256-Yu9hoy4lWQlkjq9LTTmXaLpUKzaEkJaMz9oYmOfbDos=";
+      })
+    ];
   });
 
   # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/os-specific/linux/firmware/raspberrypi-wireless/default.nix
