@@ -7,15 +7,14 @@
 let
   # there are, in the order of latest changes:
   # * https://github.com/jc-kynesim/rpi-ffmpeg/commits/release/5.1/main
-  # * https://github.com/jc-kynesim/rpi-ffmpeg/commits/test/5.1.4/main
-  # * https://github.com/jc-kynesim/rpi-ffmpeg/commits/pi/5.1.4/rpi_23
-  ffmpegVersion = "5.1";
+  # * https://github.com/jc-kynesim/rpi-ffmpeg/commits/test/5.1.6/main
+  ffmpegVersion = "5.1.6";
   rpiFfmpegSrc = fetchFromGitHub {
     owner = "jc-kynesim";
     repo  = "rpi-ffmpeg";
-    rev   = "release/${ffmpegVersion}/main";
-    # hash  = "sha256-lTcX0C5PdKWch4nB+TCH51IIjvbSrsyyurGonYR8EFU=";
-    hash  = lib.fakeHash;
+    rev   = "test/${ffmpegVersion}/main";
+    # rev   = "release/${ffmpegVersion}/main";
+    hash  = "sha256-AzUzmTrFjI7UWU5vOvnXKpwuLij+AUN1i59RlsmuAGI=";
   };
 in callPackage ./ffmpeg-rpi.nix {
   inherit ffmpeg;
