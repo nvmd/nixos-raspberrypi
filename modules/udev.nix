@@ -15,4 +15,8 @@
   services.udev.packages = [
     (pkgs.callPackage ../pkgs/raspberrypi/udev-rules.nix {})
   ];
+
+  systemd.tmpfiles.packages = [
+    (pkgs.callPackage ../pkgs/raspberrypi/udev-rules.nix {})
+  ];
 }
