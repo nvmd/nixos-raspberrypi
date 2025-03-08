@@ -70,7 +70,10 @@
       trusted-nix-caches = import ./modules/trusted-nix-caches.nix;
 
       bootloader = import ./modules/system/boot/loader/raspberrypi;
-      default = import ./modules/raspberrypi.nix;
+      # default = import ./modules/raspberrypi.nix;
+      default = { config, lib, pkgs, ... }: import ./modules/raspberrypi.nix {
+        inherit config lib pkgs self;
+      };
 
       sd-image = import ./modules/installer/sd-card/sd-image-raspberrypi.nix;
       sd-image-installer = import ./modules/installer/sd-card/sd-image-raspberrypi-installer.nix;
@@ -78,22 +81,27 @@
       pisugar-3 = import ./modules/pisugar-3.nix;
 
       raspberry-pi-5 = {
-        base = import ./modules/raspberry-pi-5;
+        base = { config, lib, pkgs, ... }: import ./modules/raspberry-pi-5 {
+          inherit config lib pkgs self;
+        };
         display-vc4 = import ./modules/display-vc4.nix;
         display-rp1 = import ./modules/raspberry-pi-5/display-rp1.nix;
         bluetooth = import ./modules/bluetooth.nix;
-
       };
 
       raspberry-pi-4 = {
-        base = import ./modules/raspberry-pi-4.nix;
+        base = { config, lib, pkgs, ... }: import ./modules/raspberry-pi-4.nix {
+          inherit config lib pkgs self;
+        };
         display-vc4 = import ./modules/display-vc4.nix;
         case-argonone = import ./modules/case-argononev2.nix { inherit argononed; };
         bluetooth = import ./modules/bluetooth.nix;
       };
 
       raspberry-pi-02 = {
-        base = import ./modules/raspberry-pi-02.nix;
+        base = { config, lib, pkgs, ... }: import ./modules/raspberry-pi-02.nix {
+          inherit config lib pkgs self;
+        };
         display-vc4 = import ./modules/display-vc4.nix;
         bluetooth = import ./modules/bluetooth.nix;
       };
