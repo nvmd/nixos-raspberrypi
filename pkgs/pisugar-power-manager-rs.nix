@@ -11,7 +11,8 @@ rustPlatform.buildRustPackage rec {
     sha256 = "sha256-dKyCBD4+/0NiN28/0aYhUtGyYQcT9ze0fI/Vlw9LxPI=";
   };
 
-  cargoHash = "sha256-OYxec22c27hUMCWtq/3I+QBSdFr4R9FOWbe+smYaPPo=";
+  useFetchCargoVendor = true;
+  cargoHash = "sha256-EHwlv6XlsltpaSBTKebhrgJYq3GTtB0t5tyNhkiptb8=";
 
   postPatch = ''
     sed -e 's#.*replace-with.*##' -i .cargo/config.toml
