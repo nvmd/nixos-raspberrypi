@@ -68,6 +68,9 @@
 
     nixosModules = {
       trusted-nix-caches = import ./modules/trusted-nix-caches.nix;
+      nixpkgs-rpi = { config, lib, pkgs, ... }: import ./modules/nixpkgs-rpi.nix {
+        inherit config lib pkgs self;
+      };
 
       bootloader = import ./modules/system/boot/loader/raspberrypi;
       # default = import ./modules/raspberrypi.nix;
