@@ -19,8 +19,9 @@ let
   rpiFfmpegSrc = fetchFromGitHub {
     owner = "jc-kynesim";
     repo  = "rpi-ffmpeg";
-    rev   = "test/${ffmpegVersion}/main";
-    hash  = "sha256-9wqA1OU0/otiQGlUGAupIP/DSDlf0CLqhN8CQ2WCvbk=";
+    # rev   = "test/${ffmpegVersion}/main";
+    rev   = "a4f8d3f69e97de0a0005a06ad76063e0a52fd7f5";
+    hash  = "sha256-wmj2WyJ9Tywiv4SB0Jgov/p5Hn2j3sAN8yvgCPOTCKg=";
     # hash  = lib.fakeHash;
   };
   # see also for configure flags
