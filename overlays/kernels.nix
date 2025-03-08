@@ -69,7 +69,7 @@ let
       # DRM_KMS_HELPER=y.
       BACKLIGHT_CLASS_DEVICE = yes;
     };
-    kernelPatches = builtins.map (p: p pkgs) [
+    kernelPatches = [
       # Fix compilation errors due to incomplete patch backport.
       # https://github.com/raspberrypi/linux/pull/6223
       gpio-pwm_-_pwm_apply_might_sleep
@@ -90,7 +90,7 @@ let
     modDirVersion = "6.1.73";
     tag = "stable_20240124";
     srcHash = "sha256-P4ExzxWqZj+9FZr9U2tmh7rfs/3+iHEv0m74PCoXVuM=";
-    kernelPatches = builtins.map (p: p pkgs) [
+    kernelPatches = [
       drm-rp1-depends-on-instead-of-select-MFD_RP1
       iommu-bcm2712-don-t-allow-building-as-module
     ];
@@ -100,7 +100,7 @@ let
     modDirVersion = "6.1.63";
     tag = "stable_20231123";
     srcHash = "sha256-4Rc57y70LmRFwDnOD4rHoHGmfxD9zYEAwYm9Wvyb3no=";
-    kernelPatches = builtins.map (p: p pkgs) [
+    kernelPatches = [
       drm-rp1-depends-on-instead-of-select-MFD_RP1
       iommu-bcm2712-don-t-allow-building-as-module
     ];
