@@ -78,6 +78,9 @@ imports = [
   # additionally, `nixpkgs.rpi` with _all_ overlays applied (see below)
   nixos-raspberrypi.lib.inject-overlays
 
+  # Adds raspberry overlay on top of `nixpkgs`, so that you may access all optimized packages via `pkgs.rpi`
+  nixos-raspberrypi.nixosModules.nixpkgs-rpi
+
   # Optional: Applies overlays with optimized packages to the global scope, 
   # including ffmpeg_{4,6,7}, kodi, libcamera, SDL2, vlc
   # Use with caution – this may cause lots of rebuilds (even though many 
