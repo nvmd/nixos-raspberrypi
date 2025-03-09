@@ -34,6 +34,14 @@ inputs = {
 Pre-built packages are provided for `nixpkgs` version locked with `flake.lock`.
 Depending on the circumstances, it may be either stable `nixpkgs` or `nixpkgs-unstable`. Check `inputs.nixpkgs` in `flake.nix` if it's important for you.
 
+Can be enabled globally to the NixOS configuration:
+```nix
+imports = with nixos-raspberrypi.nixosModules; [
+  trusted-nix-caches
+];
+```
+
+Or for the flake only:
 ```flake.nix
 nixConfig = {
   extra-substituters = [
