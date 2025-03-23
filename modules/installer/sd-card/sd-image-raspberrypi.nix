@@ -6,13 +6,13 @@
   ];
   # people say this module (imported by "sd-card/sd-image" above)
   # causes problems with linux-rpi
-  disabledModules = [ "profiles/all-hardware.nix" ];
+  disabledModules = [ (modulesPath + "profiles/all-hardware.nix") ];
 
   # boot.* stuff for rpi is already configured in rpi{4,5}.nix
   # and `bootloader-config`
 
   sdImage = {
-    imageBaseName = "nixos-sd-image-${config.configuration-revision.revision.short}";
+    imageBaseName = "nixos-sd-image";
     firmwareSize = 1024;
     firmwarePartitionID = "0x2175794e";
     populateFirmwareCommands = ''
