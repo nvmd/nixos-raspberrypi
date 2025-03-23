@@ -20,8 +20,8 @@ let
     owner = "jc-kynesim";
     repo  = "rpi-ffmpeg";
     # rev   = "test/${ffmpegVersion}/main";
-    rev   = "a4f8d3f69e97de0a0005a06ad76063e0a52fd7f5";
-    hash  = "sha256-wmj2WyJ9Tywiv4SB0Jgov/p5Hn2j3sAN8yvgCPOTCKg=";
+    rev   = "fa6bc5dc62b4fb98f25701424e00cd17a8dabe6d";
+    hash  = "sha256-p/33/Fe+pz9pIuYH7gYjGTi3uOnGYCxHenkqOpC+LBA=";
     # hash  = lib.fakeHash;
   };
   # see also for configure flags
