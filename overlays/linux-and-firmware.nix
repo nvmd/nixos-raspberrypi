@@ -16,13 +16,15 @@ let
   };
 in self: super: {
 
-  inherit (self.linuxAndFirmware.latest)
+  inherit (self.linuxAndFirmware.default)
     linux_rpi5 linuxPackages_rpi5
     linux_rpi4 linuxPackages_rpi4
     linux_rpi02 linuxPackages_rpi02
     raspberrypifw raspberrypiWirelessFirmware;
 
   linuxAndFirmware = super.lib.mergeAttrsList [
+
+    { default = self.linuxAndFirmware.v6_6_74; }
 
     { latest = self.linuxAndFirmware.v6_6_74; }
 
