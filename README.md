@@ -70,6 +70,8 @@ imports = with nixos-raspberrypi.nixosModules; [
   # RPi5-specific, one of them for "PrimaryGPU" configuration:
   raspberry-pi-5.display-vc4  # "regular" display connected
   raspberry-pi-5.display-rp1  # for RP1-connected (DPI/composite/MIPI DSI) display
+
+  usb-gadget-ethernet # Configures USB Gadget/Ethernet - Ethernet emulation over USB
 ];
 ```
 
@@ -136,6 +138,14 @@ or, to an already running system:
 $ nixos-rebuild switch --flake .#<system> --target-host root@<hostname>
 ```
 
+### Examples
+
+There's a configuration example in `flake.nix` (look for `nixosConfigurations.rpi02-installer`), which also doubles as an installation SD card image for Raspberry Pi Zero2.
+SD image can be built with:
+```
+$ nix build .#installerImages.rpi0
+```
+Replace `# YOUR SSH PUB KEY HERE #` with your SSH public key to be able to access the system via USB Ethernet gadget functinality right away.
 
 ## Design goals
 
