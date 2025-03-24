@@ -125,6 +125,16 @@ Configuration options for the bootloader are in `boot.loader.raspberryPi` (defin
 
 Raspberry's `config.txt` can be configured with `hardware.raspberry-pi.config` options, see `modules/configtxt.nix` as an example (this is the default configuration as provided by RaspberryPi OS, but translated to nix format).
 
+### Configuration examples
+
+There's a configuration example `nixosConfigurations.rpi02-installer` in `flake.nix`, which also doubles as an installation SD card image for Raspberry Pi Zero2.
+SD image can be built with:
+```
+$ nix build .#installerImages.rpi0
+```
+Replace `# YOUR SSH PUB KEY HERE #` with your SSH public key to be able to access the system via USB Ethernet gadget functinality right away.
+`.#nixosConfigurations.rpi02-installer.config.system.build.toplevel` is also included in the binary cache.
+
 
 ### Deploy
 
@@ -138,14 +148,6 @@ or, to an already running system:
 $ nixos-rebuild switch --flake .#<system> --target-host root@<hostname>
 ```
 
-### Examples
-
-There's a configuration example in `flake.nix` (look for `nixosConfigurations.rpi02-installer`), which also doubles as an installation SD card image for Raspberry Pi Zero2.
-SD image can be built with:
-```
-$ nix build .#installerImages.rpi0
-```
-Replace `# YOUR SSH PUB KEY HERE #` with your SSH public key to be able to access the system via USB Ethernet gadget functinality right away.
 
 ## Design goals
 
