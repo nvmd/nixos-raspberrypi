@@ -182,5 +182,76 @@
 
     });
 
+    nixosConfigurations.rpi02-installer = nixpkgs.lib.nixosSystem {
+      system = "aarch64-linux";
+      specialArgs = inputs // { nixos-raspberrypi = self; };
+      modules = [
+        ({ config, modulesPath, nixos-raspberrypi, lib, ... }: {
+          imports = with nixos-raspberrypi.nixosModules; [
+            # Hardware configuration
+            raspberry-pi-02.base
+            usb-gadget-ethernet
+            ./modules/nice-looking-console.nix
+
+            # Nix cache with prebuilt packages,
+            # see `devshells/nix-build-to-cachix.nix` for a list
+            trusted-nix-caches
+
+            # All RPi and RPi-optimised packages to be available in `pkgs.rpi`
+            nixpkgs-rpi
+            # Add necessary overlays with kernel, firmware, vendor packages
+            nixos-raspberrypi.lib.inject-overlays
+            # Optonally add overlays with optimised packages into the global scope
+            nixos-raspberrypi.lib.inject-overlays-global
+
+            # SD-card image
+            sd-image-uboot
+            # nixos' standard installer configuration
+            ({ config, pkgs, modulesPath, ... }: {
+              # /installer/sd-card/sd-image-aarch64-installer.nix
+              imports = [
+                (modulesPath + "/profiles/installation-device.nix")
+              ];
+
+              # disable swraid – it breaks the boot on raspberry:
+              # - rootfs image is not initramfs (write error): looks like initrd
+              # - /initrd.image: incomplete write (-28 != 25571065)
+              # with the subsequent boot failure
+              boot.swraid.enable = lib.mkForce false;
+
+              # the installation media is also the installation target,
+              # so we don't want to provide the installation configuration.nix.
+              installer.cloneConfig = false;
+            })
+
+          ];
+
+          users.users.nixos.openssh.authorizedKeys.keys = [
+            # YOUR SSH PUB KEY HERE #
+          ];
+          users.users.root.openssh.authorizedKeys.keys = [
+            # YOUR SSH PUB KEY HERE #
+          ];
+
+
+          sdImage.imageBaseName = "nixos-sd-image";
+
+          system.nixos.tags = [
+            "raspberry-pi-02"
+            config.boot.loader.raspberryPi.bootloader
+            config.boot.kernelPackages.kernel.version
+          ];
+
+        })
+      ];
+    };
+
+    installerImages = let
+      nixos = self.nixosConfigurations;
+      mkImage = nixosConfig: nixosConfig.config.system.build.sdImage;
+    in {
+      rpi02 = mkImage nixos.rpi02-installer;
+    };
+
   };
 }
