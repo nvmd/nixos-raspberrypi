@@ -83,6 +83,8 @@
 
       pisugar-3 = import ./modules/pisugar-3.nix;
 
+      usb-gadget-ethernet = import ./modules/usb-gadget-ethernet.nix;
+
       raspberry-pi-5 = {
         base = { config, lib, pkgs, ... }: import ./modules/raspberry-pi-5 {
           inherit config lib pkgs self;
