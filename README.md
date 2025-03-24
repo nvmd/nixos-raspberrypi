@@ -130,7 +130,7 @@ Raspberry's `config.txt` can be configured with `hardware.raspberry-pi.config` o
 There's a configuration example `nixosConfigurations.rpi02-installer` in `flake.nix`, which also doubles as an installation SD card image for Raspberry Pi Zero2.
 SD image can be built with:
 ```
-$ nix build .#installerImages.rpi0
+$ nix build .#installerImages.rpi02
 ```
 Replace `# YOUR SSH PUB KEY HERE #` with your SSH public key to be able to access the system via USB Ethernet gadget functinality right away.
 `.#nixosConfigurations.rpi02-installer.config.system.build.toplevel` is also included in the binary cache.
