@@ -78,8 +78,8 @@
         inherit config lib pkgs self;
       };
 
-      sd-image = import ./modules/installer/sd-card/sd-image-raspberrypi.nix;
-      sd-image-installer = import ./modules/installer/sd-card/sd-image-raspberrypi-installer.nix;
+      sd-image-kernelboot = import ./modules/installer/sd-card/sd-image-raspberrypi.nix;
+      sd-image-uboot = import ./modules/installer/sd-card/sd-image-aarch64-uboot.nix;
 
       pisugar-3 = import ./modules/pisugar-3.nix;
 
