@@ -18,6 +18,9 @@ writeShellApplication {
         | cachix push "''${CACHE}"
     }
 
+    build_and_push_nixos() {
+      build_and_push ".#nixosConfigurations.$1.config.system.build.toplevel"
+    }
     build_and_push_packages() {
       build_and_push ".#packages.aarch64-linux.$1"
     }
@@ -37,6 +40,10 @@ writeShellApplication {
     # * https://docs.cachix.org/pushing
     # * https://github.com/NixOS/nix/issues/7165
     # thus, the following boilerplate
+
+    declare -a nixos=(
+      rpi02-installer
+    )
 
     declare -a packages=(
       # "ffmpeg_4"
@@ -74,6 +81,10 @@ writeShellApplication {
 
     for i in "''${packages[@]}"; do
       build_and_push_packages "$i"
+    done
+
+    for i in "''${nixos[@]}"; do
+      build_and_push_nixos "$i"
     done
 
     set +o xtrace
