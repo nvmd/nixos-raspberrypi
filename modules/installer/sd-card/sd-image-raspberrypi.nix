@@ -12,7 +12,10 @@
   # and `bootloader-config`
 
   sdImage = {
-    imageBaseName = "nixos-sd-image";
+    imageBaseName = let
+      cfg = config.boot.loader.raspberryPi;
+    in "nixos-sd-image-rpi${cfg.variant}-${cfg.bootloader}";
+
     firmwareSize = 1024;
     firmwarePartitionID = "0x2175794e";
     populateFirmwareCommands = ''
