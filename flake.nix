@@ -186,7 +186,7 @@
       system = "aarch64-linux";
       specialArgs = inputs // { nixos-raspberrypi = self; };
       modules = [
-        ({ config, modulesPath, nixos-raspberrypi, lib, ... }: {
+        ({ config, pkgs, lib, modulesPath, nixos-raspberrypi, ... }: {
           imports = with nixos-raspberrypi.nixosModules; [
             # Hardware configuration
             raspberry-pi-02.base
@@ -233,6 +233,9 @@
             # YOUR SSH PUB KEY HERE #
           ];
 
+          environment.systemPackages = with pkgs; [
+            raspberrypi-eeprom
+          ];
 
           sdImage.imageBaseName = "nixos-sd-image";
 
