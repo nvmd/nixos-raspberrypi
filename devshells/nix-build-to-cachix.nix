@@ -43,6 +43,8 @@ writeShellApplication {
 
     declare -a nixos=(
       rpi02-installer
+      rpi4-installer
+      rpi5-installer
     )
 
     declare -a packages=(
@@ -67,15 +69,15 @@ writeShellApplication {
 
       "vlc"
 
-      # linuxAndFirmware.latest.*
+      # linuxAndFirmware.default.*
       "linux_rpi02"
       "linux_rpi4"
       "linux_rpi5"
       "raspberrypifw"
       "raspberrypiWirelessFirmware"
 
-      pisugar3-kmod
-      pisugar2-kmod
+      # pisugar3-kmod
+      # pisugar2-kmod
       pisugar-power-manager-rs
     )
 
