@@ -46,10 +46,13 @@ let
   firmwarePopulateCmd = "${populateFirmwareBuilder} ${firmwareBuilderArgs}";
   firmwareBuilderArgs = lib.optionalString (!cfg.useGenerationDeviceTree) " -r";
 
+  # used for system.build.*
   builder = {
+    # system.build.installFirmware
     firmware = "${firmwareBuilder} -d ${cfg.firmwarePath} ${firmwareBuilderArgs} -c";
+    # system.build.installBootLoader
     uboot = "${ubootBuilder} -f ${cfg.firmwarePath} -b ${cfg.bootPath} -c";
-    kernelboot = "${kernelbootBuilder} -d ${cfg.firmwarePath} -c";
+    kernelboot = "${kernelbootBuilder} -f ${cfg.firmwarePath} -c";
   };
 
   populateCmds = {
@@ -59,7 +62,7 @@ let
     };
     kernelboot = {
       firmware = "${populateKernelbootBuilder}";
-      boot = "";
+      boot = "${populateKernelbootBuilder}";
     };
   };
 

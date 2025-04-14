@@ -8,31 +8,9 @@ shopt -s nullglob
 export PATH=/empty
 for i in @path@; do PATH=$PATH:$i/bin; done
 
-usage() {
-    echo "usage: $0 -c <path-to-default-configuration> [-d <boot-dir>]" >&2
-    exit 1
-}
-
-default=                # Default configuration
-target=/boot/firmware   # Target directory
-
-# fwdir=@firmware@/share/raspberrypi/boot/
-SRC_FIRMWARE_DIR=@firmware@/share/raspberrypi/boot
-
-while getopts "c:d:" opt; do
-    case "$opt" in
-        c) default="$OPTARG" ;;
-        d) target="$OPTARG" ;;
-        \?) usage ;;
-    esac
-done
-
-echo "copying firmware..."
-@firmwareBuilder@ -c $default -d $target
-
-echo "updating the boot generations directory..."
-
-mkdir -p $target/old
+# used to track copied files to decide which are obsolete
+# and need to be removed
+declare -A filesCopied
 
 # Convert a path to a file in the Nix store such as
 # /nix/store/<hash>-<name>/file to <hash>-<name>-<file>.
@@ -41,12 +19,12 @@ cleanName() {
     echo "$path" | sed 's|^/nix/store/||' | sed 's|/|-|g'
 }
 
-# Copy a file from the Nix store to $target/kernels.
-declare -A filesCopied
-
+# Copy a file from the Nix store to `kernelsDir`.
 copyToKernelsDir() {
     local src="$1"
-    local dst="$target/old/$(cleanName $src)"
+    local kernelsDir="$2"
+
+    local dst="$kernelsDir/$(cleanName $src)"
     # Don't copy the file if $dst already exists.  This means that we
     # have to create $dst atomically to prevent partially copied
     # kernels or initrd if this script is ever interrupted.
@@ -66,94 +44,108 @@ copyForced() {
     mv $dst.tmp $dst
 }
 
-outdir=$target/old
-mkdir -p $outdir || true
-
-# Copy its kernel and initrd to $target/old.
+# Copy generation's kernel and initrd to `kernelsDir`.
+# Default generation's are also copied to `outdir`
 addEntry() {
-    local path="$1"
-    local generation="$2"
+    local generationPath="$1"
+    local generationName="$2"
+    local outdir="$3"
+    local kernelsDir="$4"
 
-    if ! test -e $path/kernel -a -e $path/initrd; then
+    if ! test -e $generationPath/kernel -a -e $generationPath/initrd; then
         return
     fi
 
-    local kernel=$(readlink -f $path/kernel)
-    local initrd=$(readlink -f $path/initrd)
-    # local dtb_path=$(readlink -f $path/dtbs)
-    # local dtb_path=$SRC_FIRMWARE_DIR
+    local kernel=$(readlink -f $generationPath/kernel)
+    local initrd=$(readlink -f $generationPath/initrd)
 
     if test -n "@copyKernels@"; then
-        copyToKernelsDir $kernel; kernel=$result
-        copyToKernelsDir $initrd; initrd=$result
+        copyToKernelsDir $kernel $kernelsDir; kernel=$result
+        copyToKernelsDir $initrd $kernelsDir; initrd=$result
     fi
 
-    echo $(readlink -f $path) > $outdir/$generation-system
-    echo $(readlink -f $path/init) > $outdir/$generation-init
-    cp $path/kernel-params $outdir/$generation-cmdline.txt
-    echo $initrd > $outdir/$generation-initrd
-    echo $kernel > $outdir/$generation-kernel
+    echo $(readlink -f $generationPath) > $kernelsDir/$generationName-system
+    echo $(readlink -f $generationPath/init) > $kernelsDir/$generationName-init
+    cp $generationPath/kernel-params $kernelsDir/$generationName-cmdline.txt
+    echo $initrd > $kernelsDir/$generationName-initrd
+    echo $kernel > $kernelsDir/$generationName-kernel
 
-    if test "$generation" = "default"; then
-      copyForced $kernel $target/kernel.img
-      copyForced $initrd $target/initrd
+    if test "$generationName" = "default"; then
+      copyForced $kernel $outdir/kernel.img
+      copyForced $initrd $outdir/initrd
 
-    #   # Managed by firmware-builder
-    #   DTBS=("$dtb_path"/*.dtb)
-    #   for dtb in "${DTBS[@]}"; do
-    #       dst="$target/$(basename $dtb)"
-    #       copyForced $dtb "$dst"
-    #       filesCopied[$dst]=1
-    #   done
-
-    #   SRC_OVERLAYS_DIR="$dtb_path/overlays"
-    #   SRC_OVERLAYS=("$SRC_OVERLAYS_DIR"/*)
-    #   mkdir -p $target/overlays
-    #   for ovr in "${SRC_OVERLAYS[@]}"; do
-    #   # for ovr in $dtb_path/overlays/*; do
-    #       dst="$target/overlays/$(basename $ovr)"
-    #       copyForced $ovr "$dst"
-    #       filesCopied[$dst]=1
-    #   done
-
-      cp "$(readlink -f "$path/init")" $target/nixos-init
-      echo "`cat $path/kernel-params` init=$path/init" >$target/cmdline.txt
+      cp "$(readlink -f "$generationPath/init")" $outdir/nixos-init
+      echo "`cat $generationPath/kernel-params` init=$generationPath/init" >$outdir/cmdline.txt
     fi
 }
 
-addEntry $default default
+removeObsolete() {
+    local path="$1"
 
-# Add all generations of the system profile to the menu, in reverse
-# (most recent to least recent) order.
-for generation in $(
-    (cd /nix/var/nix/profiles && ls -d system-*-link) \
-    | sed 's/system-\([0-9]\+\)-link/\1/' \
-    | sort -n -r); do
-    link=/nix/var/nix/profiles/system-$generation-link
-    addEntry $link $generation
+    # Remove obsolete files from $path and $path/old.
+    for fn in $path/*linux* $path/*initrd-initrd*; do
+        if ! test "${filesCopied[$fn]}" = 1; then
+            rm -vf -- "$fn"
+        fi
+    done
+}
+
+addAllEntries() {
+    local defaultGenerationPath="$1"
+    local outdir="$2"
+
+    local kernelsDir="$outdir/nixos-kernels"
+    mkdir -p $kernelsDir || true
+
+    # Add default generation
+    addEntry $defaultGenerationPath default $outdir $kernelsDir
+
+    # Add all generations of the system profile to the menu, in reverse
+    # (most recent to least recent) order.
+    for generation in $(
+        (cd /nix/var/nix/profiles && ls -d system-*-link) \
+        | sed 's/system-\([0-9]\+\)-link/\1/' \
+        | sort -n -r); do
+        link=/nix/var/nix/profiles/system-$generation-link
+        addEntry $link $generation $outdir $kernelsDir
+    done
+
+    removeObsolete $kernelsDir
+}
+
+usage() {
+    echo "usage: $0 -c <path-to-default-configuration> [-d <boot-dir>]" >&2
+    exit 1
+}
+
+
+default=                # Default configuration
+
+echo "kernelboot-builder: $@"
+while getopts "c:b:f:" opt; do
+    case "$opt" in
+        c) default="$OPTARG" ;;
+        b) boottarget="$OPTARG" ;;
+        f) fwtarget="$OPTARG" ;;
+        \?) usage ;;
+    esac
 done
 
-# # Managed by firmware-builder
-# # Add the firmware files
-# # # fwdir=@firmware@/share/raspberrypi/boot/
-# # SRC_FIRMWARE_DIR=@firmware@/share/raspberrypi/boot
-# STARTFILES=("$SRC_FIRMWARE_DIR"/start*.elf)
-# BOOTCODE="$SRC_FIRMWARE_DIR/bootcode.bin"
-# FIXUPS=("$SRC_FIRMWARE_DIR"/fixup*.dat)
-# for SRC in "${STARTFILES[@]}" "$BOOTCODE" "${FIXUPS[@]}"; do
-#     dst="$target/$(basename $SRC)"
-#     copyForced "$SRC" "$dst"
-# done
+if [ -z "$boottarget" ] && [ -z "$fwtarget" ]; then
+    echo "Error: at least one of \`-b <boot-dir>\` and \`-f <firmware-dir>\` must be set"
+    usage
+fi
 
-# # Managed by firmware-builder
-# # Add the config.txt
-# copyForced @configTxt@ $target/config.txt
+if [ -n "$fwtarget" ]; then
+    @firmwareBuilder@ -c $default -d $fwtarget
 
-# # $target/*.dtb $target/overlays/* are managed by firmware-builder
-# Remove obsolete files from $target and $target/old.
-# for fn in $target/old/*linux* $target/old/*initrd-initrd* $target/*.dtb $target/overlays/*; do
-for fn in $target/old/*linux* $target/old/*initrd-initrd*; do
-    if ! test "${filesCopied[$fn]}" = 1; then
-        rm -vf -- "$fn"
-    fi
-done
+    echo "updating the boot generations directory..."
+    addAllEntries $default $fwtarget
+fi
+
+if [ -n "$boottarget" ]; then
+    echo "'-b $boottarget' isn't used when loading the kernel directly with kernelboot: \
+          kernels are copied directly to <firmware-dir>"
+fi
+
+echo "kernelboot bootloader installed"
