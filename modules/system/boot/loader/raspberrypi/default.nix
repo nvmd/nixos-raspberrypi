@@ -110,9 +110,9 @@ in
         default = "/boot/firmware";
         type = types.str;
         description = ''
-          Target path for system firmware and:
-          - rpi: system generations, `<firmwarePath>/old` will hold
-            files from old generations.
+          Target path for system firmware (DTBs, etc.) and:
+          - kernelboot: system generations, `<firmwarePath>/nixos-kernels` will hold
+            files from older generations.
           - uboot: uboot binary
         '';
       };
@@ -144,9 +144,9 @@ in
           Depending on the chosen bootloader, may also copy bootloader image.
 
           Honors all relevant module options except the
-          `-c <path-to-default-configuration>`
-          `-d <target-dir>` arguments, which can be specified
-          by the caller of firmwarePopulateCmd.
+          - `-c <path-to-default-configuration>`
+          - `-f <firmware-target-dir>` arguments,
+          which must be specified by the caller of firmwarePopulateCmd.
 
           Useful to have for sdImage.populateFirmwareCommands
         '';
