@@ -6,8 +6,9 @@
 pkgs.substituteAll {
   src = ./firmware-builder.sh;
   isExecutable = true;
+
   inherit (pkgs) bash;
-  path = [pkgs.coreutils pkgs.gnused pkgs.gnugrep];
+  path = [ pkgs.coreutils ];
 
   inherit firmware configTxt;
 }

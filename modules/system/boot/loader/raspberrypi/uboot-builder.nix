@@ -8,8 +8,9 @@
 pkgs.substituteAll {
   src = ./uboot-builder.sh;
   isExecutable = true;
+
   inherit (pkgs) bash;
-  path = [pkgs.coreutils pkgs.gnused pkgs.gnugrep];
+  path = [ pkgs.coreutils ];
 
   uboot = ubootPackage;
   inherit ubootBinName;
