@@ -78,8 +78,7 @@
         inherit config lib pkgs self;
       };
 
-      sd-image-uboot = import ./modules/installer/sd-card/sd-image-aarch64-uboot.nix;
-      sd-image-kernelboot = import ./modules/installer/sd-card/sd-image-raspberrypi.nix;
+      sd-image = import ./modules/installer/sd-card/sd-image-raspberrypi.nix;
 
       pisugar-3 = import ./modules/pisugar-3.nix;
 
@@ -244,7 +243,7 @@
             raspberry-pi-02.base
             usb-gadget-ethernet
             # SD-Card image
-            sd-image-uboot
+            sd-image
           ];
         })
         custom-user-config
@@ -256,7 +255,7 @@
             # Hardware configuration
             raspberry-pi-4.base
             # SD-Card image
-            sd-image-uboot
+            sd-image
           ];
         })
         custom-user-config
@@ -268,7 +267,7 @@
             # Hardware configuration
             raspberry-pi-5.base
             # SD-Card image
-            sd-image-kernelboot
+            sd-image
           ];
         })
         custom-user-config
