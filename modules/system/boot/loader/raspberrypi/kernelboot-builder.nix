@@ -3,7 +3,7 @@
 }:
 
 pkgs.substituteAll {
-  src = ./raspberrypi-builder.sh;
+  src = ./kernelboot-builder.sh;
   isExecutable = true;
   inherit (pkgs) bash;
   path = [pkgs.coreutils pkgs.gnused pkgs.gnugrep];

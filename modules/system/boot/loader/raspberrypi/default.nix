@@ -14,7 +14,7 @@ let
     inherit pkgs configTxt;
     firmware = cfg.firmwarePackage;
   };
-  kernelbootBuilder = import ./raspberrypi-builder.nix {
+  kernelbootBuilder = import ./kernelboot-builder.nix {
     inherit pkgs;
     firmwareBuilder = firmwarePopulateCmd;
   };
@@ -31,7 +31,7 @@ let
     pkgs = pkgs.buildPackages;
     firmware = cfg.firmwarePackage;
   };
-  populateKernelbootBuilder = import ./raspberrypi-builder.nix {
+  populateKernelbootBuilder = import ./kernelboot-builder.nix {
     pkgs = pkgs.buildPackages;
     firmwareBuilder = firmwarePopulateCmd;
   };
