@@ -188,6 +188,7 @@
         specialArgs = inputs // { nixos-raspberrypi = self; };
         modules = [
           nixos-raspberrypi-config
+          self.nixosModules.sd-image
           ./modules/installer/raspberrypi-installer.nix
         ] ++ moreModules;
       };
@@ -242,8 +243,6 @@
             # Hardware configuration
             raspberry-pi-02.base
             usb-gadget-ethernet
-            # SD-Card image
-            sd-image
           ];
         })
         custom-user-config
@@ -254,8 +253,6 @@
           imports = with nixos-raspberrypi.nixosModules; [
             # Hardware configuration
             raspberry-pi-4.base
-            # SD-Card image
-            sd-image
           ];
         })
         custom-user-config
@@ -266,8 +263,6 @@
           imports = with nixos-raspberrypi.nixosModules; [
             # Hardware configuration
             raspberry-pi-5.base
-            # SD-Card image
-            sd-image
           ];
         })
         custom-user-config
@@ -280,7 +275,7 @@
       mkImage = nixosConfig: nixosConfig.config.system.build.sdImage;
     in {
       rpi02 = mkImage nixos.rpi02-installer;
-      rpi4 = mkImage nixos.rpi02-installer;
+      rpi4 = mkImage nixos.rpi4-installer;
       rpi5 = mkImage nixos.rpi5-installer;
     };
 
