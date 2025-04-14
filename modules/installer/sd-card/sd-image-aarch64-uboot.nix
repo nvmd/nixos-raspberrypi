@@ -1,4 +1,4 @@
-{ config, lib, pkgs, modulesPath, ... }:
+{ config, pkgs, lib, modulesPath, ... }:
 
 {
   imports = [
@@ -8,6 +8,15 @@
 
   # boot stuff is already configured with `boot.loader.raspberryPi` and
   # `hardware.raspberry-pi.config`
+
+  # with default options set by sdImage it won't be mounted at all
+  fileSystems."/boot/firmware".options = lib.mkForce [
+    "noatime"
+    "noauto"
+    "x-systemd.automount"
+    "x-systemd.idle-timeout=1min"
+  ];
+  fileSystems."/".options = [ "noatime" ];
 
   sdImage = {
     imageBaseName = let
@@ -32,7 +41,8 @@
       cp ${uboot}/u-boot.bin firmware/u-boot-rpi-arm64.bin
     '';
     populateRootCommands = ''
-      mkdir -p ./files/boot
+      # create with a mount point for FIRMWARE
+      mkdir -p ./files/boot/firmware
       ${config.boot.loader.generic-extlinux-compatible.populateCmd} -c ${config.system.build.toplevel} -d ./files/boot
     '';
   };
