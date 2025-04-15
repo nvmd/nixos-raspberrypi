@@ -1,6 +1,31 @@
 { lib, self, ... }:
 
-{
+let
+  # use makeScope instead?
+  flib = lib.makeExtensible (flib_self: let
+    callLibs = file: import file { flib = flib_self; inherit self lib; };
+  in {
+
+  # NOTE: Endusers: please avoid using `int` (`internal`) directly
+  int = callLibs ./internal.nix;
+
+  nixosSystem = flib.int.nixosSystemRPi {
+    rpiModules = [ flib.int.default-nixos-raspberrypi-config ];
+  };
+  nixosSystemFull = flib.int.nixosSystemRPi {
+    rpiModules = [ flib.int.full-nixos-raspberrypi-config ];
+  };
+
+  nixosInstaller = flib.int.nixosSystemRPi {
+    rpiModules = [
+      flib.int.full-nixos-raspberrypi-config
+      self.nixosModules.sd-image
+      ../modules/installer/raspberrypi-installer.nix
+    ];
+  };
+
+  # NOTE: Not sure how long these two will be provided as a part of public
+  # interface, please consider using `nixosSystem` or `nixosSystemFull`
   inject-overlays = { config, lib, ... }: {
     nixpkgs.overlays = [
       self.overlays.bootloader
@@ -19,4 +44,6 @@
       self.overlays.pkgs
     ];
   };
-}
+
+  }); # flib
+in flib
