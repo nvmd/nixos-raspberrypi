@@ -181,37 +181,11 @@
 
     nixosConfigurations = let
 
-      mkNixOSRPiInstaller = moreModules: nixpkgs.lib.nixosSystem {
-        system = "aarch64-linux";
+      # TIP: To create "regular" nixosConfigurations look for
+      # `nixosSystem` and `nixosSystemFull` helpers in `lib/`
+      mkNixOSRPiInstaller = modules: self.lib.nixosInstaller {
         specialArgs = inputs // { nixos-raspberrypi = self; };
-        modules = [
-          nixos-raspberrypi-config
-          self.nixosModules.sd-image
-          ./modules/installer/raspberrypi-installer.nix
-        ] ++ moreModules;
-      };
-
-      nixos-raspberrypi-config = { config, pkgs, lib, nixos-raspberrypi, ... }: {
-        imports = with nixos-raspberrypi.nixosModules; [
-          # Nix cache with prebuilt packages,
-          # see `devshells/nix-build-to-cachix.nix` for a list
-          trusted-nix-caches
-
-          # All RPi and RPi-optimised packages to be available in `pkgs.rpi`
-          nixpkgs-rpi
-          # Add necessary overlays with kernel, firmware, vendor packages
-          nixos-raspberrypi.lib.inject-overlays
-          # Optonally add overlays with optimised packages into the global scope
-          nixos-raspberrypi.lib.inject-overlays-global
-        ];
-
-        system.nixos.tags = let
-          cfg = config.boot.loader.raspberryPi;
-        in[
-          "raspberry-pi${cfg.variant}"
-          cfg.bootloader
-          config.boot.kernelPackages.kernel.version
-        ];
+        inherit modules;
       };
 
       custom-user-config = ({ config, pkgs, lib, nixos-raspberrypi, ... }: {
@@ -230,6 +204,14 @@
 
         environment.systemPackages = with pkgs; [
           tree
+        ];
+
+        system.nixos.tags = let
+          cfg = config.boot.loader.raspberryPi;
+        in [
+          "raspberry-pi-${cfg.variant}"
+          cfg.bootloader
+          config.boot.kernelPackages.kernel.version
         ];
       });
 
