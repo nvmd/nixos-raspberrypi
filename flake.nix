@@ -31,16 +31,14 @@
     forSystems = systems: f: nixpkgs.lib.genAttrs systems (system: f system);
     mkRpiPkgs = nixpkgs: system: import nixpkgs {
         inherit system; overlays = [
-          self.overlays.bootloader
-
           self.overlays.pkgs
 
-          self.overlays.vendor-pkgs
-
-          self.overlays.vendor-firmware
+          self.overlays.bootloader
           self.overlays.vendor-kernel
-
+          self.overlays.vendor-firmware
           self.overlays.kernel-and-firmware
+
+          self.overlays.vendor-pkgs
         ];
       };
     mkLegacyPackagesFor = nixpkgs: forSystems rpiSystems (mkRpiPkgs nixpkgs);
