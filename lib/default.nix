@@ -9,20 +9,32 @@ let
   # NOTE: Endusers: please avoid using `int` (`internal`) directly
   int = callLibs ./internal.nix;
 
-  nixosSystem = flib.int.nixosSystemRPi {
+  nixosSystem = { nixpkgs ? self.inputs.nixpkgs
+                , trustCaches ? true
+                , ...
+                }@args: flib.int.nixosSystemRPi {
+    inherit nixpkgs trustCaches;
     rpiModules = [ flib.int.default-nixos-raspberrypi-config ];
-  };
-  nixosSystemFull = flib.int.nixosSystemRPi {
+  } args;
+  nixosSystemFull = { nixpkgs ? self.inputs.nixpkgs
+                    , trustCaches ? true
+                    , ...
+                    }@args: flib.int.nixosSystemRPi {
+    inherit nixpkgs trustCaches;
     rpiModules = [ flib.int.full-nixos-raspberrypi-config ];
-  };
+  } args;
 
-  nixosInstaller = flib.int.nixosSystemRPi {
+  nixosInstaller = { nixpkgs ? self.inputs.nixpkgs
+                   , trustCaches ? true
+                   , ...
+                   }@args: flib.int.nixosSystemRPi {
+    inherit nixpkgs trustCaches;
     rpiModules = [
       flib.int.full-nixos-raspberrypi-config
       self.nixosModules.sd-image
       ../modules/installer/raspberrypi-installer.nix
     ];
-  };
+  } args;
 
   # NOTE: Not sure how long these two will be provided as a part of public
   # interface, please consider using `nixosSystem` or `nixosSystemFull`
