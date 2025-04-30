@@ -96,8 +96,9 @@
           inherit config lib pkgs self;
         };
         display-vc4 = import ./modules/display-vc4.nix;
-        case-argonone = import ./modules/case-argononev2.nix { inherit argononed; };
         bluetooth = import ./modules/bluetooth.nix;
+        # work-in-progress, untested
+        case-argonone = import ./modules/case-argononev2.nix { inherit argononed; };
       };
 
       raspberry-pi-02 = {
