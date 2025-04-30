@@ -131,7 +131,7 @@ imports = with nixos-raspberrypi.nixosModules; [
   nixpkgs-rpi
 
   # Optonal: add overlays with optimised packages into the global scope
-  # provides: ffmpeg_{4,6,7}, kodi, libcamera, SDL2, vlc, etc.
+  # provides: ffmpeg_{4,6,7}, kodi, libcamera, vlc, etc.
   # This overlay may cause lots of rebuilds (however many 
   #  packages should be available from the binary cache)
   nixos-raspberrypi.lib.inject-overlays-global

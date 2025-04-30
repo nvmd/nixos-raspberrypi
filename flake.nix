@@ -152,8 +152,6 @@
       raspberrypi-udev-rules = (pkgs.callPackage ./pkgs/raspberrypi/udev-rules.nix {});
       rpicam-apps = pkgs.rpicam-apps;
 
-      SDL2 = pkgs.SDL2;
-
       vlc = pkgs.vlc;
 
       # see legacyPackages.<system>.linuxAndFirmware for other versions of 

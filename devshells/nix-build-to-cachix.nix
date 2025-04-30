@@ -65,8 +65,6 @@ writeShellApplication {
       "raspberrypi-udev-rules"
       "rpicam-apps"
 
-      "SDL2"
-
       "vlc"
 
       # linuxAndFirmware.default.*

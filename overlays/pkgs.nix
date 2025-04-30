@@ -122,20 +122,6 @@ self: super: { # final: prev:
     };
   });
 
-
-  SDL2 = (super.SDL2.override {
-    # enough to have the effect of '--enable-video-kmsdrm' (on by default) ?
-    drmSupport = true;
-  }).overrideAttrs (old: {
-    pname = old.pname + "-rpi";
-    configureFlags = old.configureFlags ++ [
-      # these are off by default
-      # https://github.com/libsdl-org/SDL/blob/SDL2/CMakeLists.txt#L417
-      "--enable-arm-simd"
-      "--enable-arm-neon"
-    ];
-  });
-
   vlc = super.vlc.overrideAttrs (old: {
     pname = old.pname + "-rpi";
     version = "3.0.21-0+rpt1";

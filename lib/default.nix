@@ -52,7 +52,7 @@ let
   };
   inject-overlays-global = { lib, ... }: {
     nixpkgs.overlays = lib.mkBefore [
-      # !!! causes _lots_ of rebuilds for graphical stuff via ffmpeg, SDL2, pipewire
+      # !!! causes _lots_ of rebuilds for graphical stuff via ffmpeg, pipewire
       self.overlays.pkgs
     ];
   };
