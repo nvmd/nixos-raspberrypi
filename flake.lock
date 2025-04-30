@@ -27,7 +27,7 @@
       },
       "original": {
         "owner": "nvmd",
-        "ref": "modules-with-keys",
+        "ref": "modules-with-keys-unstable",
         "repo": "nixpkgs",
         "type": "github"
       }
