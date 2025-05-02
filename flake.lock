@@ -16,6 +16,30 @@
         "type": "github"
       }
     },
+    "nixos-images": {
+      "inputs": {
+        "nixos-stable": [
+          "nixpkgs"
+        ],
+        "nixos-unstable": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1746225872,
+        "narHash": "sha256-ySSk4r9Mq6dO2MYaik4vTU18sA17aHTSb2LsAFXdw3E=",
+        "owner": "nvmd",
+        "repo": "nixos-images",
+        "rev": "33343fd9a237ed98df52e3611f833fdab729c358",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nvmd",
+        "ref": "sdimage-installer",
+        "repo": "nixos-images",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1745988343,
@@ -35,6 +59,7 @@
     "root": {
       "inputs": {
         "argononed": "argononed",
+        "nixos-images": "nixos-images",
         "nixpkgs": "nixpkgs"
       }
     }

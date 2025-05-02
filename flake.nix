@@ -24,9 +24,17 @@
       url = "github:nvmd/argononed";
       flake = false;
     };
+
+    nixos-images = {
+      # url = "github:nix-community/nixos-images";
+      url = "github:nvmd/nixos-images/sdimage-installer";
+      # url = "git+file:../nixos-images?shallow=1";
+      inputs.nixos-stable.follows = "nixpkgs";
+      inputs.nixos-unstable.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, argononed, ... }@inputs: let
+  outputs = { self, nixpkgs, argononed, nixos-images, ... }@inputs: let
     rpiSystems = [ "aarch64-linux" "armv7l-linux" "armv6l-linux" ];
     allSystems = nixpkgs.lib.systems.flakeExposed;
     forSystems = systems: f: nixpkgs.lib.genAttrs systems (system: f system);
@@ -185,13 +193,22 @@
       # `nixosSystem` and `nixosSystemFull` helpers in `lib/`
       mkNixOSRPiInstaller = modules: self.lib.nixosInstaller {
         specialArgs = inputs // { nixos-raspberrypi = self; };
-        inherit modules;
+        modules = [
+          nixos-images.nixosModules.sdimage-installer
+          ({ config, lib, modulesPath, ... }: {
+            disabledModules = [
+              # disable the sd-image module that nixos-images uses
+              (modulesPath + "/installer/sd-card/sd-image-aarch64-installer.nix")
+            ];
+            # nixos-images sets this with `mkForce`, thus `mkOverride 40`
+            image.baseName = let
+              cfg = config.boot.loader.raspberryPi;
+            in lib.mkOverride 40 "nixos-installer-rpi${cfg.variant}-${cfg.bootloader}";
+          })
+        ] ++ modules;
       };
 
       custom-user-config = ({ config, pkgs, lib, nixos-raspberrypi, ... }: {
-        imports = [
-          ./modules/nice-looking-console.nix
-        ];
 
         users.users.nixos.openssh.authorizedKeys.keys = [
           # YOUR SSH PUB KEY HERE #
