@@ -31,7 +31,7 @@ nixConfig = {
 
 ## Use the flake (Easy)
 
-There're helper functions intentended to be used as drop-in replacement for
+There're helper functions intended to be used as a drop-in replacement for
 `nixpkgs.lib.nixosSystem`:
 - `nixos-raspberrypi.lib.nixosSystem`
 - `nixos-raspberrypi.lib.nixosSystemFull` - same as above, but with RPi-optimized overlays applied globally, this may lead to more rebuilds
