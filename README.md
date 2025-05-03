@@ -138,9 +138,9 @@ imports = with nixos-raspberrypi.nixosModules; [
 ];
 ```
 
-## Installer configurations, and configuration examples
+## Installer configurations
 
-The flake provides installation SD card images for Raspberry Pi Zero2, 4, and 5, that can also double as configuration examples in addition to demo configurations provided in https://github.com/nvmd/nixos-raspberrypi-demo.
+The flake provides installation SD card images for Raspberry Pi Zero2, 4, and 5, based on https://github.com/nix-community/nixos-images. They have several advantages over the "standard" ones, making the installation more user-friendly: mDNS enabled, `iwd` for easier wlan configuration, etc.
 
 See `nixosConfigurations.rpi{02,4,5}-installer` in `flake.nix`.
 
@@ -153,6 +153,12 @@ $ nix build .#installerImages.rpi5
 Replace `# YOUR SSH PUB KEY HERE #` in `custom-user-config` with your SSH public key. Network access to RPi02 is also possible via USB Gadget/Ethernet functionality.
 
 `.#nixosConfigurations.rpi{02,4,5}-installer.config.system.build.toplevel` are included in the binary cache.
+
+## Configuration examples
+
+Sophisticated demo configurations are available in https://github.com/nvmd/nixos-raspberrypi-demo.
+
+Installer configurations can also double as the configuration examples.
 
 
 ## Deploy
