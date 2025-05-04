@@ -8,19 +8,20 @@
 
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "raspberrypi-udev-rules";
-  version = "20241202";
+  version = "20250423";
 
   # https://github.com/RPi-Distro/raspberrypi-sys-mods/tree/bookworm/
   src = fetchFromGitHub {
     owner = "RPi-Distro";
     repo = "raspberrypi-sys-mods";
-    rev = "5372108bc612c90ed6523662c57e35e2b4c4c17f";
-    hash = "sha256-prOmHr+exluX/J7wr2QAvF5qH00oeGExHSJyWoMO08Y=";
+    rev = "9921bca8dfb37b88c1cc6578753d707bc4a1917f";
+    hash = "sha256-v3dc8ffTD8jc9L8X0aTehK5E68VV7zpC+v8A/COr9K4=";
   };
 
   installPhase = ''
     mkdir -p $out/etc/udev/rules.d
     mkdir -p $out/lib/udev/rules.d
+    mkdir -p $out/lib/tmpfiles.d
 
     # Note: Installing only explicitly listed rules
 
@@ -62,10 +63,10 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       install -vD "$rules_lib_src/$i" $out/lib/udev/rules.d
     done
     for i in "''${rules_usr_lib[@]}"; do
-      install -vD "$rules_usr_lib_src/$i" $out/etc/udev/rules.d
+      install -vD "$rules_usr_lib_src/$i" $out/lib/udev/rules.d
     done
 
-    install -vD "usr/lib/tmpfiles.d/raspberrypi-sys-mods-ondemand-governor.conf" $out/usr/lib/tmpfiles.d
+    install -vD "usr/lib/tmpfiles.d/raspberrypi-sys-mods-ondemand-governor.conf" $out/lib/tmpfiles.d
   '';
 
   fixupPhase = ''
