@@ -42,6 +42,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       60-gpiochip4.rules
       60-i2c-aliases.rules
       60-pico.rules
+      60-piolib.rules
       61-drm.rules
       70-microbit.rules
 
