@@ -4,6 +4,7 @@
 , bash
 , gnugrep
 , coreutils
+, withCpuGovernorConfig ? false
 }:
 
 stdenvNoCC.mkDerivation (finalAttrs: {
@@ -53,7 +54,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
     rules_usr_lib_src=usr/lib/udev/rules.d
     declare -a rules_usr_lib=(
-      60-ondemand-governor.rules
+      ${if withCpuGovernorConfig then "60-ondemand-governor.rules" else ""}
     )
 
     for i in "''${rules_etc[@]}"; do
@@ -66,7 +67,9 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       install -vD "$rules_usr_lib_src/$i" $out/lib/udev/rules.d
     done
 
-    install -vD "usr/lib/tmpfiles.d/raspberrypi-sys-mods-ondemand-governor.conf" $out/lib/tmpfiles.d
+    ${if withCpuGovernorConfig then
+      "install -vD \"usr/lib/tmpfiles.d/raspberrypi-sys-mods-ondemand-governor.conf\" \$out/lib/tmpfiles.d"
+      else ""}
   '';
 
   fixupPhase = ''
