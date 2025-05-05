@@ -24,9 +24,14 @@ in self: super: {
 
   linuxAndFirmware = super.lib.mergeAttrsList [
 
-    { default = self.linuxAndFirmware.v6_6_74; }
+    { default = self.linuxAndFirmware.v6_12_25; }
 
-    { latest = self.linuxAndFirmware.v6_6_74; }
+    { latest = self.linuxAndFirmware.v6_12_25; }
+
+    (mkBundle self "v6_12_25" {
+      fw = self.raspberrypifw_20250430;
+      wFw = self.raspberrypiWirelessFirmware_20250408;
+    })
 
     (mkBundle self "v6_6_74" {
       fw = self.raspberrypifw_20250127;
