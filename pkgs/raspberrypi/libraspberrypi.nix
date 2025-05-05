@@ -6,13 +6,13 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "libraspberrypi";
-  version = "unstable-2023-10-20";
+  version = "unstable-2024-12-23";
 
   src = fetchFromGitHub {
     owner = "raspberrypi";
     repo = "userland";
-    rev = "96a7334ae9d5fc9db7ac92e59852377df63f1848";
-    hash = "sha256-H5wCsK7o4mBmTYpUchmumT4FyWN/cxdsmsYoRhkhOx8=";
+    rev = "a54a0dbb2b8dcf9bafdddfc9a9374fb51d97e976";
+    hash = "sha256-Edca6nkykdXKFF5MGq6LeKirMLHTZBCbFWvHTNHMWJ4=";
   };
 
   nativeBuildInputs = [ cmake pkg-config ];
