@@ -13,10 +13,10 @@
   };
 
   services.udev.packages = [
-    (pkgs.callPackage ../pkgs/raspberrypi/udev-rules.nix {})
+    pkgs.raspberrypi-udev-rules
   ];
 
   systemd.tmpfiles.packages = [
-    (pkgs.callPackage ../pkgs/raspberrypi/udev-rules.nix {})
+    pkgs.raspberrypi-udev-rules
   ];
 }
