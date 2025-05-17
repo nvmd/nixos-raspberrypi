@@ -145,7 +145,7 @@ imports = with nixos-raspberrypi.nixosModules; [
 
 ## Installer configurations
 
-The flake provides installation SD card images for Raspberry Pi Zero2, 4, and 5, based on <https://github.com/nix-community/nixos-images>. They have several advantages over the "standard" ones, making the installation more user-friendly: mDNS enabled, `iwd` for easier wlan configuration, etc.
+The flake provides installation SD card images for Raspberry Pi Zero2, 3, 4, and 5, based on <https://github.com/nix-community/nixos-images>. They have several advantages over the "standard" ones, making the installation more user-friendly: mDNS enabled, `iwd` for easier wlan configuration, etc.
 
 See `nixosConfigurations.rpi{02,4,5}-installer` in `flake.nix`.
 
