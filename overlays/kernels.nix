@@ -47,15 +47,12 @@ let
   # Linux
 
   linux_v6_12_25_argsOverride = {
-    # version of 2025-04-30 seems to be released everywhere else
-    # https://github.com/raspberrypi/linux/commit/9e9f366168e12f6edd2fda183b668a84f4a4c8a4
+    # https://github.com/raspberrypi/linux/releases/tag/stable_20250428
+    # this version seems to be released as a part of "2025-04-30"
     modDirVersion = "6.12.25";
-    tag = "2025-04-30";
-    # kernel will be fetched by the rev when it's specified
-    rev = "9e9f366168e12f6edd2fda183b668a84f4a4c8a4";
-    srcHash = "sha256-qqI2OEYFtovsuCNG+LA3EiaM/7oycZjxA8J0PTyjJEg=";
+    tag = "stable_20250428";
+    srcHash = "sha256-jVvJJJP4wSJm91jOz8QMXIujjGZ+IisTMCvusxarons";
   };
-
   linux_v6_6_74_argsOverride = {
     # https://github.com/raspberrypi/linux/releases/tag/stable_20250127
     modDirVersion = "6.6.74";
