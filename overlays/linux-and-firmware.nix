@@ -58,5 +58,4 @@ in self: super: {
       wFw = self.raspberrypiWirelessFirmware_20231115;
     })
   ];
-
 }
