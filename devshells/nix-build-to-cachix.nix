@@ -69,6 +69,7 @@ writeShellApplication {
 
       # linuxAndFirmware.default.*
       "linux_rpi02"
+      "linux_rpi3"
       "linux_rpi4"
       "linux_rpi5"
       "raspberrypifw"
