@@ -25,13 +25,13 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "rpicam-apps";
-  version = "1.6.0";
+  version = "1.7.0";
 
   src = fetchFromGitHub {
     owner = "raspberrypi";
     repo = "rpicam-apps";
     rev = "v${finalAttrs.version}";
-    hash = "sha256-pTSHmRmGV203HjrH6MWNDEz2xLitCsILKsOYD9PgjwU=";
+    hash = "sha256-79qpAfY83YOZdM5ZPyIOkg3s7x75hvjG6Cc96UAIdb0=";
   };
 
   nativeBuildInputs = [
