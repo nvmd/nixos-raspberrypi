@@ -63,11 +63,6 @@ stdenv.mkDerivation (finalAttrs: {
     "-Ddownload_imx500_models=false" #default=true
   ];
 
-  # Meson is no longer able to pick up Boost automatically.
-  # https://github.com/NixOS/nixpkgs/issues/86131
-  BOOST_INCLUDEDIR = "${lib.getDev boost}/include";
-  BOOST_LIBRARYDIR = "${lib.getLib boost}/lib";
-
   meta = with lib; {
     description = "A small suite of libcamera-based applications to drive the cameras on a Raspberry Pi platform.";
     homepage = "https://github.com/raspberrypi/rpicam-apps";
