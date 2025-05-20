@@ -1,8 +1,8 @@
 self: super: { # final: prev:
 
-  ffmpeg = self.ffmpeg_6;
-  ffmpeg-headless = self.ffmpeg_6-headless;
-  ffmpeg-full = self.ffmpeg_6-full;
+  ffmpeg = self.ffmpeg_7;
+  ffmpeg-headless = self.ffmpeg_7-headless;
+  ffmpeg-full = self.ffmpeg_7-full;
 
   ffmpeg_4 = (super.callPackage ../pkgs/ffmpeg_4-rpi.nix {
     ffmpeg = super.ffmpeg;

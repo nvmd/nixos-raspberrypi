@@ -48,10 +48,8 @@ writeShellApplication {
     )
 
     declare -a packages=(
-      # "ffmpeg_4"
-      "ffmpeg_6"
-      "ffmpeg_6-headless"
-      # "ffmpeg_7"
+      "ffmpeg_7"
+      "ffmpeg_7-headless"
 
       # "kodi"
       "kodi-gbm"
