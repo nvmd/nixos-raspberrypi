@@ -4,23 +4,25 @@
 , bash
 , gnugrep
 , coreutils
+, withCpuGovernorConfig ? false
 }:
 
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "raspberrypi-udev-rules";
-  version = "20241111";
+  version = "20250423";
 
   # https://github.com/RPi-Distro/raspberrypi-sys-mods/tree/bookworm/
   src = fetchFromGitHub {
     owner = "RPi-Distro";
     repo = "raspberrypi-sys-mods";
-    rev = "7114c0d6665e2fa86f993db842caf2d7518db69b";
-    hash = "sha256-prOmHr+exluX/J7wr2QAvF5qHPEoeGExHSJyWoMO08Y=";
+    rev = "9921bca8dfb37b88c1cc6578753d707bc4a1917f";
+    hash = "sha256-v3dc8ffTD8jc9L8X0aTehK5E68VV7zpC+v8A/COr9K4=";
   };
 
   installPhase = ''
     mkdir -p $out/etc/udev/rules.d
     mkdir -p $out/lib/udev/rules.d
+    mkdir -p $out/lib/tmpfiles.d
 
     # Note: Installing only explicitly listed rules
 
@@ -42,6 +44,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       60-gpiochip4.rules
       60-i2c-aliases.rules
       60-pico.rules
+      60-piolib.rules
       61-drm.rules
       70-microbit.rules
 
@@ -49,12 +52,24 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       # 80-noobs.rules
     )
 
-    for i in "''${rules_lib[@]}"; do
-      install -vD "$rules_lib_src/$i" $out/lib/udev/rules.d
-    done
+    rules_usr_lib_src=usr/lib/udev/rules.d
+    declare -a rules_usr_lib=(
+      ${if withCpuGovernorConfig then "60-ondemand-governor.rules" else ""}
+    )
+
     for i in "''${rules_etc[@]}"; do
       install -vD "$rules_etc_src/$i" $out/etc/udev/rules.d
     done
+    for i in "''${rules_lib[@]}"; do
+      install -vD "$rules_lib_src/$i" $out/lib/udev/rules.d
+    done
+    for i in "''${rules_usr_lib[@]}"; do
+      install -vD "$rules_usr_lib_src/$i" $out/lib/udev/rules.d
+    done
+
+    ${if withCpuGovernorConfig then
+      "install -vD \"usr/lib/tmpfiles.d/raspberrypi-sys-mods-ondemand-governor.conf\" \$out/lib/tmpfiles.d"
+      else ""}
   '';
 
   fixupPhase = ''

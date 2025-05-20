@@ -10,13 +10,13 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "libpisp";
-  version = "1.2.0";
+  version = "1.2.1";
 
   src = fetchFromGitHub {
     owner = "raspberrypi";
     repo = "libpisp";
     rev = "v${finalAttrs.version}";
-    hash = "sha256-tHfFcNSmXLcUHhqiGRh2YZT8xioUq0zMOMZl9rjG8ys=";
+    hash = "sha256-YshU7G5Rov67CVwFbf5ENp2j5ptAvkVrlMu85KmnEpk=";
   };
 
   nativeBuildInputs = [ pkg-config meson ninja ];

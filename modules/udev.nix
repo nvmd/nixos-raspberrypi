@@ -2,7 +2,7 @@
 
 {
   # ensure these groups used by udev rules exist
-  # as of raspberrypi-udev-rules-20240911
+  # as of raspberrypi-udev-rules-20250423
   users.extraGroups = {
     gpio = {};
     i2c = {};
@@ -13,6 +13,10 @@
   };
 
   services.udev.packages = [
-    (pkgs.callPackage ../pkgs/raspberrypi/udev-rules.nix {})
+    pkgs.raspberrypi-udev-rules
+  ];
+
+  systemd.tmpfiles.packages = [
+    pkgs.raspberrypi-udev-rules
   ];
 }
