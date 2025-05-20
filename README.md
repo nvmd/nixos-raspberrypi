@@ -13,7 +13,6 @@ Supported boot methods: `kernelboot`, `uboot`. Also mostly-working `uefi` in a s
 # How to use
 
 ## Add flake input
-
 ```nix
 inputs = {
   nixos-raspberrypi.url = "github:nvmd/nixos-raspberrypi";
@@ -34,13 +33,11 @@ nixConfig = {
 
 There're helper functions intended to be used as a drop-in replacement for
 `nixpkgs.lib.nixosSystem`:
-
 - `nixos-raspberrypi.lib.nixosSystem`
 - `nixos-raspberrypi.lib.nixosSystemFull` - same as above, but with RPi-optimized overlays applied globally, this may lead to more rebuilds
 - `nixos-raspberrypi.lib.nixosSystemInstaller` - same as `nixosSystemFull` but with additional installer-specific modules
 
 All of them take the following additional optional arguments:
-
 - `nixpkgs` – default = nixpkgs of the `nixos-raspberrypi` will be used
 - `trustCaches` – default=true, trust binary caches of `nixos-raspberrypi`
 
@@ -75,8 +72,7 @@ nixosConfigurations.rpi5-demo = nixos-raspberrypi.lib.nixosSystem {
   ];
 };
 ```
-
-See also: <https://github.com/nvmd/nixos-raspberrypi-demo>, [Installers and examples](#installer-configurations-and-configuration-examples).
+See also: https://github.com/nvmd/nixos-raspberrypi-demo, [Installers and examples](#installer-configurations-and-configuration-examples).
 
 ## Choosing modules corresponding to your hardware
 
@@ -87,7 +83,6 @@ Here is the list of the most important:
 imports = with nixos-raspberrypi.nixosModules; [
   # Base board support modules
   raspberry-pi-02.base
-  raspberry-pi-3.base
   raspberry-pi-4.base
   raspberry-pi-5.base
 
@@ -113,10 +108,10 @@ Configuration options for the bootloader are in `boot.loader.raspberryPi` (defin
 
 Raspberry's `config.txt` can be configured with `hardware.raspberry-pi.config` options, see `modules/configtxt.nix` as an example (this is the default configuration as provided by RaspberryPi OS, but translated to nix format).
 
+
 ## Use the flake (Advanced)
 
 Options for a more fine-grained control:
-
 - see implementation details in `lib/default.nix`, `lib/internal.nix`
 - Use `nixos-raspberrypi.lib.int.nixosSystemRPi` instead of `nixos-raspberrypi.lib.nixosSystem`
 - Use regular `nixpkgs.lib.nixosSystem` importing the modules manually, see
@@ -145,48 +140,44 @@ imports = with nixos-raspberrypi.nixosModules; [
 
 ## Installer configurations
 
-The flake provides installation SD card images for Raspberry Pi Zero2, 3, 4, and 5, based on <https://github.com/nix-community/nixos-images>. They have several advantages over the "standard" ones, making the installation more user-friendly: mDNS enabled, `iwd` for easier wlan configuration, etc.
+The flake provides installation SD card images for Raspberry Pi Zero2, 4, and 5, based on https://github.com/nix-community/nixos-images. They have several advantages over the "standard" ones, making the installation more user-friendly: mDNS enabled, `iwd` for easier wlan configuration, etc.
 
 See `nixosConfigurations.rpi{02,4,5}-installer` in `flake.nix`.
 
 SD image can be built with:
-
 ```
-nix build .#installerImages.rpi02
-nix build .#installerImages.rpi3
-nix build .#installerImages.rpi4
-nix build .#installerImages.rpi5
+$ nix build .#installerImages.rpi02
+$ nix build .#installerImages.rpi4
+$ nix build .#installerImages.rpi5
 ```
-
 Replace `# YOUR SSH PUB KEY HERE #` in `custom-user-config` with your SSH public key. Network access to RPi02 is also possible via USB Gadget/Ethernet functionality.
 
 `.#nixosConfigurations.rpi{02,4,5}-installer.config.system.build.toplevel` are included in the binary cache.
 
 ## Configuration examples
 
-Sophisticated demo configurations are available in <https://github.com/nvmd/nixos-raspberrypi-demo>.
+Sophisticated demo configurations are available in https://github.com/nvmd/nixos-raspberrypi-demo.
 
 Installer configurations can also double as the configuration examples.
+
 
 ## Deploy
 
 for example, with `nixos-anywhere` to the system running installer image (will use [disko](https://github.com/nix-community/disko/) to set the disks up):
-
 ```shell
-nixos-anywhere --flake .#<system> root@<hostname>"
+$ nixos-anywhere --flake .#<system> root@<hostname>"
 ```
 
 or, to an already running system (change configuration of):
-
 ```shell
-nixos-rebuild switch --flake .#<system> --target-host root@<hostname>
+$ nixos-rebuild switch --flake .#<system> --target-host root@<hostname>
 ```
 
 ## Alternative ways to get individual packages
 
 An alternative ways to consume individual packages without overlays are:
 
-- to get it directly from the flake, it will based on stable `nixpkgs` _without_ any of other optimisations transitively applied (i.e. only this particular package is optimised):
+* to get it directly from the flake, it will based on stable `nixpkgs` _without_ any of other optimisations transitively applied (i.e. only this particular package is optimised):
 
 ```nix
   environment.systemPackages = [
@@ -194,17 +185,18 @@ An alternative ways to consume individual packages without overlays are:
   ];
 ```
 
-- to get it from `nixos-raspberrypi.legacyPackages.<system>`. Here all overlays are applied.
+* to get it from `nixos-raspberrypi.legacyPackages.<system>`. Here all overlays are applied.
+
 
 ## Design goals
 
 This is basically [`boot.loader.raspberryPi` options](https://search.nixos.org/options?channel=unstable&show=boot.loader.raspberryPi), which are deprecated in nixpkgs, but updated and improved upon.
 
 Design objectives:
+* individually consumable modules and overlays for specific functions
+* reuse of the existing nixos/nixpkgs infrastructure and idiomatic approaches to the maximum extent possible
+* integration with the existing nixos system activation
 
-- individually consumable modules and overlays for specific functions
-- reuse of the existing nixos/nixpkgs infrastructure and idiomatic approaches to the maximum extent possible
-- integration with the existing nixos system activation
 
 ## Historical background
 

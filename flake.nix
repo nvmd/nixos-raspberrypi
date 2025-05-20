@@ -110,12 +110,6 @@
         case-argonone = import ./modules/case-argononev2.nix { inherit argononed; };
       };
 
-      raspberry-pi-3 = {
-        base = { config, lib, pkgs, ... }: import ./modules/raspberry-pi-3.nix {
-          inherit config lib pkgs self;
-        };
-      };
-
       raspberry-pi-02 = {
         base = { config, lib, pkgs, ... }: import ./modules/raspberry-pi-02.nix {
           inherit config lib pkgs self;
@@ -173,7 +167,6 @@
       inherit (pkgs.linuxAndFirmware.default)
         linux_rpi5 linuxPackages_rpi5
         linux_rpi4 linuxPackages_rpi4
-        linux_rpi3 linuxPackages_rpi3
         linux_rpi02 linuxPackages_rpi02
         raspberrypifw raspberrypiWirelessFirmware;
 
@@ -252,16 +245,6 @@
         custom-user-config
       ];
 
-      rpi3-installer = mkNixOSRPiInstaller [
-        ({ config, pkgs, lib, nixos-raspberrypi, ... }: {
-          imports = with nixos-raspberrypi.nixosModules; [
-            # Hardware configuration
-            raspberry-pi-3.base
-          ];
-        })
-        custom-user-config
-      ];
-
       rpi4-installer = mkNixOSRPiInstaller [
         ({ config, pkgs, lib, nixos-raspberrypi, ... }: {
           imports = with nixos-raspberrypi.nixosModules; [
@@ -289,7 +272,6 @@
       mkImage = nixosConfig: nixosConfig.config.system.build.sdImage;
     in {
       rpi02 = mkImage nixos.rpi02-installer;
-      rpi3 = mkImage nixos.rpi3-installer;
       rpi4 = mkImage nixos.rpi4-installer;
       rpi5 = mkImage nixos.rpi5-installer;
     };
