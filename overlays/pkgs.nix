@@ -94,17 +94,6 @@ self: super: { # final: prev:
       hash = "sha256-7nXoYgwV354T42QM9LA9U0xlG2f4Gc7I1inaEG/HwTI=";
     };
 
-    # not needed for nixpkgs-unstable
-    postPatch = ''
-      ${old.postPatch}
-      patchShebangs src/py/
-    '';
-
-    buildInputs = old.buildInputs ++ (with self; [
-      libpisp
-      python3Packages.pybind11  # not needed for nixpkgs-unstable
-    ]);
-
     mesonFlags = old.mesonFlags ++ [
       # add flags that raspberry suggests, but nixpkgs doesn't include
       "--buildtype=release"
