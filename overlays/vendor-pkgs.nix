@@ -1,6 +1,7 @@
 self: super: { # final: prev:
 
-  libpisp = self.callPackage ../pkgs/raspberrypi/libpisp.nix {};
+  # now available from nixpkgs
+  # libpisp = self.callPackage ../pkgs/raspberrypi/libpisp.nix {};
 
   libraspberrypi = super.callPackage ../pkgs/raspberrypi/libraspberrypi.nix {};
 
