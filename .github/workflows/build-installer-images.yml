@@ -19,9 +19,7 @@ jobs:
         uses: actions/checkout@v4
 
 
-      - uses: cachix/install-nix-action@latest
-        with:
-          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: cachix/install-nix-action@v31
       - run: nix build
       - run: nix flake check
 
