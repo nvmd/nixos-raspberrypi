@@ -218,6 +218,12 @@
           # YOUR SSH PUB KEY HERE #
           
         ];
+        services.openssh = {
+          enable = true;
+          passwordAuthentication = true;
+        };
+
+        users.users.nixos.initialPassword = "password";
 
         environment.systemPackages = with pkgs; [
           tree
