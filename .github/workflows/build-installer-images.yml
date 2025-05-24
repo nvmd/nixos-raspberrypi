@@ -16,13 +16,14 @@ jobs:
       SSH_PUB_KEY: ${{ secrets.SSH_PUB_KEY }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Setup Nix
-        uses: nix/setup-nix@v20
+
+      - uses: cachix/install-nix-action@v31
         with:
-          extra_nix_config: |
-            experimental-features = nix-command flakes
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - run: nix build
+      - run: nix flake check
 
       - name: Inject SSH public key
         run: |
