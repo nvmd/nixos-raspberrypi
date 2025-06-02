@@ -16,7 +16,8 @@ Supported boot methods: `kernelboot`, `uboot`.
 
 ```nix
 inputs = {
-  nixos-raspberrypi.url = "github:nvmd/nixos-raspberrypi";
+  # follow `main` branch of this repository, considered being stable
+  nixos-raspberrypi.url = "github:nvmd/nixos-raspberrypi/main";
 };
 
 # Optional: Binary cache for the flake
