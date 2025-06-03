@@ -1,9 +1,11 @@
-{ stdenv, lib, buildPackages, fetchFromGitHub, fetchpatch, perl, buildLinux, rpiModel, ... } @ args:
+{ stdenv, lib, buildPackages, fetchFromGitHub, fetchpatch, perl, buildLinux, rpiModel 
+, modDirVersion
+, tag
+, rev ? tag
+, srcHash
+, ... } @ args:
 
 let
-  # NOTE: raspberrypifw & raspberryPiWirelessFirmware should be updated with this
-  modDirVersion = "6.6.28";
-  tag = "stable_20240423";
   linuxConfig = let
     arch = stdenv.hostPlatform.uname.processor;
     mkConfig = name: {
@@ -39,8 +41,8 @@ lib.overrideDerivation (buildLinux (args // rec {
   src = fetchFromGitHub {
     owner = "raspberrypi";
     repo = "linux";
-    rev = tag;
-    hash = "sha256-mlsDuVczu0e57BlD/iq7IEEluOIgqbZ+W4Ju30E/zhw=";
+    inherit rev;
+    hash = srcHash;
   };
 
   defconfig = linuxConfig.defconfig;
@@ -53,6 +55,7 @@ lib.overrideDerivation (buildLinux (args // rec {
 
   kernelPatches = (args.kernelPatches or []) ++ [
   ];
+
   extraMeta = if (lib.elem rpiModel [ "0" "1" "2" ]) then {
     platforms = with lib.platforms; arm;
     hydraPlatforms = [];
