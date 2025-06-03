@@ -67,7 +67,11 @@ let
         # CRYPTO_SHA512 = module ; # =yes in nixos;
         NET_CLS_BPF = mkKernelOverride yes ; # =module in nixos;
         NR_CPUS = mkKernelOverride (freeform "4"); # =384 in nixos;
+
         PREEMPT = mkKernelOverride yes;
+        # override what nixos sets in `linux/kernel/preempt.common-config.nix`
+        PREEMPT_VOLUNTARY = mkKernelOverride no;
+
         # BINFMT_MISC = module ; # =yes in nixos;
         CMA_SIZE_MBYTES = mkKernelOverride (freeform "5") ; # =32 in nixos;
         CPU_FREQ_DEFAULT_GOV_ONDEMAND = yes;
@@ -136,7 +140,11 @@ let
         # CRYPTO_AES = module ; # =yes in nixos;
         # CRYPTO_SHA512 = module ; # =yes in nixos;
         NET_CLS_BPF = mkKernelOverride yes ; # =module in nixos;
+
         PREEMPT = mkKernelOverride yes;
+        # override what nixos sets in `linux/kernel/preempt.common-config.nix`
+        PREEMPT_VOLUNTARY = mkKernelOverride no;
+
         # BINFMT_MISC = module ; # =yes in nixos;
         CMA_SIZE_MBYTES = mkKernelOverride (freeform "5") ; # =32 in nixos;
         # CPU_FREQ_DEFAULT_GOV_POWERSAVE = yes;
