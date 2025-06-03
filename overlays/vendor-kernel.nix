@@ -1,23 +1,7 @@
 let
-  argsOverrideFor = pkgs: version: let
-    mkArgsOverride = { modDirVersion
-                     , tag, rev ? tag, srcHash
-                     , structuredExtraConfig ? {}
-                     , kernelPatches ? []
-                     }: rec {
-      inherit modDirVersion tag structuredExtraConfig kernelPatches;
-
-      version = "${modDirVersion}-${tag}";
-      src = pkgs.fetchFromGitHub {
-        owner = "raspberrypi";
-        repo = "linux";
-        inherit rev;
-        hash = srcHash;
-      };
-    };
-  in mkArgsOverride (import ./kernels.nix { inherit pkgs; }).${version};
 
   mkLinuxFor = pkgs: version: models: let
+    argsFor = (import ./kernels.nix { inherit pkgs; }).${version};
     linuxVersionForModel = rpiModel: {
       # in nixpkgs this is also in pkgs.linuxKernel.packages.<...>
       # see also https://github.com/NixOS/nixos-hardware/pull/927
@@ -26,14 +10,28 @@ let
       # };
 
       # as in https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/linux-kernels.nix#L91
-      "linux_rpi${rpiModel}_v${version}" = pkgs.callPackage ../pkgs/linux-rpi.nix {
-        argsOverride = argsOverrideFor pkgs version;
+      "linux_rpi${rpiModel}_v${version}" = pkgs.callPackage ../pkgs/linux-rpi.nix (let
+        # the latter value is retained when can't be merged
+        recursiveMerge = with pkgs.lib; attrList:
+          let f = attrPath:
+            zipAttrsWith (n: values:
+              if tail values == []
+                then head values
+              else if all isList values
+                then unique (concatLists values)
+              else if all isAttrs values
+                then f (attrPath ++ [n]) values
+              else last values
+            );
+          in f [] attrList;
+      in recursiveMerge [{
+        # argsOverride = argsFor.argsOverride;
         kernelPatches = with pkgs.kernelPatches; [
           bridge_stp_helper
           request_key_helper
         ];
         inherit rpiModel;
-      };
+      } argsFor]);
 
       # https://github.com/NixOS/nixpkgs/blob/master/pkgs/os-specific/linux/kernel/linux-rpi.nix
       # overriding other override like this doesn't work
