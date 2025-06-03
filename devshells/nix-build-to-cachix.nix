@@ -43,6 +43,7 @@ writeShellApplication {
 
     declare -a nixos=(
       rpi02-installer
+      rpi3-installer
       rpi4-installer
       rpi5-installer
     )
