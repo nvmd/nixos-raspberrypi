@@ -43,15 +43,14 @@ writeShellApplication {
 
     declare -a nixos=(
       rpi02-installer
+      rpi3-installer
       rpi4-installer
       rpi5-installer
     )
 
     declare -a packages=(
-      # "ffmpeg_4"
-      "ffmpeg_6"
-      "ffmpeg_6-headless"
-      # "ffmpeg_7"
+      "ffmpeg_7"
+      "ffmpeg_7-headless"
 
       # "kodi"
       "kodi-gbm"
@@ -69,6 +68,7 @@ writeShellApplication {
 
       # linuxAndFirmware.default.*
       "linux_rpi02"
+      "linux_rpi3"
       "linux_rpi4"
       "linux_rpi5"
       "raspberrypifw"

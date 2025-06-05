@@ -26,11 +26,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1746225872,
-        "narHash": "sha256-ySSk4r9Mq6dO2MYaik4vTU18sA17aHTSb2LsAFXdw3E=",
+        "lastModified": 1747747741,
+        "narHash": "sha256-LUOH27unNWbGTvZFitHonraNx0JF/55h30r9WxqrznM=",
         "owner": "nvmd",
         "repo": "nixos-images",
-        "rev": "33343fd9a237ed98df52e3611f833fdab729c358",
+        "rev": "cbbd6db325775096680b65e2a32fb6187c09bbb4",
         "type": "github"
       },
       "original": {
@@ -42,16 +42,16 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1746408827,
-        "narHash": "sha256-tqjFTkIm8xhHk36KSk3mCieEvWmFl7SWCVESGlcUFew=",
+        "lastModified": 1748882666,
+        "narHash": "sha256-z2uanxifOXGEqdiprquIGZu0XaRYih3FHXDQwLc1xis=",
         "owner": "nvmd",
         "repo": "nixpkgs",
-        "rev": "1473ad1795a4a4ea14fe636c464649b9b27d8cc8",
+        "rev": "d2e9e5abf6308b83487d26e383799f7520dc5cdf",
         "type": "github"
       },
       "original": {
         "owner": "nvmd",
-        "ref": "modules-with-keys-unstable",
+        "ref": "modules-with-keys-25.05",
         "repo": "nixpkgs",
         "type": "github"
       }

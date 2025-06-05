@@ -15,7 +15,7 @@
     # use fork to allow disabling modules introduced by mkRemovedOptionModule
     # and similar functions
     # see PR nixos:nixpkgs#398456 (https://github.com/NixOS/nixpkgs/pull/398456)
-    nixpkgs.url = "github:nvmd/nixpkgs/modules-with-keys-unstable";
+    nixpkgs.url = "github:nvmd/nixpkgs/modules-with-keys-25.05";
     # nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     argononed = {
@@ -110,6 +110,12 @@
         case-argonone = import ./modules/case-argononev2.nix { inherit argononed; };
       };
 
+      raspberry-pi-3 = {
+        base = { config, lib, pkgs, ... }: import ./modules/raspberry-pi-3.nix {
+          inherit config lib pkgs self;
+        };
+      };
+
       raspberry-pi-02 = {
         base = { config, lib, pkgs, ... }: import ./modules/raspberry-pi-02.nix {
           inherit config lib pkgs self;
@@ -145,8 +151,8 @@
       ffmpeg_4 = pkgs.ffmpeg_4;
       ffmpeg_5 = pkgs.ffmpeg_5;
       ffmpeg_6 = pkgs.ffmpeg_6;
-      ffmpeg_6-headless = pkgs.ffmpeg_6-headless;
       ffmpeg_7 = pkgs.ffmpeg_7;
+      ffmpeg_7-headless = pkgs.ffmpeg_7-headless;
 
       kodi = pkgs.kodi;
       kodi-gbm = pkgs.kodi-gbm;
@@ -167,6 +173,7 @@
       inherit (pkgs.linuxAndFirmware.default)
         linux_rpi5 linuxPackages_rpi5
         linux_rpi4 linuxPackages_rpi4
+        linux_rpi3 linuxPackages_rpi3
         linux_rpi02 linuxPackages_rpi02
         raspberrypifw raspberrypiWirelessFirmware;
 
@@ -245,6 +252,16 @@
         custom-user-config
       ];
 
+      rpi3-installer = mkNixOSRPiInstaller [
+        ({ config, pkgs, lib, nixos-raspberrypi, ... }: {
+          imports = with nixos-raspberrypi.nixosModules; [
+            # Hardware configuration
+            raspberry-pi-3.base
+          ];
+        })
+        custom-user-config
+      ];
+
       rpi4-installer = mkNixOSRPiInstaller [
         ({ config, pkgs, lib, nixos-raspberrypi, ... }: {
           imports = with nixos-raspberrypi.nixosModules; [
@@ -272,6 +289,7 @@
       mkImage = nixosConfig: nixosConfig.config.system.build.sdImage;
     in {
       rpi02 = mkImage nixos.rpi02-installer;
+      rpi3 = mkImage nixos.rpi3-installer;
       rpi4 = mkImage nixos.rpi4-installer;
       rpi5 = mkImage nixos.rpi5-installer;
     };

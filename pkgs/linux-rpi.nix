@@ -1,9 +1,37 @@
-{ stdenv, lib, buildPackages, fetchFromGitHub, fetchpatch, perl, buildLinux, rpiModel, ... } @ args:
+{ stdenv, lib, buildPackages, fetchFromGitHub, fetchpatch, perl, buildLinux, rpiModel 
+, modDirVersion
+, tag
+, rev ? tag
+, srcHash
+, ... } @ args:
 
 let
-  # NOTE: raspberrypifw & raspberryPiWirelessFirmware should be updated with this
-  modDirVersion = "6.6.28";
-  tag = "stable_20240423";
+  linuxConfig = let
+    arch = stdenv.hostPlatform.uname.processor;
+    mkConfig = name: {
+      defconfig = "${name}_defconfig";
+      structuredConfigFixes = args.fixStructuredExtraConfig.${name}.${arch};
+    };
+  in {
+    # matching first on arch, and the on the board model to easier handle 
+    # unsupported (arch,board) combinations
+    armv6l = {
+      "0" = mkConfig "bcmrpi";
+      "1" = mkConfig "bcmrpi";
+    };
+    armv7l = {
+      "02" = mkConfig "bcm2709";
+      "2" = mkConfig "bcm2709";
+      "3" = mkConfig "bcm2709";
+      "4" = mkConfig "bcm2711";
+    };
+    aarch64 = {
+      "02" = mkConfig "bcm2711";
+      "3" = mkConfig "bcm2711";
+      "4" = mkConfig "bcm2711";
+      "5" = mkConfig "bcm2712";
+    };
+  }.${arch}.${rpiModel};
 in
 lib.overrideDerivation (buildLinux (args // rec {
   version = "${modDirVersion}-${tag}";
@@ -13,28 +41,13 @@ lib.overrideDerivation (buildLinux (args // rec {
   src = fetchFromGitHub {
     owner = "raspberrypi";
     repo = "linux";
-    rev = tag;
-    hash = "sha256-mlsDuVczu0e57BlD/iq7IEEluOIgqbZ+W4Ju30E/zhw=";
+    inherit rev;
+    hash = srcHash;
   };
 
-  defconfig = {
-    armv6l-linux = {
-      "0" = "bcmrpi_defconfig";
-      "1" = "bcmrpi_defconfig";
-    };
-    armv7l-linux = {
-      "02" = "bcm2709_defconfig";
-      "2" = "bcm2709_defconfig";
-      "3" = "bcm2709_defconfig";
-      "4" = "bcm2711_defconfig";
-    };
-    aarch64-linux = {
-      "02" = "bcm2711_defconfig";
-      "3" = "bcm2711_defconfig";
-      "4" = "bcm2711_defconfig";
-      "5" = "bcm2712_defconfig";
-    };
-  }.${stdenv.hostPlatform.system}.${rpiModel};
+  defconfig = linuxConfig.defconfig;
+
+  structuredExtraConfig = linuxConfig.structuredConfigFixes // (args.structuredExtraConfig or {});
 
   features = {
     efiBootStub = false;
@@ -42,6 +55,7 @@ lib.overrideDerivation (buildLinux (args // rec {
 
   kernelPatches = (args.kernelPatches or []) ++ [
   ];
+
   extraMeta = if (lib.elem rpiModel [ "0" "1" "2" ]) then {
     platforms = with lib.platforms; arm;
     hydraPlatforms = [];
