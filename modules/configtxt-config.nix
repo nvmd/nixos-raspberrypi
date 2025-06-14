@@ -53,107 +53,103 @@ let
     lib.strings.concatStringsSep "\n"
       ((lib.attrsets.mapAttrsToList render-config-section conf)
       ++ [ cfg.extra-config ]);
-in
-{
-  options = {
-    hardware.raspberry-pi = {
-      config =
-        let
-          rpi-config-param = {
-            options = {
-              enable = lib.mkEnableOption "attr";
-              value =
-                lib.mkOption { type = with lib.types; oneOf [ int str bool ]; };
-            };
-          };
-          dt-param = {
-            options = {
-              enable = lib.mkEnableOption "attr";
-              value = lib.mkOption {
-                type = with lib.types; nullOr (oneOf [ int str bool ]);
-                default = null;
-              };
-            };
-          };
-          dt-overlay = {
-            options = {
-              enable = lib.mkEnableOption "overlay";
-              params = lib.mkOption {
-                type = with lib.types; attrsOf (submodule dt-param);
-              };
-            };
-          };
-          raspberry-pi-config-options = {
-            options = {
-              options = lib.mkOption {
-                type = with lib.types; attrsOf (submodule rpi-config-param);
-                default = { };
-                example = {
-                  enable_gic = {
-                    enable = true;
-                    value = true;
-                  };
-                  arm_boost = {
-                    enable = true;
-                    value = true;
-                  };
-                };
-              };
-              base-dt-params = lib.mkOption {
-                type = with lib.types; attrsOf (submodule rpi-config-param);
-                default = { };
-                example = {
-                  i2c = {
-                    enable = true;
-                    value = "on";
-                  };
-                  audio = {
-                    enable = true;
-                    value = "on";
-                  };
-                };
-                description = "parameters to pass to the base dtb";
-              };
-              dt-overlays = lib.mkOption {
-                type = with lib.types; attrsOf (submodule dt-overlay);
-                default = { };
-                example = { vc4-kms-v3d = { cma-256 = { enable = true; }; }; };
-                description = "dtb overlays to apply";
-              };
-            };
-          };
-        in
-        lib.mkOption {
-          type = with lib.types; attrsOf (submodule raspberry-pi-config-options);
+in {
+  options.hardware.raspberry-pi = {
+    config = let
+      rpi-config-param = {
+        options = {
+          enable = lib.mkEnableOption "attr";
+          value =
+            lib.mkOption { type = with lib.types; oneOf [ int str bool ]; };
         };
+      };
+      dt-param = {
+        options = {
+          enable = lib.mkEnableOption "attr";
+          value = lib.mkOption {
+            type = with lib.types; nullOr (oneOf [ int str bool ]);
+            default = null;
+          };
+        };
+      };
+      dt-overlay = {
+        options = {
+          enable = lib.mkEnableOption "overlay";
+          params = lib.mkOption {
+            type = with lib.types; attrsOf (submodule dt-param);
+          };
+        };
+      };
+      raspberry-pi-config-options = {
+        options = {
+          options = lib.mkOption {
+            type = with lib.types; attrsOf (submodule rpi-config-param);
+            default = { };
+            example = {
+              enable_gic = {
+                enable = true;
+                value = true;
+              };
+              arm_boost = {
+                enable = true;
+                value = true;
+              };
+            };
+          };
+          base-dt-params = lib.mkOption {
+            type = with lib.types; attrsOf (submodule rpi-config-param);
+            default = { };
+            example = {
+              i2c = {
+                enable = true;
+                value = "on";
+              };
+              audio = {
+                enable = true;
+                value = "on";
+              };
+            };
+            description = "parameters to pass to the base dtb";
+          };
+          dt-overlays = lib.mkOption {
+            type = with lib.types; attrsOf (submodule dt-overlay);
+            default = { };
+            example = { vc4-kms-v3d = { cma-256 = { enable = true; }; }; };
+            description = "dtb overlays to apply";
+          };
+        };
+      };
+    in lib.mkOption {
+      type = with lib.types; attrsOf (submodule raspberry-pi-config-options);
+    };
 
-      extra-config = lib.mkOption {
-        default = "";
-        type = lib.types.lines;
-        description = ''
-          Extra options that will be appended to `/boot/config.txt` file.
-          For possible values, see: https://www.raspberrypi.com/documentation/computers/config_txt.html
+    extra-config = lib.mkOption {
+      default = "";
+      type = lib.types.lines;
+      description = ''
+        Extra options that will be appended to `/boot/config.txt` file.
+        For possible values, see: https://www.raspberrypi.com/documentation/computers/config_txt.html
+      '';
+    };
+
+    config-generated = lib.mkOption {
+      type = lib.types.str;
+      description = "the config text generated by raspberrypi.hardware.config";
+      readOnly = true;
+    };
+
+    config-output = lib.mkOption {
+      type = lib.types.package;
+      default = pkgs.writeTextFile {
+        name = "config.txt";
+        text = ''
+          # This is a generated file. Do not edit!
+          ${cfg.config-generated}
         '';
-      };
-
-      config-generated = lib.mkOption {
-        type = lib.types.str;
-        description = "the config text generated by raspberrypi.hardware.config";
-        readOnly = true;
-      };
-
-      config-output = lib.mkOption {
-        type = lib.types.package;
-        default = pkgs.writeTextFile {
-          name = "config.txt";
-          text = ''
-            # This is a generated file. Do not edit!
-            ${cfg.config-generated}
-          '';
-        };
       };
     };
   };
+
   config = {
     hardware.raspberry-pi.config-generated = render-raspberrypi-config cfg.config;
   };
