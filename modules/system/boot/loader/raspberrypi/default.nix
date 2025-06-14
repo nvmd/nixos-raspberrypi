@@ -256,9 +256,13 @@ in
           };
         };
       };
-      hardware.raspberry-pi.extra-config = ''
+      hardware.raspberry-pi.extra-config = let
+        # https://www.raspberrypi.com/documentation/computers/config_txt.html#initramfs
+        ramfsfile = "initrd";
+        ramfsaddr = "followkernel"; # same as 0 = "after the kernel image"
+      in ''
         [all]
-        initramfs initrd followkernel
+        initramfs ${ramfsfile} ${ramfsaddr}
       '';
 
       boot.loader.grub.enable = false;
