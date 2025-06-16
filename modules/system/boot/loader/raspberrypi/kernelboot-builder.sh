@@ -7,6 +7,7 @@ export PATH=/empty:@path@
 # used to track copied files to decide which are obsolete
 # and need to be removed
 declare -A filesCopied
+declare -A activeGenerations
 
 # Convert a path to a file in the Nix store such as
 # /nix/store/<hash>-<name>/file to <hash>-<name>-<file>.
@@ -40,48 +41,46 @@ copyForced() {
     mv $dst.tmp $dst
 }
 
-# Copy generation's kernel and initrd to `kernelsDir`.
-# Default generation's are also copied to `outdir`
+# Copy generation's kernel, initrd, cmdline to `kernelsDir`.
 addEntry() {
     local generationPath="$1"
     local generationName="$2"
-    local outdir="$3"
-    local kernelsDir="$4"
+    local kernelsDir="$3"
 
     if ! test -e $generationPath/kernel -a -e $generationPath/initrd; then
         return
     fi
 
+    local genDir="$kernelsDir/$generationName"
+    mkdir -p $genDir || true
+
     local kernel=$(readlink -f $generationPath/kernel)
     local initrd=$(readlink -f $generationPath/initrd)
 
-    if test "1" = "@copyKernels@"; then
-        copyToKernelsDir $kernel $kernelsDir; kernel=$result
-        copyToKernelsDir $initrd $kernelsDir; initrd=$result
-    fi
+    # if test "1" = "@copyKernels@"; then
+    #     copyToKernelsDir $kernel $kernelsDir; kernel=$result
+    #     copyToKernelsDir $initrd $kernelsDir; initrd=$result
+    # fi
 
-    echo $(readlink -f $generationPath) > $kernelsDir/$generationName-system
-    echo $(readlink -f $generationPath/init) > $kernelsDir/$generationName-init
-    cp $generationPath/kernel-params $kernelsDir/$generationName-cmdline.txt
-    echo $initrd > $kernelsDir/$generationName-initrd
-    echo $kernel > $kernelsDir/$generationName-kernel
+    echo $(readlink -f $generationPath) > $genDir/system-link
+    echo $(readlink -f $generationPath/init) > $genDir/init-link
+    echo $initrd > $genDir/initrd-link
+    echo $kernel > $genDir/kernel-link
 
-    if test "$generationName" = "default"; then
-      copyForced $kernel $outdir/kernel.img
-      copyForced $initrd $outdir/initrd
+    copyForced $kernel $genDir/kernel.img
+    copyForced $initrd $genDir/initrd
+    # cp "$(readlink -f "$generationPath/init")" $genDir/nixos-init
+    echo "`cat $generationPath/kernel-params` init=$generationPath/init" > $genDir/cmdline.txt
 
-      cp "$(readlink -f "$generationPath/init")" $outdir/nixos-init
-      echo "`cat $generationPath/kernel-params` init=$generationPath/init" >$outdir/cmdline.txt
-    fi
+    activeGenerations[$generationName]=1
 }
 
-removeObsolete() {
+removeObsoleteGenerations() {
     local path="$1"
 
-    # Remove obsolete files from $path and $path/old.
-    for fn in $path/*linux* $path/*initrd-initrd*; do
-        if ! test "${filesCopied[$fn]}" = 1; then
-            rm -vf -- "$fn"
+    for gen in $path; do
+        if ! test "${activeGenerations[$gen]}" = 1; then
+            rm -vrf "$gen"
         fi
     done
 }
@@ -89,39 +88,51 @@ removeObsolete() {
 addAllEntries() {
     local defaultGenerationPath="$1"
     local outdir="$2"
+    local numGenerations="$3"
 
-    local kernelsDir="$outdir/nixos-kernels"
+    local kernelsDir="$outdir/@nixosGenerationsDir@"
     mkdir -p $kernelsDir || true
 
     # Add default generation
-    addEntry $defaultGenerationPath default $outdir $kernelsDir
+    addEntry $defaultGenerationPath default $kernelsDir
 
-    # Add all generations of the system profile to the menu, in reverse
-    # (most recent to least recent) order.
-    for generation in $(
-        (cd /nix/var/nix/profiles && ls -d system-*-link) \
-        | sed 's/system-\([0-9]\+\)-link/\1/' \
-        | sort -n -r); do
-        link=/nix/var/nix/profiles/system-$generation-link
-        addEntry $link $generation $outdir $kernelsDir
-    done
+    if [ "$numGenerations" -gt 0 ]; then
+        # Add up to $numGenerations generations of the system profile, in reverse
+        # (most recent to least recent) order.
+        for generation in $(
+            (cd /nix/var/nix/profiles && ls -d system-*-link) \
+            | sed 's/system-\([0-9]\+\)-link/\1/' \
+            | sort -n -r \
+            | head -n $numGenerations); do
+            link=/nix/var/nix/profiles/system-$generation-link
+            addEntry $link "${generation}-default" $kernelsDir
+            for specialisation in $(
+                ls /nix/var/nix/profiles/system-$generation-link/specialisation \
+                | sort -n -r); do
+                link=/nix/var/nix/profiles/system-$generation-link/specialisation/$specialisation
+                addEntry $link "${generation}-${specialisation}" $kernelsDir
+            done
+        done
+    fi
 
-    removeObsolete $kernelsDir
+    removeObsoleteGenerations $kernelsDir
 }
 
 usage() {
-    echo "usage: $0 -c <path-to-default-configuration> [-d <boot-dir>]" >&2
+    echo "usage: $0 -c <path-to-default-configuration> [-d <boot-dir>] [-g <num-generations>]" >&2
     exit 1
 }
 
 
 default=                # Default configuration
+numGenerations=0        # Number of other generations to keep (kernel, initrd, DTBs, overlays)
 
 echo "kernelboot-builder: $@"
 while getopts "c:b:f:" opt; do
     case "$opt" in
         c) default="$OPTARG" ;;
         b) boottarget="$OPTARG" ;;
+        g) numGenerations="$OPTARG" ;;
         f) fwtarget="$OPTARG" ;;
         \?) usage ;;
     esac
@@ -136,7 +147,7 @@ if [ -n "$fwtarget" ]; then
     @firmwareBuilder@ -c $default -d $fwtarget
 
     echo "updating the boot generations directory..."
-    addAllEntries $default $fwtarget
+    addAllEntries $default $fwtarget $numGenerations
 fi
 
 if [ -n "$boottarget" ]; then
