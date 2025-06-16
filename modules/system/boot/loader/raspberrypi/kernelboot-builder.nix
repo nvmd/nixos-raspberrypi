@@ -1,5 +1,6 @@
 { pkgs
 , firmwareBuilder
+, nixosGenerationsDir
 }:
 
 pkgs.replaceVarsWith {
@@ -13,7 +14,7 @@ pkgs.replaceVarsWith {
       pkgs.gnused
     ];
 
-    inherit firmwareBuilder;
+    inherit firmwareBuilder nixosGenerationsDir;
     copyKernels = true;
   };
 }

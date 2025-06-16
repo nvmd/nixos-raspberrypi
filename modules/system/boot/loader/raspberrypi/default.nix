@@ -8,6 +8,7 @@ let
 
   ubootBinName = if isAarch64 then "u-boot-rpi-arm64.bin" else "u-boot-rpi.bin";
 
+  kernelbootNixosGenerationsDir = "nixos";
 
   # Builders used to write during system activation
   firmwareBuilder = import ./firmware-builder.nix {
@@ -18,6 +19,7 @@ let
   kernelbootBuilder = import ./kernelboot-builder.nix {
     inherit pkgs;
     firmwareBuilder = firmwarePopulateCmd;
+    nixosGenerationsDir = kernelbootNixosGenerationsDir;
   };
   ubootBuilder = import ./uboot-builder.nix {
     inherit pkgs ubootBinName;
@@ -35,6 +37,8 @@ let
   populateKernelbootBuilder = import ./kernelboot-builder.nix {
     pkgs = pkgs.buildPackages;
     firmwareBuilder = firmwarePopulateCmd;
+    nixosGenerationsDir = kernelbootNixosGenerationsDir;
+    maxGenerations = kernelbootMaxNixosGenerations;
   };
   populateUbootBuilder = import ./uboot-builder.nix {
     inherit ubootBinName;
@@ -53,7 +57,12 @@ let
     firmware = "${firmwareBuilder} -d ${cfg.firmwarePath} ${firmwareBuilderArgs} -c";
     # system.build.installBootLoader
     uboot = "${ubootBuilder} -f ${cfg.firmwarePath} -b ${cfg.bootPath} -c";
-    kernelboot = "${kernelbootBuilder} -f ${cfg.firmwarePath} -c";
+    kernelboot = builtins.concatStringsSep " " [
+      "${kernelbootBuilder}"
+      "-g ${toString cfg.kernelbootConfigurationLimit}"
+      "-f ${cfg.firmwarePath}"
+      "-c"
+    ];
   };
 
   populateCmds = {
@@ -193,6 +202,24 @@ in
         '';
       };
 
+      kernelbootConfigurationLimit = mkOption {
+        default = 4;
+        example = 10;
+        type = types.int;
+        description = ''
+          Maximum number of configurations to keep on FIRMWARE partition.
+          This is quite space-consuming, because to keep the NixOS generaions 
+          as independent as possible the following files are need to be copied
+          and kept for each generation (no symlinks allowed):
+          * kernel,
+          * initrd,
+          * DTBs,
+          * overlays
+          You can specify `os_prefix=` in `config.txt` appropriately to
+          temporarily boot the desired nixos generation, e.g. `os_prefix=nixos/103-default/`
+        '';
+      };
+
       variant = mkOption {
         type = types.enum [ "0" "02" "1" "2" "3" "4" "5" ];
         description = "";
@@ -249,6 +276,22 @@ in
       hardware.raspberry-pi.config = {
         all = {
           options = {
+            # https://www.raspberrypi.com/documentation/computers/config_txt.html#os_prefix
+            # os_prefix is prepended to the name of any operating system files loaded by the firmware:
+            # * kernels,
+            # * initramfs,
+            # * cmdline.txt,
+            # * .dtbs,
+            # * overlays.
+            # Commonly a directory name, could also be part of the filename such as "test-".
+            # Directory prefixes must include the trailing / character.
+            os_prefix = {
+              enable = true;
+              value = "${kernelbootNixosGenerationsDir}/default/"; # "nixos/<generation-name>/"
+            };
+
+            # https://www.raspberrypi.com/documentation/computers/config_txt.html#cmdline
+            # https://www.raspberrypi.com/documentation/computers/config_txt.html#kernel
             kernel = {
               enable = true;
               value = "kernel.img";
