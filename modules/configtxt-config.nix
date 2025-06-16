@@ -21,19 +21,24 @@ let
       lib.attrsets.mapAttrsToList render-dt-kv
         (lib.filterAttrs (k: v: v.enable) x);
 
-    render-dt-overlay = { overlay, args }:
-      "dtoverlay=" + overlay + "\n"
-      + lib.strings.concatMapStringsSep "\n" render-dt-param args + "\n"
-      + "dtoverlay=";
-    render-base-dt-params = params:
-      lib.strings.concatMapStringsSep "\n" render-dt-param
-        (render-dt-kvs params);
+    render-dt-params = params:
+      lib.strings.concatMapStringsSep "\n" render-dt-param (render-dt-kvs params);
+
+    render-dt-overlay = { overlay, params }:
+      lib.concatStringsSep "\n" (lib.filter (x: x != "") [
+        ("dtoverlay=" + overlay)
+        (render-dt-params params)
+        "dtoverlay="
+      ]);
+
+    render-base-dt-params = render-dt-params;
+
     render-dt-overlays = overlays:
       lib.strings.concatMapStringsSep "\n" render-dt-overlay
         (lib.attrsets.mapAttrsToList
-          (k: v: {
-            overlay = k;
-            args = render-dt-kvs v.params;
+          (overlay: params: {
+            inherit overlay;
+            inherit (params) params;
           })
           (lib.filterAttrs (k: v: v.enable) overlays));
 
