@@ -10,19 +10,16 @@ let
 
   render-raspberrypi-config = let
 
-    render-options = opts:
-      lib.strings.concatStringsSep "\n" (render-dt-kvs opts);
+    render-kvs = kvs: let
+      render-kv = k: v:
+        if isNull v.value then k
+        else "${k}=${toString v.value}";
+    in lib.attrsets.mapAttrsToList render-kv
+        (lib.filterAttrs (k: v: v.enable) kvs);
+
     render-dt-param = x: "dtparam=" + x;
-    render-dt-kv = k: v:
-      if isNull v.value then k
-      else "${k}=${toString v.value}";
-
-    render-dt-kvs = x:
-      lib.attrsets.mapAttrsToList render-dt-kv
-        (lib.filterAttrs (k: v: v.enable) x);
-
     render-dt-params = params:
-      lib.strings.concatMapStringsSep "\n" render-dt-param (render-dt-kvs params);
+      lib.strings.concatMapStringsSep "\n" render-dt-param (render-kvs params);
 
     render-dt-overlay = { overlay, params }:
       lib.concatStringsSep "\n" (lib.filter (x: x != "") [
@@ -30,6 +27,9 @@ let
         (render-dt-params params)
         "dtoverlay="
       ]);
+
+    render-options = opts:
+      lib.strings.concatStringsSep "\n" (render-kvs opts);
 
     render-base-dt-params = render-dt-params;
 
