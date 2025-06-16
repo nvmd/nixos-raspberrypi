@@ -37,7 +37,7 @@ let
           })
           (lib.filterAttrs (k: v: v.enable) overlays));
 
-    render-config-section = k:
+    render-config-section = conditionalFilter:
       { options, base-dt-params, dt-overlays }:
       let all-config = lib.concatStringsSep "\n" (lib.filter (x: x != "") [
           (render-options options)
@@ -45,7 +45,7 @@ let
           (render-dt-overlays dt-overlays)
         ]);
       in ''
-        [${k}]
+        [${conditionalFilter}]
         ${all-config}
       '';
   in conf: lib.strings.concatStringsSep "\n"
