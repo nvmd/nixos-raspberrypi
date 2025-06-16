@@ -88,6 +88,10 @@ in {
           options = lib.mkOption {
             type = with lib.types; attrsOf (submodule rpi-config-param);
             default = { };
+            description = ''
+              Common hardware configuration options
+              <https://www.raspberrypi.com/documentation/computers/config_txt.html#common-hardware-configuration-options>
+            '';
             example = {
               enable_gic = {
                 enable = true;
@@ -102,6 +106,10 @@ in {
           base-dt-params = lib.mkOption {
             type = with lib.types; attrsOf (submodule rpi-config-param);
             default = { };
+            description = ''
+              Parameters to pass to the base DTB
+              <https://www.raspberrypi.com/documentation/computers/configuration.html#part3.2>
+            '';
             example = {
               i2c = {
                 enable = true;
@@ -112,11 +120,14 @@ in {
                 value = "on";
               };
             };
-            description = "parameters to pass to the base dtb";
           };
           dt-overlays = lib.mkOption {
             type = with lib.types; attrsOf (submodule dt-overlay);
             default = { };
+            description = ''
+              DTB overlays to enable and configure with parameters
+              <https://www.raspberrypi.com/documentation/computers/configuration.html#part3.1>
+            '';
             example = {
               vc4-kms-v3d = {
                 enable = true;
@@ -128,7 +139,6 @@ in {
                 };
               };
             };
-            description = "dtb overlays to apply";
           };
         };
       };
