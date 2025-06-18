@@ -3,10 +3,7 @@
 , firmware ? pkgs.raspberrypifw
 }:
 
-pkgs.substituteAll {
-  src = ./firmware-builder.sh;
-  isExecutable = true;
-
+pkgs.replaceVars ./firmware-builder.sh {
   inherit (pkgs) bash;
   path = [ pkgs.coreutils ];
 

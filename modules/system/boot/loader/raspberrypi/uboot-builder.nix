@@ -5,10 +5,7 @@
 , firmwareBuilder
 }:
 
-pkgs.substituteAll {
-  src = ./uboot-builder.sh;
-  isExecutable = true;
-
+pkgs.replaceVars ./uboot-builder.sh {
   inherit (pkgs) bash;
   path = [ pkgs.coreutils ];
 
