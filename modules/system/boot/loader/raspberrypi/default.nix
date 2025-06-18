@@ -11,7 +11,8 @@ let
 
   # Builders used to write during system activation
   firmwareBuilder = import ./firmware-builder.nix {
-    inherit pkgs configTxt;
+    inherit pkgs;
+    configTxt = cfg.configTxtPackage;
     firmware = cfg.firmwarePackage;
   };
   kernelbootBuilder = import ./kernelboot-builder.nix {
@@ -27,8 +28,8 @@ let
 
   # Builders exposed via populateCmd, which run on the build architecture
   populateFirmwareBuilder = import  ./firmware-builder.nix {
-    inherit configTxt;
     pkgs = pkgs.buildPackages;
+    configTxt = cfg.configTxtPackage;
     firmware = cfg.firmwarePackage;
   };
   populateKernelbootBuilder = import ./kernelboot-builder.nix {
@@ -65,9 +66,6 @@ let
       boot = "${populateKernelbootBuilder}";
     };
   };
-
-  configTxt = config.hardware.raspberry-pi.config-output;
-
 in
 
 {
@@ -89,6 +87,22 @@ in
           Whether to manage boot firmware, device trees and bootloader
           with this module
         '';
+      };
+
+      configTxtPackage = mkOption {
+        type = types.package;
+        default = pkgs.writeTextFile {
+          name = "config.txt";
+          text = ''
+            # Do not edit!
+            # This configuration file is generated from NixOS configuration
+            # options `hardware.raspberry-pi.config`.
+            # Any manual changes will be overwritten on the next configuration
+            # switch.
+            ${config.hardware.raspberry-pi.config-generated}
+          '';
+        };
+        description = "The `config.txt` package to use.";
       };
 
       firmwarePackage = mkPackageOption pkgs "raspberrypifw" { };
@@ -242,9 +256,13 @@ in
           };
         };
       };
-      hardware.raspberry-pi.extra-config = ''
+      hardware.raspberry-pi.extra-config = let
+        # https://www.raspberrypi.com/documentation/computers/config_txt.html#initramfs
+        ramfsfile = "initrd";
+        ramfsaddr = "followkernel"; # same as 0 = "after the kernel image"
+      in ''
         [all]
-        initramfs initrd followkernel
+        initramfs ${ramfsfile} ${ramfsaddr}
       '';
 
       boot.loader.grub.enable = false;
