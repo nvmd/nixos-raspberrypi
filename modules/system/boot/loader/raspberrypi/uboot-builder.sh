@@ -1,12 +1,8 @@
-#! @bash@/bin/sh
-
-# This can end up being called disregarding the shebang.
-set -e
+#! @bash@/bin/sh -e
 
 shopt -s nullglob
 
-export PATH=/empty
-for i in @path@; do PATH=$PATH:$i/bin; done
+export PATH=/empty:@path@
 
 usage() {
     echo "usage: $0 -f <firmware-dir> -b <boot-dir> -c <path-to-default-configuration>" >&2

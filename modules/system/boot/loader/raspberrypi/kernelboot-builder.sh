@@ -1,12 +1,8 @@
-#! @bash@/bin/sh
-
-# This can end up being called disregarding the shebang.
-set -e
+#! @bash@/bin/sh -e
 
 shopt -s nullglob
 
-export PATH=/empty
-for i in @path@; do PATH=$PATH:$i/bin; done
+export PATH=/empty:@path@
 
 # used to track copied files to decide which are obsolete
 # and need to be removed
@@ -59,7 +55,7 @@ addEntry() {
     local kernel=$(readlink -f $generationPath/kernel)
     local initrd=$(readlink -f $generationPath/initrd)
 
-    if test -n "@copyKernels@"; then
+    if test "1" = "@copyKernels@"; then
         copyToKernelsDir $kernel $kernelsDir; kernel=$result
         copyToKernelsDir $initrd $kernelsDir; initrd=$result
     fi

@@ -1,6 +1,8 @@
-#!/usr/bin/env bash
+#! @bash@/bin/sh -e
 
-set -euo pipefail
+shopt -s nullglob
+
+export PATH=/empty:@path@
 
 configtxt="$1"
 bootcode_source="$2"

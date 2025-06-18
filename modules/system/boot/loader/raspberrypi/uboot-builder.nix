@@ -5,15 +5,19 @@
 , firmwareBuilder
 }:
 
-pkgs.substituteAll {
+pkgs.replaceVarsWith {
   src = ./uboot-builder.sh;
   isExecutable = true;
 
-  inherit (pkgs) bash;
-  path = [ pkgs.coreutils ];
+  replacements = {
+    inherit (pkgs) bash;
+    path = pkgs.lib.makeBinPath [
+      pkgs.coreutils
+    ];
 
-  uboot = ubootPackage;
-  inherit ubootBinName;
-  inherit extlinuxConfBuilder;
-  inherit firmwareBuilder;
+    uboot = ubootPackage;
+    inherit ubootBinName;
+    inherit extlinuxConfBuilder;
+    inherit firmwareBuilder;
+  };
 }

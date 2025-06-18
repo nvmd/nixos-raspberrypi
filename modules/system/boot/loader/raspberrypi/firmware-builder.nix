@@ -3,12 +3,16 @@
 , firmware ? pkgs.raspberrypifw
 }:
 
-pkgs.substituteAll {
+pkgs.replaceVarsWith {
   src = ./firmware-builder.sh;
   isExecutable = true;
 
-  inherit (pkgs) bash;
-  path = [ pkgs.coreutils ];
+  replacements = {
+    inherit (pkgs) bash;
+    path = pkgs.lib.makeBinPath [
+      pkgs.coreutils
+    ];
 
-  inherit firmware configTxt;
+    inherit firmware configTxt;
+  };
 }
