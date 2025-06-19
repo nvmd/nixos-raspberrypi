@@ -250,7 +250,7 @@ in
       boot.loader.grub.enable = false;
 
       system = {
-        build.installBootLoader = builder.${cfg.bootloader};
+        build.installBootLoader = lib.mkOverride 60 (builder.${cfg.bootloader});
         boot.loader.id = "raspberrypi";
         boot.loader.kernelFile = pkgs.stdenv.hostPlatform.linux-kernel.target;
       };
