@@ -10,6 +10,73 @@ let
 
   kernelbootNixosGenerationsDir = "nixos";
 
+  bootloader = pkgs.replaceVarsWith {
+    src = ./nixos-generations-builder.sh;
+    isExecutable = true;
+
+    replacements = {
+      inherit (pkgs) bash;
+      path = pkgs.lib.makeBinPath [
+        pkgs.coreutils
+        pkgs.gnused
+      ];
+
+      # NixOS-generations -independent
+      installFirmwareBuilder = "${raspberryPiFirmware}";
+
+      # NixOS-generations -dependent
+      nixosGenerationsDir = kernelbootNixosGenerationsDir;
+      nixosGenBuilder = "${kernelbootGenBuilder}";
+    };
+  };
+
+  kernelbootGenBuilder = pkgs.replaceVarsWith {
+    src = ./kernelboot-gen-builder.sh;
+    isExecutable = true;
+
+    replacements = {
+      inherit (pkgs) bash;
+      path = pkgs.lib.makeBinPath [
+        pkgs.coreutils
+      ];
+
+      installDeviceTree = let
+        builderArgs = lib.optionalString (!cfg.useGenerationDeviceTree) " -r";
+      in "${deviceTree} ${builderArgs}";
+    };
+  };
+
+  deviceTree = pkgs.replaceVarsWith {
+    src = ./install-device-tree.sh;
+    isExecutable = true;
+
+    replacements = {
+      inherit (pkgs) bash;
+      path = pkgs.lib.makeBinPath [
+        pkgs.coreutils
+      ];
+
+      firmware = cfg.firmwarePackage;
+    };
+  };
+
+  # installs raspberry's firmware independent of the nixos generations
+  # sometimes referred to as "boot code"
+  raspberryPiFirmware = pkgs.replaceVarsWith {
+    src = ./install-firmware.sh;
+    isExecutable = true;
+
+    replacements = {
+      inherit (pkgs) bash;
+      path = pkgs.lib.makeBinPath [
+        pkgs.coreutils
+      ];
+
+      configTxt = cfg.configTxtPackage;
+      firmware = cfg.firmwarePackage;
+    };
+  };
+
   # Builders used to write during system activation
   firmwareBuilder = import ./firmware-builder.nix {
     inherit pkgs;
@@ -38,7 +105,6 @@ let
     pkgs = pkgs.buildPackages;
     firmwareBuilder = firmwarePopulateCmd;
     nixosGenerationsDir = kernelbootNixosGenerationsDir;
-    maxGenerations = kernelbootMaxNixosGenerations;
   };
   populateUbootBuilder = import ./uboot-builder.nix {
     inherit ubootBinName;
@@ -54,11 +120,13 @@ let
   # used for system.build.*
   builder = {
     # system.build.installFirmware
-    firmware = "${firmwareBuilder} -d ${cfg.firmwarePath} ${firmwareBuilderArgs} -c";
+    # ???: Who triggers this?
+    # firmware = "${firmwareBuilder} -d ${cfg.firmwarePath} ${firmwareBuilderArgs} -c";
+    firmware = "${raspberryPiFirmware} -d ${cfg.firmwarePath} ${firmwareBuilderArgs} -c";
     # system.build.installBootLoader
     uboot = "${ubootBuilder} -f ${cfg.firmwarePath} -b ${cfg.bootPath} -c";
     kernelboot = builtins.concatStringsSep " " [
-      "${kernelbootBuilder}"
+      "${bootloader}"
       "-g ${toString cfg.kernelbootConfigurationLimit}"
       "-f ${cfg.firmwarePath}"
       "-c"
@@ -71,8 +139,8 @@ let
       boot = "${populateUbootBuilder}";     # call with `-b <boot-dir>`
     };
     kernelboot = {
-      firmware = "${populateKernelbootBuilder}";
-      boot = "${populateKernelbootBuilder}";
+      firmware = "${bootloader}";  # should be populate* variant
+      boot = "${bootloader}";  # should be populate* variant
     };
   };
 in
@@ -267,7 +335,8 @@ in
           ${builtins.concatStringsSep ", " supportAarch64} support aarch64.
         '';
       };
-      system.build.installFirmware = builder."firmware";
+      # ???: Who triggers this?
+      system.build.installFirmware = builder.firmware;
       boot.loader.raspberryPi.firmwarePopulateCmd = populateCmds.${cfg.bootloader}.firmware;
       boot.loader.raspberryPi.bootPopulateCmd = populateCmds.${cfg.bootloader}.boot;
     })
