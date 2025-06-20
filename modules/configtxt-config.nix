@@ -104,7 +104,7 @@ in {
             };
           };
           base-dt-params = lib.mkOption {
-            type = with lib.types; attrsOf (submodule rpi-config-param);
+            type = with lib.types; attrsOf (submodule dt-param);
             default = { };
             description = ''
               Parameters to pass to the base DTB
@@ -118,6 +118,9 @@ in {
               audio = {
                 enable = true;
                 value = "on";
+              };
+              ant2 = {
+                enable = true;
               };
             };
           };
