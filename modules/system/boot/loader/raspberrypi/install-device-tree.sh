@@ -50,19 +50,16 @@ else
 fi
 echo $dtb_path
 
-DTBS=("$dtb_path"/*.dtb)
+DTBS=("$dtb_path"/*.dtb "$dtb_path"/broadcom/*.dtb)
 for dtb in "${DTBS[@]}"; do
-# for dtb in $dtb_path/broadcom/*.dtb; do
     dst="$target/$(basename $dtb)"
     copyForced $dtb "$dst"
     filesCopied[$dst]=1
 done
 
-SRC_OVERLAYS_DIR="$dtb_path/overlays"
-SRC_OVERLAYS=("$SRC_OVERLAYS_DIR"/*)
+SRC_OVERLAYS=("$dtb_path/overlays"/*)
 mkdir -p $target/overlays
 for ovr in "${SRC_OVERLAYS[@]}"; do
-# for ovr in $dtb_path/overlays/*; do
     dst="$target/overlays/$(basename $ovr)"
     copyForced $ovr "$dst"
     filesCopied[$dst]=1
