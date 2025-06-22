@@ -62,8 +62,9 @@ in {
       rpi-config-param = {
         options = {
           enable = lib.mkEnableOption "attr";
-          value =
-            lib.mkOption { type = with lib.types; oneOf [ int str bool ]; };
+          value = lib.mkOption {
+            type = with lib.types; oneOf [ int str bool ];
+          };
         };
       };
       dt-param = {
@@ -80,6 +81,7 @@ in {
           enable = lib.mkEnableOption "overlay";
           params = lib.mkOption {
             type = with lib.types; attrsOf (submodule dt-param);
+            default = {};
           };
         };
       };
@@ -140,6 +142,9 @@ in {
                     # value = "";
                   };
                 };
+              };
+              disable-bt = {  # dtoverlay=disable-bt
+                enable = true;
               };
             };
           };
