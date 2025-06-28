@@ -50,6 +50,8 @@ else
 fi
 echo $dtb_path
 
+# firmware package has dtbs in its root,
+# dtbs built with kernel are in broadcom/
 DTBS=("$dtb_path"/*.dtb "$dtb_path"/broadcom/*.dtb)
 for dtb in "${DTBS[@]}"; do
     dst="$target/$(basename $dtb)"
