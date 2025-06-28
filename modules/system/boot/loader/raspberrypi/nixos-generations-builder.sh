@@ -4,42 +4,9 @@ shopt -s nullglob
 
 export PATH=/empty:@path@
 
-# used to track copied files to decide which are obsolete
+# used to track copied generations to decide which are obsolete
 # and need to be removed
-declare -A filesCopied
 declare -A activeGenerations
-
-# Convert a path to a file in the Nix store such as
-# /nix/store/<hash>-<name>/file to <hash>-<name>-<file>.
-cleanName() {
-    local path="$1"
-    echo "$path" | sed 's|^/nix/store/||' | sed 's|/|-|g'
-}
-
-# Copy a file from the Nix store to `kernelsDir`.
-copyToKernelsDir() {
-    local src="$1"
-    local kernelsDir="$2"
-
-    local dst="$kernelsDir/$(cleanName $src)"
-    # Don't copy the file if $dst already exists.  This means that we
-    # have to create $dst atomically to prevent partially copied
-    # kernels or initrd if this script is ever interrupted.
-    if ! test -e $dst; then
-        local dstTmp=$dst.tmp.$$
-        cp $src $dstTmp
-        mv $dstTmp $dst
-    fi
-    filesCopied[$dst]=1
-    result=$dst
-}
-
-copyForced() {
-    local src="$1"
-    local dst="$2"
-    cp $src $dst.tmp
-    mv $dst.tmp $dst
-}
 
 # Copy generation's kernel, initrd, cmdline to `kernelsDir`.
 addEntry() {
@@ -47,10 +14,19 @@ addEntry() {
     local generationName="$2"
     local kernelsDir="$3"
 
-    local genDir="$kernelsDir/$generationName"
-    mkdir -p $genDir || true
+    local dst="$kernelsDir/$generationName"
 
-    @nixosGenBuilder@ $generationPath $generationName $genDir
+    # Don't copy the files if $dst already exists.  This means that we
+    # have to create $dst atomically to prevent partially copied
+    # generations if this script is ever interrupted.
+    if ! test -e $dst; then
+        local dstTmp=$dst.tmp.$$
+        mkdir -p $dstTmp || true
+
+        @nixosGenBuilder@ $generationPath $generationName $dstTmp
+
+        mv $dstTmp $dst
+    fi
 
     activeGenerations[$generationName]=1
 }
