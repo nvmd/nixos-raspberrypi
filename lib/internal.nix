@@ -9,13 +9,14 @@
     { modules, ... }@args:
     assert nixpkgs.lib.assertMsg (args.specialArgs ? nixos-raspberrypi)
       "specialArgs must provide nixos-raspberrypi";
-    nixpkgs.lib.nixosSystem (args // {
-      modules = rpiModules
-        # Nix cache with prebuilt packages,
-        # see `devshells/nix-build-to-cachix.nix` for a list
-        ++ lib.optional trustCaches self.nixosModules.trusted-nix-caches
-        # User modules
-        ++ args.modules;
+    nixpkgs.lib.nixosSystem (
+      builtins.removeAttrs args [ "nixpkgs" "trustCaches" ] // {
+        modules = rpiModules
+          # Nix cache with prebuilt packages,
+          # see `devshells/nix-build-to-cachix.nix` for a list
+          ++ lib.optional trustCaches self.nixosModules.trusted-nix-caches
+          # User modules
+          ++ args.modules;
     });
 
   full-nixos-raspberrypi-config = { config, ... }: {
