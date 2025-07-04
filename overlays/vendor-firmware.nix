@@ -103,6 +103,7 @@ self: super: { # final: prev:
         hash = "sha256-5ywIPs3lpmqVOVP3B75H577fYkkucDqB7htY2U1DW8U=";
       })
     ];
+    __intentionallyOverridingVersion = true;
   });
 
   raspberrypiWirelessFirmware_20241223 = super.raspberrypiWirelessFirmware.overrideAttrs (old: {
@@ -126,6 +127,7 @@ self: super: { # final: prev:
         hash = "sha256-Yu9hoy4lWQlkjq9LTTmXaLpUKzaEkJaMz9oYmOfbDos=";
       })
     ];
+    __intentionallyOverridingVersion = true;
   });
 
   # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/os-specific/linux/firmware/raspberrypi-wireless/default.nix
@@ -154,6 +156,7 @@ self: super: { # final: prev:
         hash = "sha256-T7eTKXqY9cxEMdab8Snda4CEOrEihy5uOhA6Fy+Mhnw=";
       })
     ];
+    __intentionallyOverridingVersion = true;
   });
 
   raspberrypiWirelessFirmware_20240117 = super.raspberrypiWirelessFirmware.overrideAttrs (old: {
@@ -180,6 +183,7 @@ self: super: { # final: prev:
         hash = "sha256-Qu96GKezjF39bBlYsWhEv6CoIpap1jtHTvcrszZOzzE=";
       })
     ];
+    __intentionallyOverridingVersion = true;
   });
 
   # as in nixpkgs-unstable
@@ -201,6 +205,7 @@ self: super: { # final: prev:
         hash = "sha256-Yynww79LPPkau4YDSLI6IMOjH64nMpHUdGjnCfIR2+M=";
       })
     ];
+    __intentionallyOverridingVersion = true;
   });
 
 }
