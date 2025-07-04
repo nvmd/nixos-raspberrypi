@@ -8,13 +8,13 @@ export PATH=/empty:@path@
 # and need to be removed
 declare -A activeGenerations
 
-# Copy generation's kernel, initrd, cmdline to `kernelsDir`.
+# Copy generation's kernel, initrd, cmdline to `gensDir/generationName`.
 addEntry() {
     local generationPath="$1"
     local generationName="$2"
-    local kernelsDir="$3"
+    local gensDir="$3"
 
-    local dst="$kernelsDir/$generationName"
+    local dst="$gensDir/$generationName"
 
     # Don't copy the files if $dst already exists, unless it's the default
     # configuration.
@@ -64,11 +64,11 @@ addAllEntries() {
     local outdir="$2"
     local numGenerations="$3"
 
-    local kernelsDir="$outdir/@nixosGenerationsDir@/"
-    mkdir -p $kernelsDir || true
+    local gensDir="$outdir/@nixosGenerationsDir@/"
+    mkdir -p $gensDir || true
 
     # Add default generation
-    addEntry $defaultGenerationPath default $kernelsDir
+    addEntry $defaultGenerationPath default $gensDir
 
     if [ "$numGenerations" -gt 0 ]; then
         # Add up to $numGenerations generations of the system profile, in reverse
@@ -79,17 +79,17 @@ addAllEntries() {
             | sort -n -r \
             | head -n $numGenerations); do
             link=/nix/var/nix/profiles/system-$generation-link
-            addEntry $link "${generation}-default" $kernelsDir
+            addEntry $link "${generation}-default" $gensDir
             for specialisation in $(
                 ls /nix/var/nix/profiles/system-$generation-link/specialisation \
                 | sort -n -r); do
                 link=/nix/var/nix/profiles/system-$generation-link/specialisation/$specialisation
-                addEntry $link "${generation}-${specialisation}" $kernelsDir
+                addEntry $link "${generation}-${specialisation}" $gensDir
             done
         done
     fi
 
-    removeObsoleteGenerations $kernelsDir
+    removeObsoleteGenerations $gensDir
 }
 
 usage() {
@@ -131,4 +131,4 @@ if [ -n "$boottarget" ]; then
     exit 0
 fi
 
-echo "kernelboot bootloader installed"
+echo "generational (kernelboot-2) bootloader installed"
