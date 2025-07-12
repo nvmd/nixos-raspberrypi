@@ -443,7 +443,7 @@ in
 
       system = {
         build.installBootLoader = builder.${cfg.bootloader};
-        boot.loader.id = "raspberrypi";
+        boot.loader.id = "raspberrypi-${cfg.bootloader}";
         boot.loader.kernelFile = pkgs.stdenv.hostPlatform.linux-kernel.target;
       };
     })
@@ -475,7 +475,7 @@ in
       # consuming modules to override with mkForce
       system = {
         build.installBootLoader = lib.mkOverride 60 (builder.${cfg.bootloader});
-        boot.loader.id = lib.mkOverride 60 ("${cfg.bootloader}+extlinux");
+        boot.loader.id = lib.mkOverride 60 ("raspberrypi-${cfg.bootloader}+extlinux");
       };
     })
 
