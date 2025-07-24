@@ -13,6 +13,7 @@ Partition provisioning is integrated with bootloader activation scripts, happeni
 Supported boot methods:
 - `kernelboot` (legacy), default for RPi5
 - `uboot` default bootloader for all other boards
+- `kernel` (testing: new generation of `kernelboot`, supporting multiple NixOS generations, see #60).
 
 
 ## Provides vendor kernel packages with matched firmware
