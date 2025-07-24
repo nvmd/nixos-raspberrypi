@@ -2,17 +2,37 @@
 
 Unopinionated Nix flake for infrastructure, vendor packages, kernel, and some optimized third-party packages for [NixOS](https://nixos.org/) running on Raspberry Pi devices.
 
-It will let you deploy [NixOS](https://nixos.org/) fully declaratively in one step with tools like [nixos-anywhere](https://github.com/nix-community/nixos-anywhere/).
+It will let you deploy [NixOS](https://nixos.org/) fully declaratively in one step with tools like [nixos-anywhere](https://github.com/nix-community/nixos-anywhere/) (note: `kexec` is, unfortunately, not supported)
 
-## What does it do
+## Provides bootloader infrastructure
 
-Provisions and manages Raspberry Pi firmware partition `/boot/firmware`. Partition is being provisioned on nixos generation switch (integrated with bootloader activation scripts, as opposed to oneshot systemd services, for example), enabling to use deployment tools like `nixos-anywhere` without any interactive intervention.
+Manages Raspberry Pi firmware partition `/boot/firmware` (configurable in `boot.loader.raspberryPi.firmwarePath`).
 
-Supported boot methods: `kernelboot`, `uboot`.
+Partition provisioning is integrated with bootloader activation scripts, happening on NixOS generation switch, enabling to use deployment tools like `nixos-anywhere` without any interactive intervention.
 
-# How to use
+Supported boot methods:
+- `kernelboot` (legacy), default for RPi5
+- `uboot` default bootloader for all other boards
 
-## Add flake input
+
+## Provides vendor kernel packages with matched firmware
+
+`pkgs.linuxAndFirmware.default` contains compatible:
+```nix
+linuxPackages_rpi<board model>  # Linux kernel
+raspberrypifw                   # Raspberry firmware, device trees (DTBs), device overlays
+raspberrypiWirelessFirmware     # wireless firmware
+```
+
+Latest stable version compatible with the board is selected in the flake module by default.
+
+## Provides 3rd-party optimised packages
+
+overlays, containing vendor, and optimized packages, like `libcamera`, `ffmpeg`, etc.
+
+# Usage
+
+## Adding flake input
 
 ```nix
 inputs = {
@@ -31,7 +51,7 @@ nixConfig = {
 };
 ```
 
-## Use the flake (Easy)
+## Using the flake to create NixOS configuration
 
 There're helper functions intended to be used as a drop-in replacement for
 `nixpkgs.lib.nixosSystem`:
@@ -114,7 +134,7 @@ Configuration options for the bootloader are in `boot.loader.raspberryPi` (defin
 
 Raspberry's `config.txt` can be configured with `hardware.raspberry-pi.config` options, see `modules/configtxt.nix` as an example (this is the default configuration as provided by RaspberryPi OS, but translated to nix format).
 
-## Use the flake (Advanced)
+## Options for advanced usage
 
 Options for a more fine-grained control:
 
@@ -144,9 +164,12 @@ imports = with nixos-raspberrypi.nixosModules; [
 ];
 ```
 
-## Installer configurations
+# Installer configurations
 
 The flake provides installation SD card images for Raspberry Pi Zero2, 3, 4, and 5, based on <https://github.com/nix-community/nixos-images>. They have several advantages over the "standard" ones, making the installation more user-friendly: mDNS enabled, `iwd` for easier wlan configuration, etc.
+
+Note: these images are mutable, i.e. they're suitable to be used both as an installation media, and as a ready to use system on the sd-card. The partition table will be expanded to use all the available space during the first boot.
+This can helpful for boards with a single storage device option, like RPi Zero/Zero 2.
 
 See `nixosConfigurations.rpi{02,4,5}-installer` in `flake.nix`.
 
@@ -159,17 +182,21 @@ nix build .#installerImages.rpi4
 nix build .#installerImages.rpi5
 ```
 
-Replace `# YOUR SSH PUB KEY HERE #` in `custom-user-config` with your SSH public key. Network access to RPi02 is also possible via USB Gadget/Ethernet functionality.
+Optional: Replace `# YOUR SSH PUB KEY HERE #` in `custom-user-config` with your SSH public key.
+
+Randomly generated connection credentials will be displayed on the screen, once the system is booted.
+
+Network access to RPi02 is also possible via USB Gadget/Ethernet functionality.
 
 `.#nixosConfigurations.rpi{02,4,5}-installer.config.system.build.toplevel` are included in the binary cache.
 
-## Configuration examples
+# NixOS configuration examples
 
 Sophisticated demo configurations are available in <https://github.com/nvmd/nixos-raspberrypi-demo>.
 
 Installer configurations can also double as the configuration examples.
 
-## Deploy
+# Deployment
 
 for example, with `nixos-anywhere` to the system running installer image (will use [disko](https://github.com/nix-community/disko/) to set the disks up):
 
@@ -177,13 +204,13 @@ for example, with `nixos-anywhere` to the system running installer image (will u
 nixos-anywhere --flake .#<system> root@<hostname>"
 ```
 
-or, to an already running system (change configuration of):
+or, to an already running system (to change configuration of it):
 
 ```shell
 nixos-rebuild switch --flake .#<system> --target-host root@<hostname>
 ```
 
-## Alternative ways to get individual packages
+# Alternative ways to get individual packages
 
 An alternative ways to consume individual packages without overlays are:
 
@@ -197,7 +224,7 @@ An alternative ways to consume individual packages without overlays are:
 
 - to get it from `nixos-raspberrypi.legacyPackages.<system>`. Here all overlays are applied.
 
-## Design goals
+# Design goals
 
 This is basically [`boot.loader.raspberryPi` options](https://search.nixos.org/options?channel=unstable&show=boot.loader.raspberryPi), which are deprecated in nixpkgs, but updated and improved upon.
 
