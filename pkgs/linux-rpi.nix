@@ -81,33 +81,24 @@ lib.overrideDerivation (buildLinux (args // rec {
     sed -i $buildRoot/include/config/auto.conf -e 's/^CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION=""/'
   '';
 
-  # Make copies of the DTBs named after the upstream names so that U-Boot finds them.
-  # This is ugly as heck, but I don't know a better solution so far.
-  postFixup = ''
-    dtbDir=${if stdenv.isAarch64 then "$out/dtbs/broadcom" else "$out/dtbs"}
-    rm $dtbDir/bcm283*.dtb
-    copyDTB() {
-      cp -v "$dtbDir/$1" "$dtbDir/$2"
-    }
-  '' + lib.optionalString (lib.elem stdenv.hostPlatform.system ["armv6l-linux"]) ''
-    copyDTB bcm2708-rpi-zero-w.dtb bcm2835-rpi-zero.dtb
-    copyDTB bcm2708-rpi-zero-w.dtb bcm2835-rpi-zero-w.dtb
-    copyDTB bcm2708-rpi-b.dtb bcm2835-rpi-a.dtb
-    copyDTB bcm2708-rpi-b.dtb bcm2835-rpi-b.dtb
-    copyDTB bcm2708-rpi-b.dtb bcm2835-rpi-b-rev2.dtb
-    copyDTB bcm2708-rpi-b-plus.dtb bcm2835-rpi-a-plus.dtb
-    copyDTB bcm2708-rpi-b-plus.dtb bcm2835-rpi-b-plus.dtb
-    copyDTB bcm2708-rpi-b-plus.dtb bcm2835-rpi-zero.dtb
-    copyDTB bcm2708-rpi-cm.dtb bcm2835-rpi-cm.dtb
-  '' + lib.optionalString (lib.elem stdenv.hostPlatform.system ["armv7l-linux"]) ''
-    copyDTB bcm2709-rpi-2-b.dtb bcm2836-rpi-2-b.dtb
-  '' + lib.optionalString (lib.elem stdenv.hostPlatform.system ["armv7l-linux" "aarch64-linux"]) ''
-    copyDTB bcm2710-rpi-zero-2.dtb bcm2837-rpi-zero-2.dtb
-    copyDTB bcm2710-rpi-zero-2-w.dtb bcm2837-rpi-zero-2-w.dtb
-    copyDTB bcm2710-rpi-3-b.dtb bcm2837-rpi-3-b.dtb
-    copyDTB bcm2710-rpi-3-b-plus.dtb bcm2837-rpi-3-a-plus.dtb
-    copyDTB bcm2710-rpi-3-b-plus.dtb bcm2837-rpi-3-b-plus.dtb
-    copyDTB bcm2710-rpi-cm3.dtb bcm2837-rpi-cm3.dtb
-    copyDTB bcm2711-rpi-4-b.dtb bcm2838-rpi-4-b.dtb
+  postFixup = let
+    armArch = if stdenv.isAarch64 then "arm64" else "arm";
+  in ''
+    # Provide overlays together with README just like `raspberrypifw`
+    # (https://github.com/raspberrypi/firmware/) does
+    # Raspberry's bootloader may check if it's present in `overlays/` on
+    # FIRMWARE partition
+    # see
+    # * https://www.raspberrypi.com/documentation/computers/config_txt.html#os_prefix
+    # * https://www.raspberrypi.com/documentation/computers/config_txt.html#overlay_prefix
+
+    # `src` is, unfortunately, unset in postPatch for linux
+    # see:
+    # * https://github.com/NixOS/nixpkgs/blob/be281b772565298a2e0b18138df2e25cbf838521/pkgs/os-specific/linux/kernel/manual-config.nix#L290
+    # * https://github.com/NixOS/nixpkgs/pull/332180
+    # assume linux needs only one source archive, so that srcs is always single path
+
+    overlaySrcDir="$srcs/arch/${armArch}/boot/dts/overlays"
+    cp "$overlaySrcDir/README" "$out/dtbs/overlays/"
   '';
 })
