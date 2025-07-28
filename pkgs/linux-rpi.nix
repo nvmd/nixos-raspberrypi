@@ -10,7 +10,13 @@ let
     arch = stdenv.hostPlatform.uname.processor;
     mkConfig = name: {
       defconfig = "${name}_defconfig";
-      structuredConfigFixes = args.fixStructuredExtraConfig.${name}.${arch};
+      structuredExtraConfig = let
+        genericConfig = args.structuredExtraConfig or {};
+        # this is to enforce some of the "<name>_defconfig" kernel options
+        # after nixos overrides some of them
+        # specific to <name> and the arch it is being built for
+        configFixup = args.fixupStructuredConfig.${name}.${arch} or {};
+      in configFixup // genericConfig;
     };
   in {
     # matching first on arch, and the on the board model to easier handle 
@@ -45,9 +51,7 @@ lib.overrideDerivation (buildLinux (args // rec {
     hash = srcHash;
   };
 
-  defconfig = linuxConfig.defconfig;
-
-  structuredExtraConfig = linuxConfig.structuredConfigFixes // (args.structuredExtraConfig or {});
+  inherit (linuxConfig) defconfig structuredExtraConfig;
 
   features = {
     efiBootStub = false;
