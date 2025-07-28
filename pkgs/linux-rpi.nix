@@ -1,9 +1,14 @@
-{ stdenv, lib, buildPackages, fetchFromGitHub, fetchpatch, perl, buildLinux, rpiModel 
+{ stdenv
+, lib
+, fetchFromGitHub
+, buildLinux
+, rpiModel
 , modDirVersion
 , tag
 , rev ? tag
 , srcHash
-, ... } @ args:
+, ...
+} @ args:
 
 let
   linuxConfig = let
@@ -57,8 +62,7 @@ lib.overrideDerivation (buildLinux (args // rec {
     efiBootStub = false;
   } // (args.features or {});
 
-  kernelPatches = (args.kernelPatches or []) ++ [
-  ];
+  kernelPatches = args.kernelPatches or [];
 
   extraMeta = if (lib.elem rpiModel [ "0" "1" "2" ]) then {
     platforms = with lib.platforms; arm;
