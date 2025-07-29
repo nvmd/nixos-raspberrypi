@@ -61,7 +61,7 @@ let
     # this is to enforce some of the "_defconfig" kernel options after nixos
     # overrides some of them
     # https://raw.githubusercontent.com/raspberrypi/linux/refs/tags/stable_20250428/arch/arm64/configs/bcm2712_defconfig
-    fixStructuredExtraConfig = let
+    fixupStructuredConfig = let
       common = with pkgs.lib.kernel; {
         # CRYPTO_AES = module ; # =yes in nixos;
         # CRYPTO_SHA512 = module ; # =yes in nixos;
@@ -135,7 +135,7 @@ let
     # this is to enforce some of the "_defconfig" kernel options after nixos
     # overrides some of them
     # https://raw.githubusercontent.com/raspberrypi/linux/refs/tags/stable_20240529/arch/arm64/configs/bcm2712_defconfig
-    fixStructuredExtraConfig = let
+    fixupStructuredConfig = let
       common = with pkgs.lib.kernel; {
         # CRYPTO_AES = module ; # =yes in nixos;
         # CRYPTO_SHA512 = module ; # =yes in nixos;
