@@ -250,7 +250,8 @@ in
       };
 
       useGenerationDeviceTree = mkOption {
-        default = false;  # generic-extlinux-compatible defaults to `true`
+        default = if cfg.bootloader == "kernel" then true
+                  else false;  # generic-extlinux-compatible defaults to `true`
         type = types.bool;
         description = ''
           Whether to use device tree supplied from the generation's kernel
