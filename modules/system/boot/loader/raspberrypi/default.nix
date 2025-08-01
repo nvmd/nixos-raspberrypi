@@ -220,7 +220,15 @@ in
         description = "The `config.txt` package to use.";
       };
 
-      firmwarePackage = mkPackageOption pkgs "raspberrypifw" { };
+      firmwarePackage = mkPackageOption pkgs "raspberrypifw" {
+        default = "raspberrypifw";
+        extraDescription = ''
+          This package will be used to:
+          - install RaspberryPi firmware a.k.a "boot code" from
+          - install device tree files from when
+            `boot.loader.raspberryPi.useGenerationDeviceTree == false`.
+        '';
+      };
 
       bootPath = mkOption {
         default = "/boot";
@@ -240,12 +248,12 @@ in
         type = types.str;
         description = ''
           Target path for system firmware (DTBs, etc.) and:
-          - kernelboot: system generations, `<firmwarePath>/nixos-kernels` will hold
-            files from older generations.
           - kernel: system generations,
             `<firmwarePath>/<kernelbootNixosGenerationsDir>` will hold files
             from older generations.
           - uboot: uboot binary
+          - kernelboot (legacy): system generations,
+            `<firmwarePath>/nixos-kernels` will hold files from older generations.
         '';
       };
 
@@ -254,16 +262,15 @@ in
                   else false;  # generic-extlinux-compatible defaults to `true`
         type = types.bool;
         description = ''
-          Whether to use device tree supplied from the generation's kernel
-          or from the vendor's firmware package (usually `pkgs.raspberrypifw`).
+          Whether to use device tree supplied by:
+          - the generation's kernel (when `true`)
+          - or from the vendor's firmware package set with
+            `boot.loader.raspberryPi.firmwarePackage` (when `false`)
 
-          When enabled, the device tree binaries will be copied to
-          `firmwarePath` from the generation's kernel.
-
-          This affects `kernelboot` and `uboot` bootloaders.
-
-          Note that this affects all generations, regardless of the
-          setting value used in their configurations.
+          `kernelboot` (legacy), `uboot`: Note that this affects all generations,
+            regardless of the setting value used in their configurations because
+            these bootloaders don't effectively distinguish between
+            nixos-generations on the level of FIRMWARE
         '';
       };
 
@@ -293,6 +300,11 @@ in
 
           May or may not do anything depending on chosen the bootloader.
 
+          Honors all relevant module options except the
+          - `-c <path-to-default-configuration>`
+          - `-b <boot-dir>` arguments,
+          which must be specified by the caller of bootPopulateCmd.
+
           Useful to have for sdImage.populateRootCommands
         '';
       };
@@ -303,7 +315,7 @@ in
         description = ''
           Bootloader to use:
           - `"uboot"`: U-Boot
-          - `kernel` (new, generational), `"kernelboot"` (legacy):
+          - `"kernel"` (new, generational), `"kernelboot"` (legacy):
             The linux kernel is installed directly into the
             firmware directory as expected by the Raspberry Pi boot process.
             This can be useful for newer hardware that doesn't yet have
