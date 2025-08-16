@@ -13,7 +13,8 @@ Partition provisioning is integrated with bootloader activation scripts, happeni
 Supported boot methods:
 - `kernelboot` (legacy), default for RPi5
 - `uboot` default bootloader for all other boards
-- `kernel` (testing: new generation of `kernelboot`, supporting multiple NixOS generations, see #60).
+- `kernel` (new generation of `kernelboot`, supporting multiple NixOS generations, see #60,
+  default for RPi5 sd-images/installer images).
 
 
 ## Provides vendor kernel packages with matched firmware
@@ -171,6 +172,9 @@ The flake provides installation SD card images for Raspberry Pi Zero2, 3, 4, and
 
 Note: these images are mutable, i.e. they're suitable to be used both as an installation media, and as a ready to use system on the sd-card. The partition table will be expanded to use all the available space during the first boot.
 This can helpful for boards with a single storage device option, like RPi Zero/Zero 2.
+
+Note: installer images use new generational bootloader for RPi5 by default (see #60),
+  to keep that in your configuration, set `boot.loader.raspberryPi.bootloader = "kernel"`
 
 See `nixosConfigurations.rpi{02,4,5}-installer` in `flake.nix`.
 

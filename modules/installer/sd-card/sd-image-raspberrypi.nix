@@ -20,6 +20,11 @@
   ];
   fileSystems."/".options = [ "noatime" ];
 
+  # Use generation bootloader for RPi5 by default for all sd-images
+  # TODO: Remove when it is default for all RPi5 installations
+  boot.loader.raspberryPi.bootloader = lib.mkIf
+    (config.boot.loader.raspberryPi.variant == "5") "kernel";
+
   sdImage = {
     imageBaseName = let
       cfg = config.boot.loader.raspberryPi;
