@@ -97,6 +97,7 @@ self: super: { # final: prev:
 
   raspberrypiWirelessFirmware_20250408 = super.raspberrypiWirelessFirmware.overrideAttrs (old: {
     version = "2025-04-08";
+    __intentionallyOverridingVersion = true; # silence warning regarding missing `src` attr.
     srcs = [
       # https://github.com/RPi-Distro/bluez-firmware/commits/bookworm
       # 1.2-9+rpt3 release – 20240226
@@ -120,6 +121,7 @@ self: super: { # final: prev:
 
   raspberrypiWirelessFirmware_20241223 = super.raspberrypiWirelessFirmware.overrideAttrs (old: {
     version = "2024-12-23";
+    __intentionallyOverridingVersion = true; # silence warning regarding missing `src` attr.
     srcs = [
       # https://github.com/RPi-Distro/bluez-firmware/commits/bookworm
       # 1.2-9+rpt3 release – 20240226
@@ -145,6 +147,7 @@ self: super: { # final: prev:
   # pkgs/os-specific/linux/firmware/raspberrypi-wireless/default.nix
   raspberrypiWirelessFirmware_20240226 = super.raspberrypiWirelessFirmware.overrideAttrs (old: {
     version = "2024-02-26";
+    __intentionallyOverridingVersion = true; # silence warning regarding missing `src` attr.
     srcs = [
       # https://github.com/RPi-Distro/bluez-firmware/commits/bookworm
       # https://github.com/RPi-Distro/bluez-firmware/tree/78d6a07730e2d20c035899521ab67726dc028e1c
@@ -171,6 +174,7 @@ self: super: { # final: prev:
 
   raspberrypiWirelessFirmware_20240117 = super.raspberrypiWirelessFirmware.overrideAttrs (old: {
     version = "2024-01-17";
+    __intentionallyOverridingVersion = true; # silence warning regarding missing `src` attr.
     srcs = [
       # as in nixpkgs-unstable
       # https://github.com/RPi-Distro/bluez-firmware/commits/bookworm
@@ -198,6 +202,7 @@ self: super: { # final: prev:
   # as in nixpkgs-unstable
   raspberrypiWirelessFirmware_20231115 = super.raspberrypiWirelessFirmware.overrideAttrs (old: {
     version = "unstable-2023-11-15";
+    __intentionallyOverridingVersion = true; # silence warning regarding missing `src` attr.
     srcs = [
       (super.fetchFromGitHub {  # 1.2-9+rpt2 release – 20231024
         name = "bluez-firmware";

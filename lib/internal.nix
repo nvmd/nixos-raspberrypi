@@ -1,8 +1,6 @@
-{ lib, self, ... }:
-
-{
+{ patchedNixpkgs, self, ... }: {
   nixosSystemRPi =
-    { nixpkgs ? self.inputs.nixpkgs
+    { nixpkgs ? patchedNixpkgs
     , trustCaches ? true
     , rpiModules
     }:
@@ -14,7 +12,7 @@
         modules = rpiModules
           # Nix cache with prebuilt packages,
           # see `devshells/nix-build-to-cachix.nix` for a list
-          ++ lib.optional trustCaches self.nixosModules.trusted-nix-caches
+          ++ nixpkgs.lib.optional trustCaches self.nixosModules.trusted-nix-caches
           # User modules
           ++ args.modules;
     });

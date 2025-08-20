@@ -15,8 +15,8 @@
     # use fork to allow disabling modules introduced by mkRemovedOptionModule
     # and similar functions
     # see PR nixos:nixpkgs#398456 (https://github.com/NixOS/nixpkgs/pull/398456)
-    nixpkgs.url = "github:nvmd/nixpkgs/modules-with-keys-25.05";
-    # nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    # nixpkgs.url = "github:nvmd/nixpkgs/modules-with-keys-25.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     argononed = {
       # url = "git+file:../argononed?shallow=1";
@@ -32,14 +32,29 @@
       inputs.nixos-stable.follows = "nixpkgs";
       inputs.nixos-unstable.follows = "nixpkgs";
     };
+
+    flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.tar.gz";
   };
 
-  outputs = { self, nixpkgs, argononed, nixos-images, ... }@inputs: let
-    rpiSystems = [ "aarch64-linux" "armv7l-linux" "armv6l-linux" ];
+  nixConfig = {
+    allowImportsFromDerivation = true;
+  };
+
+  outputs = {
+    self,
+    nixpkgs,
+    argononed,
+    nixos-images,
+    ...
+  } @ inputs: let
+    patchedNixpkgs = system: import ./lib/patched-nixpkgs.nix {inherit self system;};
+    rpiSystems = ["aarch64-linux" "armv7l-linux" "armv6l-linux"];
     allSystems = nixpkgs.lib.systems.flakeExposed;
     forSystems = systems: f: nixpkgs.lib.genAttrs systems (system: f system);
-    mkRpiPkgs = nixpkgs: system: import nixpkgs {
-        inherit system; overlays = [
+    mkRpiPkgs = system:
+      import (patchedNixpkgs system) {
+        inherit system;
+        overlays = [
           self.overlays.pkgs
 
           self.overlays.bootloader
@@ -50,11 +65,10 @@
           self.overlays.vendor-pkgs
         ];
       };
-    mkLegacyPackagesFor = nixpkgs: forSystems rpiSystems (mkRpiPkgs nixpkgs);
   in {
 
     devShells = forSystems allSystems (system: let
-      pkgs = nixpkgs.legacyPackages.${system};
+      pkgs = inputs.nixpkgs.legacyPackages.${system};
     in {
       default = pkgs.mkShell {
         name = "nixos-raspberrypi";
@@ -69,21 +83,21 @@
       };
     });
 
-    lib = import ./lib ({
-      inherit (nixpkgs) lib;
-    } // inputs);
+    lib = import ./lib {
+        inherit self;
+    };
 
     nixosModules = {
       trusted-nix-caches = import ./modules/trusted-nix-caches.nix;
       nixpkgs-rpi = { config, lib, pkgs, ... }: import ./modules/nixpkgs-rpi.nix {
-        inherit config lib pkgs self;
-      };
+          inherit config lib pkgs self;
+        };
 
       bootloader = import ./modules/system/boot/loader/raspberrypi;
       # default = import ./modules/raspberrypi.nix;
       default = { config, lib, pkgs, ... }: import ./modules/raspberrypi.nix {
-        inherit config lib pkgs self;
-      };
+          inherit config lib pkgs self;
+        };
 
       sd-image = import ./modules/installer/sd-card/sd-image-raspberrypi.nix;
 
@@ -93,8 +107,8 @@
 
       raspberry-pi-5 = {
         base = { config, lib, pkgs, ... }: import ./modules/raspberry-pi-5 {
-          inherit config lib pkgs self;
-        };
+            inherit config lib pkgs self;
+          };
         display-vc4 = import ./modules/display-vc4.nix;
         display-rp1 = import ./modules/raspberry-pi-5/display-rp1.nix;
         bluetooth = import ./modules/bluetooth.nix;
@@ -102,8 +116,8 @@
 
       raspberry-pi-4 = {
         base = { config, lib, pkgs, ... }: import ./modules/raspberry-pi-4.nix {
-          inherit config lib pkgs self;
-        };
+            inherit config lib pkgs self;
+          };
         display-vc4 = import ./modules/display-vc4.nix;
         bluetooth = import ./modules/bluetooth.nix;
         # work-in-progress, untested
@@ -112,14 +126,14 @@
 
       raspberry-pi-3 = {
         base = { config, lib, pkgs, ... }: import ./modules/raspberry-pi-3.nix {
-          inherit config lib pkgs self;
-        };
+            inherit config lib pkgs self;
+          };
       };
 
       raspberry-pi-02 = {
         base = { config, lib, pkgs, ... }: import ./modules/raspberry-pi-02.nix {
-          inherit config lib pkgs self;
-        };
+            inherit config lib pkgs self;
+          };
         display-vc4 = import ./modules/display-vc4.nix;
         bluetooth = import ./modules/bluetooth.nix;
       };
@@ -129,6 +143,7 @@
       bootloader = import ./overlays/bootloader.nix;
 
       pkgs = import ./overlays/pkgs.nix;
+      
       vendor-pkgs = import ./overlays/vendor-pkgs.nix;
 
       vendor-firmware = import ./overlays/vendor-firmware.nix;
@@ -140,10 +155,10 @@
 
     # "RPi world": nixpkgs with all overlays applied "globally", i.e.
     # all packages here depend on rpi's/optimized versions of the dependencies
-    # * used inside the modules, where a choice of "sane defaults" about the 
+    # * used inside the modules, where a choice of "sane defaults" about the
     #   nixpkgs channel had to be made
     # * binary cache is generated from this package set
-    legacyPackages = mkLegacyPackagesFor nixpkgs;
+    legacyPackages = forSystems rpiSystems mkRpiPkgs;
 
     packages = forSystems rpiSystems (system: let
       pkgs = self.legacyPackages.${system};
@@ -168,7 +183,7 @@
 
       vlc = pkgs.vlc;
 
-      # see legacyPackages.<system>.linuxAndFirmware for other versions of 
+      # see legacyPackages.<system>.linuxAndFirmware for other versions of
       # the bundle
       inherit (pkgs.linuxAndFirmware.default)
         linux_rpi5 linuxPackages_rpi5
@@ -182,13 +197,13 @@
       pisugar3-kmod = let
         targetKernel = pkgs.linux_rpi02;
       in (pkgs.linuxPackagesFor targetKernel).callPackage ./pkgs/pisugar-kmod.nix {
-        pisugarVersion = "3";
-      };
+          pisugarVersion = "3";
+        };
       pisugar2-kmod = let
         targetKernel = pkgs.linux_rpi02;
       in (pkgs.linuxPackagesFor targetKernel).callPackage ./pkgs/pisugar-kmod.nix {
-        pisugarVersion = "2";
-      };
+          pisugarVersion = "2";
+        };
 
       pisugar-power-manager-rs = pkgs.callPackage ./pkgs/pisugar-power-manager-rs.nix {};
 
@@ -199,21 +214,21 @@
       # TIP: To create "regular" nixosConfigurations look for
       # `nixosSystem` and `nixosSystemFull` helpers in `lib/`
       mkNixOSRPiInstaller = modules: self.lib.nixosInstaller {
-        specialArgs = inputs // { nixos-raspberrypi = self; };
+        specialArgs = { nixos-raspberrypi = self; };
         modules = [
-          nixos-images.nixosModules.sdimage-installer
+              nixos-images.nixosModules.sdimage-installer
           ({ config, lib, modulesPath, ... }: {
-            disabledModules = [
-              # disable the sd-image module that nixos-images uses
-              (modulesPath + "/installer/sd-card/sd-image-aarch64-installer.nix")
-            ];
-            # nixos-images sets this with `mkForce`, thus `mkOverride 40`
-            image.baseName = let
-              cfg = config.boot.loader.raspberryPi;
+                disabledModules = [
+                  # disable the sd-image module that nixos-images uses
+                  (modulesPath + "/installer/sd-card/sd-image-aarch64-installer.nix")
+                ];
+                # nixos-images sets this with `mkForce`, thus `mkOverride 40`
+                image.baseName = let
+                  cfg = config.boot.loader.raspberryPi;
             in lib.mkOverride 40 "nixos-installer-rpi${cfg.variant}-${cfg.bootloader}";
-          })
+              })
         ] ++ modules;
-      };
+        };
 
       custom-user-config = ({ config, pkgs, lib, nixos-raspberrypi, ... }: {
 

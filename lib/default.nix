@@ -1,22 +1,25 @@
-{ lib, self, ... }:
+{ self, ... }:
 
 let
+  patchedNixpkgs = import ./patched-nixpkgs.nix {inherit self;};
+  lib = patchedNixpkgs.lib;
+
   # use makeScope instead?
   flib = lib.makeExtensible (flib_self: let
-    callLibs = file: import file { flib = flib_self; inherit self lib; };
+    callLibs = file: import file { flib = flib_self; inherit self patchedNixpkgs; };
   in {
 
   # NOTE: Endusers: please avoid using `int` (`internal`) directly
   int = callLibs ./internal.nix;
 
-  nixosSystem = { nixpkgs ? self.inputs.nixpkgs
+  nixosSystem = { nixpkgs ? patchedNixpkgs
                 , trustCaches ? true
                 , ...
                 }@args: flib.int.nixosSystemRPi {
     inherit nixpkgs trustCaches;
     rpiModules = [ flib.int.default-nixos-raspberrypi-config ];
   } args;
-  nixosSystemFull = { nixpkgs ? self.inputs.nixpkgs
+  nixosSystemFull = { nixpkgs ? patchedNixpkgs
                     , trustCaches ? true
                     , ...
                     }@args: flib.int.nixosSystemRPi {
@@ -24,7 +27,7 @@ let
     rpiModules = [ flib.int.full-nixos-raspberrypi-config ];
   } args;
 
-  nixosInstaller = { nixpkgs ? self.inputs.nixpkgs
+  nixosInstaller = { nixpkgs ? patchedNixpkgs
                    , trustCaches ? true
                    , ...
                    }@args: flib.int.nixosSystemRPi {
