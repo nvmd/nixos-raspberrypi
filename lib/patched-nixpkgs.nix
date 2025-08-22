@@ -1,7 +1,8 @@
-{self, system ? builtins.currentSystem, ...}: let
-  pre-pkgs = self.inputs.nixpkgs.legacyPackages."${system}";
+{self, ...}: let
+  pre-pkgs = import self.inputs.nixpkgs {};
 
-  patchedSrc = pre-pkgs.applyPatches
+  patchedSrc =
+    pre-pkgs.applyPatches
     {
       name = "nixpkgs";
       src = self.inputs.nixpkgs.outPath;
@@ -16,5 +17,4 @@
       ];
     };
 in
-  (import self.inputs.flake-compat { src = patchedSrc; }).outputs
-
+  (import self.inputs.flake-compat {src = patchedSrc;}).outputs
