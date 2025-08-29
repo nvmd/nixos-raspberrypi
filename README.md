@@ -6,15 +6,14 @@ It will let you deploy [NixOS](https://nixos.org/) fully declaratively in one st
 
 ## Provides bootloader infrastructure
 
-Manages Raspberry Pi firmware partition `/boot/firmware` (configurable in `boot.loader.raspberryPi.firmwarePath`).
+Manages Raspberry Pi firmware partition `/boot/firmware` (the path is configurable with `boot.loader.raspberryPi.firmwarePath`).
 
 Partition provisioning is integrated with bootloader activation scripts, happening on NixOS generation switch, enabling to use deployment tools like `nixos-anywhere` without any interactive intervention.
 
-Supported boot methods:
+Supported boot methods (configurable with `boot.loader.raspberryPi.bootloader`):
 - `kernelboot` (legacy), default for RPi5
-- `uboot` default bootloader for all other boards
-- `kernel` (new generation of `kernelboot`, supporting multiple NixOS generations, see #60,
-  default for RPi5 sd-images/installer images).
+- `uboot`, default bootloader for all other boards
+- `kernel`, new generation of `kernelboot`, supporting multiple NixOS generations (see #60), default for RPi5 sd-image/installer images, _recommended_ for new installations.
 
 
 ## Provides vendor kernel packages with matched firmware
@@ -173,8 +172,10 @@ The flake provides installation SD card images for Raspberry Pi Zero2, 3, 4, and
 Note: these images are mutable, i.e. they're suitable to be used both as an installation media, and as a ready to use system on the sd-card. The partition table will be expanded to use all the available space during the first boot.
 This can helpful for boards with a single storage device option, like RPi Zero/Zero 2.
 
-Note: installer images use new generational bootloader for RPi5 by default (see #60),
-  to keep that in your configuration, set `boot.loader.raspberryPi.bootloader = "kernel"`
+> [!TIP]
+> installer images use new generational bootloader for RPi5 by default (see #60),
+> to keep that in your configuration, set `boot.loader.raspberryPi.bootloader = "kernel"`.
+> This is _recommended_ for new installations.
 
 See `nixosConfigurations.rpi{02,4,5}-installer` in `flake.nix`.
 
@@ -187,11 +188,13 @@ nix build .#installerImages.rpi4
 nix build .#installerImages.rpi5
 ```
 
-Optional: Replace `# YOUR SSH PUB KEY HERE #` in `custom-user-config` with your SSH public key.
-
 Randomly generated connection credentials will be displayed on the screen, once the system is booted.
 
-Network access to RPi02 is also possible via USB Gadget/Ethernet functionality.
+Network access to Raspberry Pi Zero2 (RPi02) boards is also possible via USB Gadget/Ethernet functionality.
+
+> [!TIP]
+> You can optionally replace `# YOUR SSH PUB KEY HERE #` in `custom-user-config`
+> with your SSH public key to generate the image with your SSH key already baked in
 
 `.#nixosConfigurations.rpi{02,4,5}-installer.config.system.build.toplevel` are included in the binary cache.
 
