@@ -4,8 +4,21 @@ self: super: { # final: prev:
   # pkgs/os-specific/linux/firmware/raspberrypi/default.nix
   # https://github.com/raspberrypi/firmware/commits/stable/
 
+  # see `extra/git_hash` for a matching hash of the `raspberrypi/linux`
+
+
+  raspberrypifw_20250829 = super.raspberrypifw.overrideAttrs (old: {
+    # this release is untagged in the upstream for linux 6.12.44
+    version = "unstable_20250829";
+    src = super.fetchFromGitHub {
+      owner = "raspberrypi";
+      repo = "firmware";
+      rev = "73065c21a0337eac9de13521fc1254cdadd3bd0a";
+      hash = "sha256-cprLY/xtYuE2LjgbQGuPlHBlIYLS5YSp/URvgCLMB14=";
+    };
+  });
+
   raspberrypifw_20250702 = super.raspberrypifw.overrideAttrs (old: {
-    # see `extra/git_hash` for a matching hash of the `raspberrypi/linux`
     # this release is untagged in the upstream
     # this the the version of the matching stable kernel from `raspberrypi/linux`
     version = "1.20250702";
