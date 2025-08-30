@@ -44,7 +44,6 @@ let
 
       self.overlays.vendor-kernel
       self.overlays.vendor-firmware
-      # self.overlays.vendor-kernel-nixpkgs
       self.overlays.kernel-and-firmware
 
       self.overlays.vendor-pkgs

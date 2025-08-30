@@ -133,7 +133,6 @@
 
       vendor-firmware = import ./overlays/vendor-firmware.nix;
       vendor-kernel = import ./overlays/vendor-kernel.nix;
-      vendor-kernel-nixpkgs = import ./overlays/vendor-kernel-nixpkgs.nix;
 
       kernel-and-firmware = import ./overlays/linux-and-firmware.nix;
     };
