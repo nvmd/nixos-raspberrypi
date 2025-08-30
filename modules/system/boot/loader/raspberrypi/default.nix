@@ -9,6 +9,102 @@ let
   ubootBinName = if isAarch64 then "u-boot-rpi-arm64.bin" else "u-boot-rpi.bin";
 
 
+  mkBootloader = pkgs: bootloader {
+    inherit pkgs;
+    inherit (cfg) nixosGenerationsDir;
+
+    firmwareInstaller = "${raspberryPiFirmware {
+      inherit pkgs;
+      firmware = cfg.firmwarePackage;
+      configTxt = cfg.configTxtPackage;
+    }}";
+
+    nixosGenBuilder = "${kernelbootGenBuilder {
+      inherit pkgs;
+      deviceTreeInstaller = let
+        cmd = deviceTree {
+          inherit pkgs;
+          firmware = cfg.firmwarePackage;
+        };
+        args = lib.optionalString (!cfg.useGenerationDeviceTree) " -r";
+      in "${cmd} ${args}";
+    }}";
+
+  };
+
+  bootloader = ({ pkgs
+                , nixosGenerationsDir
+                , firmwareInstaller
+                , nixosGenBuilder
+                }: pkgs.replaceVarsWith {
+    src = ./generational/nixos-generations-builder.sh;
+    isExecutable = true;
+
+    replacements = {
+      inherit (pkgs) bash;
+      path = pkgs.lib.makeBinPath [
+        pkgs.coreutils
+        pkgs.gnused
+      ];
+
+      # NixOS-generations -independent
+      installFirmwareBuilder = firmwareInstaller;
+      # NixOS-generations -dependent
+      inherit nixosGenerationsDir nixosGenBuilder;
+    };
+  });
+
+  kernelbootGenBuilder = ({ pkgs
+                          , deviceTreeInstaller
+                          }: pkgs.replaceVarsWith {
+    src = ./generational/kernelboot-gen-builder.sh;
+    isExecutable = true;
+
+    replacements = {
+      inherit (pkgs) bash;
+      path = pkgs.lib.makeBinPath [
+        pkgs.coreutils
+      ];
+
+      installDeviceTree = deviceTreeInstaller;
+    };
+  });
+
+  deviceTree = ({ pkgs
+                , firmware
+                }: pkgs.replaceVarsWith {
+    src = ./generational/install-device-tree.sh;
+    isExecutable = true;
+
+    replacements = {
+      inherit (pkgs) bash;
+      path = pkgs.lib.makeBinPath [
+        pkgs.coreutils
+      ];
+
+      inherit firmware;
+    };
+  });
+
+  # installs raspberry's firmware independent of the nixos generations
+  # sometimes referred to as "boot code"
+  raspberryPiFirmware = ({ pkgs
+                         , firmware
+                         , configTxt
+                         }: pkgs.replaceVarsWith {
+    src = ./generational/install-firmware.sh;
+    isExecutable = true;
+
+    replacements = {
+      inherit (pkgs) bash;
+      path = pkgs.lib.makeBinPath [
+        pkgs.coreutils
+      ];
+
+      inherit firmware configTxt;
+    };
+  });
+
   # Builders used to write during system activation
   firmwareBuilder = import ./firmware-builder.nix {
     inherit pkgs;
@@ -47,23 +143,42 @@ let
   firmwarePopulateCmd = "${populateFirmwareBuilder} ${firmwareBuilderArgs}";
   firmwareBuilderArgs = lib.optionalString (!cfg.useGenerationDeviceTree) " -r";
 
-  # used for system.build.*
+  # these will receive the top-level path as an argument when invoked as
+  # system.build.installBootloader
   builder = {
-    # system.build.installFirmware
-    firmware = "${firmwareBuilder} -d ${cfg.firmwarePath} ${firmwareBuilderArgs} -c";
     # system.build.installBootLoader
     uboot = "${ubootBuilder} -f ${cfg.firmwarePath} -b ${cfg.bootPath} -c";
-    kernelboot = "${kernelbootBuilder} -f ${cfg.firmwarePath} -c";
+    kernelboot = builtins.concatStringsSep " " [
+      "${kernelbootBuilder}"
+      "-f ${cfg.firmwarePath}"
+      "-c"
+    ];
+    kernel = builtins.concatStringsSep " " [
+      "${mkBootloader pkgs}"
+      "-g ${toString cfg.configurationLimit}"
+      "-f ${cfg.firmwarePath}"
+      "-c"
+    ];
   };
 
+  # firmware: caller must provide `-c <nixos configuration>` and  `-f <firmware target path>`
+  # boot: caller must provide `-c <nixos configuration>` and `-b <boot-dir>`
   populateCmds = {
     uboot = {
-      firmware = "${populateUbootBuilder}"; # call with `-f <firmware target path>`
-      boot = "${populateUbootBuilder}";     # call with `-b <boot-dir>`
+      firmware = "${populateUbootBuilder}";
+      boot = "${populateUbootBuilder}";
     };
     kernelboot = {
       firmware = "${populateKernelbootBuilder}";
       boot = "${populateKernelbootBuilder}";
+    };
+    kernel = let cmd = builtins.concatStringsSep " " [
+      "${mkBootloader pkgs.buildPackages}"
+      "-g ${toString cfg.configurationLimit}"
+    ];
+    in {
+      firmware = "${cmd}";
+      boot = "${cmd}";
     };
   };
 in
@@ -105,7 +220,15 @@ in
         description = "The `config.txt` package to use.";
       };
 
-      firmwarePackage = mkPackageOption pkgs "raspberrypifw" { };
+      firmwarePackage = mkPackageOption pkgs "raspberrypifw" {
+        default = "raspberrypifw";
+        extraDescription = ''
+          This package will be used to:
+          - install RaspberryPi firmware a.k.a "boot code" from
+          - install device tree files from when
+            `boot.loader.raspberryPi.useGenerationDeviceTree == false`.
+        '';
+      };
 
       bootPath = mkOption {
         default = "/boot";
@@ -125,26 +248,29 @@ in
         type = types.str;
         description = ''
           Target path for system firmware (DTBs, etc.) and:
-          - kernelboot: system generations, `<firmwarePath>/nixos-kernels` will hold
-            files from older generations.
+          - kernel: system generations,
+            `<firmwarePath>/<kernelbootNixosGenerationsDir>` will hold files
+            from older generations.
           - uboot: uboot binary
+          - kernelboot (legacy): system generations,
+            `<firmwarePath>/nixos-kernels` will hold files from older generations.
         '';
       };
 
       useGenerationDeviceTree = mkOption {
-        default = false;  # generic-extlinux-compatible defaults to `true`
+        default = if cfg.bootloader == "kernel" then true
+                  else false;  # generic-extlinux-compatible defaults to `true`
         type = types.bool;
         description = ''
-          Whether to use device tree supplied from the generation's kernel
-          or from the vendor's firmware package (usually `pkgs.raspberrypifw`).
+          Whether to use device tree supplied by:
+          - the generation's kernel (when `true`)
+          - or from the vendor's firmware package set with
+            `boot.loader.raspberryPi.firmwarePackage` (when `false`)
 
-          When enabled, the device tree binaries will be copied to
-          `firmwarePath` from the generation's kernel.
-
-          This affects `kernelboot` and `uboot` bootloaders.
-
-          Note that this affects all generations, regardless of the
-          setting value used in their configurations.
+          `kernelboot` (legacy), `uboot`: Note that this affects all generations,
+            regardless of the setting value used in their configurations because
+            these bootloaders don't effectively distinguish between
+            nixos-generations on the level of FIRMWARE
         '';
       };
 
@@ -174,22 +300,60 @@ in
 
           May or may not do anything depending on chosen the bootloader.
 
+          Honors all relevant module options except the
+          - `-c <path-to-default-configuration>`
+          - `-b <boot-dir>` arguments,
+          which must be specified by the caller of bootPopulateCmd.
+
           Useful to have for sdImage.populateRootCommands
         '';
       };
 
       bootloader = mkOption {
         default = if cfg.variant == "5" then "kernelboot" else "uboot";
-        type = types.enum [ "kernelboot" "uboot" ];
+        type = types.enum [ "kernel" "kernelboot" "uboot" ];
         description = ''
           Bootloader to use:
           - `"uboot"`: U-Boot
-          - `"kernelboot"`: The linux kernel is installed directly into the
-            firmware directory as expected by the Raspberry Pi boot
-            process.
+          - `"kernel"` (new, generational), `"kernelboot"` (legacy):
+            The linux kernel is installed directly into the
+            firmware directory as expected by the Raspberry Pi boot process.
             This can be useful for newer hardware that doesn't yet have
             uboot compatibility or less common setups, like booting a
             cm4 with an nvme drive.
+        '';
+      };
+
+      nixosGenerationsDir = mkOption {
+        default = "nixos";
+        type = types.str;
+        description = ''
+          Used only by `kernel` bootloader!
+          Directory for nixos generations inside `firmwarePath`.
+        '';
+      };
+
+      configurationLimit = mkOption {
+        default = 4;
+        example = 10;
+        type = types.int;
+        description = ''
+          Used only by `kernel` bootloader!
+
+          Maximum number of configurations to keep on FIRMWARE partition.
+          
+          This is quite space-consuming, because to keep the NixOS generations 
+          as independent as possible the following files are need to be copied
+          and kept for each generation (no symlinks allowed):
+          * kernel,
+          * initrd,
+          * DTBs,
+          * overlays
+          You can specify `os_prefix=` in `config.txt` appropriately to
+          temporarily boot the desired nixos generation, e.g. `os_prefix=nixos/103-default/`
+
+          For a maximum number of configurations in the uboot menu see
+          `boot.loader.generic-extlinux-compatible.configurationLimit`.
         '';
       };
 
@@ -240,15 +404,39 @@ in
           ${builtins.concatStringsSep ", " supportAarch64} support aarch64.
         '';
       };
-      system.build.installFirmware = builder."firmware";
+      boot.loader.grub.enable = false;
       boot.loader.raspberryPi.firmwarePopulateCmd = populateCmds.${cfg.bootloader}.firmware;
       boot.loader.raspberryPi.bootPopulateCmd = populateCmds.${cfg.bootloader}.boot;
     })
 
-    (mkIf (cfg.enable && (cfg.bootloader == "kernelboot")) {
+    (mkIf (cfg.enable && (cfg.bootloader == "kernel")) {
       hardware.raspberry-pi.config = {
         all = {
           options = {
+            # https://www.raspberrypi.com/documentation/computers/config_txt.html#os_prefix
+            # os_prefix is prepended to the name of any operating system files loaded by the firmware:
+            # * kernels,
+            # * initramfs,
+            # * cmdline.txt,
+            # * .dtbs,
+            # * overlays.
+            # Commonly a directory name, could also be part of the filename such as "test-".
+            # Directory prefixes must include the trailing / character.
+            os_prefix = {
+              enable = true;
+              value = "${cfg.nixosGenerationsDir}/default/"; # "nixos/<generation-name>/"
+            };
+          };
+        };
+      };
+    })
+
+    (mkIf (cfg.enable && (builtins.elem cfg.bootloader [ "kernelboot" "kernel" ])) {
+      hardware.raspberry-pi.config = {
+        all = {
+          options = {
+            # https://www.raspberrypi.com/documentation/computers/config_txt.html#cmdline
+            # https://www.raspberrypi.com/documentation/computers/config_txt.html#kernel
             kernel = {
               enable = true;
               value = "kernel.img";
@@ -265,11 +453,9 @@ in
         initramfs ${ramfsfile} ${ramfsaddr}
       '';
 
-      boot.loader.grub.enable = false;
-
       system = {
         build.installBootLoader = builder.${cfg.bootloader};
-        boot.loader.id = "raspberrypi";
+        boot.loader.id = "raspberrypi-${cfg.bootloader}";
         boot.loader.kernelFile = pkgs.stdenv.hostPlatform.linux-kernel.target;
       };
     })
@@ -294,8 +480,6 @@ in
         useGenerationDeviceTree = cfg.useGenerationDeviceTree;
       };
 
-      boot.loader.grub.enable = false;
-
       # ... These are also set by generic-extlinux-compatible, but we need to
       # override them here to be able to setup config.txt,firmware, etc
       # before setting up extlinux
@@ -303,7 +487,7 @@ in
       # consuming modules to override with mkForce
       system = {
         build.installBootLoader = lib.mkOverride 60 (builder.${cfg.bootloader});
-        boot.loader.id = lib.mkOverride 60 ("${cfg.bootloader}+extlinux");
+        boot.loader.id = lib.mkOverride 60 ("raspberrypi-${cfg.bootloader}+extlinux");
       };
     })
 
