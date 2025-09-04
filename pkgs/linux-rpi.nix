@@ -50,8 +50,8 @@ lib.overrideDerivation (buildLinux (args // rec {
   pname = "linux_rpi-${builtins.elemAt (lib.splitString "_" defconfig) 0}";
 
   src = fetchFromGitHub {
-    owner = "raspberrypi";
-    repo = "linux";
+    owner = "ak-rex";
+    repo = "ClockworkPi-linux";
     inherit rev;
     hash = srcHash;
   };

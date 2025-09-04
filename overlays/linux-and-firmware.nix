@@ -27,7 +27,7 @@ in self: super: {
 
   linuxAndFirmware = super.lib.mergeAttrsList [
 
-    { default = self.linuxAndFirmware.v6_12_25; }
+    { default = self.linuxAndFirmware.v6_12_34; }
 
     { latest = self.linuxAndFirmware.v6_12_44; }
 

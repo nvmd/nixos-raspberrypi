@@ -54,15 +54,15 @@ let
   linux_v6_12_44_argsOverride = {
     modDirVersion = "6.12.44";
     tag = "unstable_20250829";
-    rev = "6c61955254d5c1af6687e79b1de4db7e76c9ff68"; # 6.12.44
-    srcHash = "sha256-5v28FioaPYSV6HYGiJn4X+PZ7byOPDCVKZfU0JukV3A=";
+    rev = "6c61955254d5c1af6687e79b1de4db7e76c9ff68"; # 6.12.44 with merge from ak-rex
+    srcHash = "sha256-5v28FioaPYSV6HYGiJn4X+PZ7byOPDCVKZfU0JukV3A="; # fix me
   };
 
   linux_v6_12_34_argsOverride = {
-    # https://github.com/raspberrypi/linux/releases/tag/stable_20250702
     modDirVersion = "6.12.34";
-    tag = "stable_20250702";  # 8f77e03530f65209a377d25023e912b288e039cd
-    srcHash = "sha256-lK0esjFhLvtBbyddMfa1H7ZcBbcOm2ygor338ZT5VpI=";
+    tag = "stable_20250702";
+    rev = "59b5c72214c967316b6de5916ef2ee63a17baee1"; # 6.12.34 merge from ak-rex
+    srcHash = "sha256-tXM55fTxDiU2loH8Uc6S2heK0ABdYJ3Q6bHcfVL79KU=";
   };
 
   linux_v6_12_25_argsOverride = {
