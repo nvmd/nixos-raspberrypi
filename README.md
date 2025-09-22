@@ -59,7 +59,7 @@ There're helper functions intended to be used as a drop-in replacement for
 
 - `nixos-raspberrypi.lib.nixosSystem`
 - `nixos-raspberrypi.lib.nixosSystemFull` - same as above, but with RPi-optimized overlays applied globally, this may lead to more rebuilds
-- `nixos-raspberrypi.lib.nixosSystemInstaller` - same as `nixosSystemFull` but with additional installer-specific modules
+- `nixos-raspberrypi.lib.nixosInstaller` - same as `nixosSystemFull` but with additional installer-specific modules
 
 All of them take the following additional optional arguments:
 
