@@ -75,6 +75,7 @@ nixosConfigurations.rpi5-demo = nixos-raspberrypi.lib.nixosSystem {
       # list of modules
       imports = with nixos-raspberrypi.nixosModules; [
         raspberry-pi-5.base
+        raspberry-pi-5.page-size-16k
         raspberry-pi-5.display-vc4
         raspberry-pi-5.bluetooth
       ];
@@ -121,6 +122,7 @@ imports = with nixos-raspberrypi.nixosModules; [
   raspberry-pi-4.display-vc4
 
   # RPi5:
+  raspberry-pi-5.page-size-16k  # Recommended: optimizations and fixes for issues arising from 16k memory page size (only for systems running default rpi5 (bcm2712) kernel)
   # use one of following for the "PrimaryGPU" configuration:
   raspberry-pi-5.display-vc4  # "regular" display connected
   raspberry-pi-5.display-rp1  # for RP1-connected (DPI/composite/MIPI DSI) display
