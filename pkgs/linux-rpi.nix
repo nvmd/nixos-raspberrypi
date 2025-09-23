@@ -44,7 +44,7 @@ let
     };
   }.${arch}.${rpiModel};
 in
-lib.overrideDerivation (buildLinux (args // rec {
+(buildLinux (args // rec {
   version = "${modDirVersion}-${tag}";
   inherit modDirVersion;
   pname = "linux_rpi-${builtins.elemAt (lib.splitString "_" defconfig) 0}";
@@ -74,7 +74,7 @@ lib.overrideDerivation (buildLinux (args // rec {
 
   ignoreConfigErrors = true;
 
-} // (args.argsOverride or {}))) (oldAttrs: {
+} // (args.argsOverride or {}))).overrideAttrs {
   postConfigure = ''
     # The v7 defconfig has this set to '-v7' which screws up our modDirVersion.
     sed -i $buildRoot/.config -e 's/^CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION=""/'
@@ -101,4 +101,4 @@ lib.overrideDerivation (buildLinux (args // rec {
     overlaySrcDir="$srcs/arch/${armArch}/boot/dts/overlays"
     cp "$overlaySrcDir/README" "$out/dtbs/overlays/"
   '';
-})
+}
