@@ -137,6 +137,8 @@
       vendor-kernel = import ./overlays/vendor-kernel.nix;
 
       kernel-and-firmware = import ./overlays/linux-and-firmware.nix;
+
+      libpisp-default-config-path = import ./overlays/libpisp-default-config-path.nix;
     };
 
     # "RPi world": nixpkgs with all overlays applied "globally", i.e.
