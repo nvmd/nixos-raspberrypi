@@ -58,7 +58,7 @@ writeShellApplication {
 
       "libcamera"
       "libpisp"
-      "libraspberrypi"
+      # "libraspberrypi"
 
       "raspberrypi-utils"
       "raspberrypi-udev-rules"
