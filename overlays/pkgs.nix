@@ -85,13 +85,13 @@ self: super: { # final: prev:
 
   libcamera_rpi = super.libcamera.overrideAttrs (old: rec {
     pname = old.pname + "-rpi";
-    version = "0.5.1+rpt20250722";
+    version = "0.5.2+rpt20250903";
 
     src = super.fetchFromGitHub {
       owner = "raspberrypi";
       repo = "libcamera";
       rev = "v${version}";
-      hash = "sha256-nv098BdGLwrMgHOeOHgAyI9UTq44tPMVXqj1G5COJzE=";
+      hash = "sha256-4rNV9TMDvVpMBmgeRftO51ptOyHh4QOgoyZ6F/Iwdnw";
     };
 
     mesonFlags = old.mesonFlags ++ [
