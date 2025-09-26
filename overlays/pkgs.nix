@@ -85,13 +85,13 @@ self: super: { # final: prev:
 
   libcamera_rpi = super.libcamera.overrideAttrs (old: rec {
     pname = old.pname + "-rpi";
-    version = "0.5.1+rpt20250722";
+    version = "0.5.2+rpt20250903";
 
     src = super.fetchFromGitHub {
       owner = "raspberrypi";
       repo = "libcamera";
       rev = "v${version}";
-      hash = "sha256-nv098BdGLwrMgHOeOHgAyI9UTq44tPMVXqj1G5COJzE=";
+      hash = "sha256-4rNV9TMDvVpMBmgeRftO51ptOyHh4QOgoyZ6F/Iwdnw";
     };
 
     mesonFlags = old.mesonFlags ++ [
@@ -113,14 +113,14 @@ self: super: { # final: prev:
 
   vlc = super.vlc.overrideAttrs (old: {
     pname = old.pname + "-rpi";
-    version = "3.0.21-0+rpt4";
+    version = "3.0.21-0+rpt5";
 
     # https://github.com/RPi-Distro/vlc/commits/bookworm-rpt/
     src = super.fetchFromGitHub {
       owner = "RPi-Distro";
       repo = "vlc";
-      rev = "ea18309fed2653121843d258c56a7c6c8edeb1ff";
-      hash = "sha256-CXOY9PSHdv9AMYRPfVrisrMCIjOwjdTCPWVT/LAAxqU=";
+      rev = "dad001256a4fbd50c6691e6bf094758f48dc8b61";
+      hash = "sha256-UhY0Q/19ZL7CaX5R7t23SSntP1OXctT+8Afy/bSy3bk";
     };
   });
 

@@ -11,8 +11,8 @@ let
     owner = "jc-kynesim";
     repo  = "rpi-ffmpeg";
     # rev   = "test/${ffmpegVersion}/main"; # this branch is being forced-push to
-    rev = "3e3136eed08a34364568af99576a97985fdcd020";
-    hash  = "sha256-6Q+WFyk8zFt1Y1HflPoUz5jcGf2TgdHWmLTl1LL7BoU=";
+    rev = "857f6c0ab47578dbd4153b4ed41eefbd488fd7fe";
+    hash  = "sha256-8hb85ZwCaJBbJFaVBXNIZdxYfrHXs7TrpsunlaOTlwg=";
   };
 
 in callPackage ./ffmpeg-rpi.nix {

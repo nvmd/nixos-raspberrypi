@@ -98,6 +98,7 @@
         display-vc4 = import ./modules/display-vc4.nix;
         display-rp1 = import ./modules/raspberry-pi-5/display-rp1.nix;
         bluetooth = import ./modules/bluetooth.nix;
+        page-size-16k = import ./modules/raspberry-pi-5/page-size-16k.nix;
       };
 
       raspberry-pi-4 = {
@@ -130,11 +131,14 @@
 
       pkgs = import ./overlays/pkgs.nix;
       vendor-pkgs = import ./overlays/vendor-pkgs.nix;
+      jemalloc-page-size-16k = import ./overlays/jemalloc-page-size-16k.nix;
 
       vendor-firmware = import ./overlays/vendor-firmware.nix;
       vendor-kernel = import ./overlays/vendor-kernel.nix;
 
       kernel-and-firmware = import ./overlays/linux-and-firmware.nix;
+
+      libpisp-default-config-path = import ./overlays/libpisp-default-config-path.nix;
     };
 
     # "RPi world": nixpkgs with all overlays applied "globally", i.e.
@@ -276,6 +280,7 @@
           imports = with nixos-raspberrypi.nixosModules; [
             # Hardware configuration
             raspberry-pi-5.base
+            raspberry-pi-5.page-size-16k
           ];
         })
         custom-user-config
