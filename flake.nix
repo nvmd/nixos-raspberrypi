@@ -98,7 +98,9 @@
         display-vc4 = import ./modules/display-vc4.nix;
         display-rp1 = import ./modules/raspberry-pi-5/display-rp1.nix;
         bluetooth = import ./modules/bluetooth.nix;
-        page-size-16k = import ./modules/raspberry-pi-5/page-size-16k.nix;
+        page-size-16k = { config, lib, pkgs, ... }: import ./modules/raspberry-pi-5/page-size-16k.nix {
+          inherit config lib pkgs self;
+        };
       };
 
       raspberry-pi-4 = {
