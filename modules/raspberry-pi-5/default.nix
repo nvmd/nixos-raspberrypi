@@ -12,7 +12,7 @@
   boot.kernelPackages = lib.mkDefault self.packages.${pkgs.hostPlatform.system}.linuxPackages_rpi5;
 
   boot.initrd.kernelModules = [
-    "ocp8178_bl" # backlight
+    "panel-cwu50" # display
     "panel_clockwork_cwu50" # display
     "vc4"
   ];
