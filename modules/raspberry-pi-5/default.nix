@@ -13,7 +13,7 @@
 
   boot.initrd.kernelModules = [
     "panel-cwu50" # display
-    "panel_clockwork_cwu50" # display
+    "ocp8178_bl" # backlight
     "vc4"
   ];
 
