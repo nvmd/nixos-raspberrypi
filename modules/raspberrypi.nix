@@ -1,6 +1,7 @@
 { config, lib, pkgs, ... }:
-
-{
+let 
+  luksConfigured = config.boot.initrd.luks.devices != {};
+in {
   imports = [
     ./system/boot/loader/raspberrypi
     ./configtxt.nix
@@ -38,10 +39,12 @@
     # https://github.com/NixOS/nixos-hardware/issues/631#issuecomment-1584100732
     "usbhid"
     "usb_storage"
-    "vc4"
     "pcie_brcmstb" # required for the pcie bus to work
     "reset-raspberrypi" # required for vl805 firmware to load
-  ];
+  ] ++ lib.optional (!luksConfigured) "vc4";
+
+  boot.kernelModules = lib.optional luksConfigured "vc4";
+
   hardware.enableRedistributableFirmware = true;
 
   environment.systemPackages = with pkgs; [
