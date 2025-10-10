@@ -1,7 +1,11 @@
-{ self, config, lib, pkgs, ... }:
-
 {
-  imports = [ ../raspberrypi.nix ];
+  self,
+  config,
+  lib,
+  pkgs,
+  ...
+}: {
+  imports = [../raspberrypi.nix];
 
   boot.loader.raspberryPi = {
     variant = "5";
@@ -12,21 +16,41 @@
   boot.kernelPackages = lib.mkDefault self.packages.${pkgs.hostPlatform.system}.linuxPackages_rpi5;
 
   boot.initrd.kernelModules = [
-    "panel-cwu50" # display
-    "ocp8178_bl" # backlight
-    "axp20x"
-    "axp20x_regulator"
-    "axp20x_i2c"
+    # Display
+    "panel_cwu50"
+    "ocp8178_bl"
+    "backlight"
+    "drm"
+    "drm_kms_helper"
+    "drm_dma_helper"
+    "drm_display_helper"
+    "drm_shmem_helper"
+    "drm_ttm_helper"
+    "ttm"
+    "drm_rp1_dsi"
+
+    # Power management (AXP20x PMIC)
     "axp20x_battery"
     "axp20x_ac_power"
-    "axp20x_pek"
     "axp20x_adc"
-    "i2c_mux_pinctrl"
-    "i2c_mux"
+    "industrialio"
+
+    # Input (keyboard)
+    "gpio_keys"
+
+    # I2C/SPI/GPIO buses
     "i2c_brcmstb"
-    "i2c_bcm2835"
-    "i2c_dev"
-    "dwc2"
+    "i2c_gpio"
+    "i2c_algo_bit"
+    "spi_bcm2835"
+    "raspberrypi_gpiomem"
+    "i2c_designware_core"
+    "i2c_designware_platform"
+
+    # Optional RP1 stuff
+    "rp1_pio"
+    "rp1_fw"
+    "rp1_mailbox"
   ];
 
   # config.txt
