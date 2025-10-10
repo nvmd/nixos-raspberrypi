@@ -11,7 +11,7 @@
 
   boot.kernelPackages = lib.mkDefault self.packages.${pkgs.hostPlatform.system}.linuxPackages_rpi5;
 
-  boot.initrd.availablekernelModules = [
+  boot.initrd.availableKernelModules = [
     "panel-cwu50" # display
     "ocp8178_bl" # backlight
     "axp20x"
