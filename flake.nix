@@ -32,6 +32,8 @@
       inputs.nixos-stable.follows = "nixpkgs";
       inputs.nixos-unstable.follows = "nixpkgs";
     };
+
+    flake-compat.url = "github:edolstra/flake-compat";
   };
 
   outputs = { self, nixpkgs, argononed, nixos-images, ... }@inputs: let
