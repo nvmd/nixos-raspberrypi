@@ -50,6 +50,12 @@ let
   };
 
   # Linux
+  linux_v6_12_47_argsOverride = {
+    modDirVersion = "6.12.47";
+    tag = "stable_20250916";
+    rev = "2ae782b21ddd477b4d77fa7710cf44928157d504"; # 6.12.47 with merge from ak-rex
+    srcHash = ""; # fix me
+  };
 
   linux_v6_12_44_argsOverride = {
     modDirVersion = "6.12.44";
@@ -219,6 +225,7 @@ let
     ];
   };
 in {
+  "6_12_47" = linux_v6_12_47_argsOverride;
   "6_12_44" = linux_v6_12_44_argsOverride;
   "6_12_34" = linux_v6_12_34_argsOverride;
   "6_12_25" = linux_v6_12_25_argsOverride;
