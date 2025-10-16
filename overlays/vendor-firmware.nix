@@ -6,6 +6,17 @@ self: super: { # final: prev:
 
   # see `extra/git_hash` for a matching hash of the `raspberrypi/linux`
 
+  raspberrypifw_20250915 = super.raspberrypifw.overrideAttrs (old: {
+    # this release is untagged in the upstream
+    # this the the version of the matching stable kernel from `raspberrypi/linux`
+    version = "1.20250915";
+    src = super.fetchFromGitHub {
+      owner = "raspberrypi";
+      repo = "firmware";
+      rev = "676efed1194de38975889a34276091da1f5aadd3";
+      hash = ""; #fixme
+    };
+  });
 
   raspberrypifw_20250829 = super.raspberrypifw.overrideAttrs (old: {
     # this release is untagged in the upstream for linux 6.12.44
