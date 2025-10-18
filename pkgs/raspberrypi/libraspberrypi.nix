@@ -24,7 +24,7 @@ stdenv.mkDerivation (finalAttrs: {
   ];
 
   meta = with lib; {
-    description = "ARM side libraries for interfacing to Raspberry Pi GPU";
+    description = "ARM side libraries for interfacing to Raspberry Pi GPU (deprecated as of 27.08.2025)";
     homepage = "https://github.com/raspberrypi/userland";
     license = licenses.bsd3;
     platforms = [ "armv6l-linux" "armv7l-linux" "aarch64-linux" "x86_64-linux" ];
