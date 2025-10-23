@@ -13,7 +13,7 @@ self: super: { # final: prev:
       owner = "raspberrypi";
       repo = "firmware";
       rev = "676efed1194de38975889a34276091da1f5aadd3";
-      hash = "sha256-00rLY/xtYuE2L00bQGuPlHBlIYLS5YSp/URvgCLMB14=";
+      hash = "sha256-DqVgsPhppxCsZ+H6S7XY5bBoRhOgPipKibDwikqBk08=";
     };
   });
 
