@@ -128,7 +128,7 @@ self: super: { # final: prev:
         owner = "RPi-Distro";
         repo = "bluez-firmware";
         rev = "cdf61dc691a49ff01a124752bd04194907f0f9cd";
-        hash = "sha256-00kKnOBeWxh0exu4400Z7cbr5ni4RA9vkWYb9sGMb8Q=";
+        hash = "sha256-35pnbQV/zcikz9Vic+2a1QAS72riruKklV8JHboL9NY=";
       })
       # https://github.com/RPi-Distro/firmware-nonfree/commits/trixie
       # 20241210-1+rpt3 - 20250930
@@ -137,7 +137,7 @@ self: super: { # final: prev:
         owner = "RPi-Distro";
         repo = "firmware-nonfree";
         rev = "e90d6888e745eb9ee1aab098fff001edc31b95b7";
-        hash = "sha256-00wIPs3lpmqVOV00B75H577fYkkucDqB7htY2U1DW8U=";
+        hash = "sha256-+MO0VOwttfTT9hX5lMmMRAaDzmWh2dFxsH/FRDTFzjs";
       })
     ];
   });
