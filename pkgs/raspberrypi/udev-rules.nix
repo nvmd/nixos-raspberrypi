@@ -9,30 +9,24 @@
 
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "raspberrypi-udev-rules";
-  version = "20250423";
+  version = "20251014";
 
-  # https://github.com/RPi-Distro/raspberrypi-sys-mods/tree/bookworm/
+  # https://github.com/RPi-Distro/raspberrypi-sys-mods/tree/pios/trixie
   src = fetchFromGitHub {
     owner = "RPi-Distro";
     repo = "raspberrypi-sys-mods";
-    rev = "9921bca8dfb37b88c1cc6578753d707bc4a1917f";
-    hash = "sha256-v3dc8ffTD8jc9L8X0aTehK5E68VV7zpC+v8A/COr9K4=";
+    rev = "964f9b797fddbe1982d086707846a9135b8ebe36";
+    hash = "sha256-yFgRjPDQ8NoNFXM8ezMrQUeWFVv3fypshpLScRZaOGg=";
   };
 
   installPhase = ''
-    mkdir -p $out/etc/udev/rules.d
     mkdir -p $out/lib/udev/rules.d
     mkdir -p $out/lib/tmpfiles.d
 
     # Note: Installing only explicitly listed rules
 
-    rules_etc_src=etc.armhf/udev/rules.d
-    declare -a rules_etc=(
-      99-com.rules
-    )
-
-    rules_lib_src=lib/udev/rules.d
-    declare -a rules_lib=(
+    rules_usr_lib_src=usr/lib/udev/rules.d
+    declare -a rules_usr_lib=(
       10-vc.rules
 
       # disable until i know what to do with /usr/lib/raspberrypi-sys-mods/i2cprobe
@@ -43,6 +37,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
       60-dma-heap.rules
       60-gpiochip4.rules
       60-i2c-aliases.rules
+      ${if withCpuGovernorConfig then "60-ondemand-governor.rules" else ""}
       60-pico.rules
       60-piolib.rules
       61-drm.rules
@@ -50,26 +45,24 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
       # doesn't seem to provide any value on nixos
       # 80-noobs.rules
+
+      99-com.rules
     )
 
-    rules_usr_lib_src=usr/lib/udev/rules.d
-    declare -a rules_usr_lib=(
-      ${if withCpuGovernorConfig then "60-ondemand-governor.rules" else ""}
+    tmpfiles_usr_lib_src=usr/lib/tmpfiles.d
+    declare -a tmpfiles_usr_lib=(
+      raspberrypi-sys-mods-mglru.conf
+      ${if withCpuGovernorConfig then "raspberrypi-sys-mods-ondemand-governor.conf" else ""}
+      sys-kernel-debug.conf
     )
 
-    for i in "''${rules_etc[@]}"; do
-      install -vD "$rules_etc_src/$i" $out/etc/udev/rules.d
-    done
-    for i in "''${rules_lib[@]}"; do
-      install -vD "$rules_lib_src/$i" $out/lib/udev/rules.d
-    done
     for i in "''${rules_usr_lib[@]}"; do
       install -vD "$rules_usr_lib_src/$i" $out/lib/udev/rules.d
     done
 
-    ${if withCpuGovernorConfig then
-      "install -vD \"usr/lib/tmpfiles.d/raspberrypi-sys-mods-ondemand-governor.conf\" \$out/lib/tmpfiles.d"
-      else ""}
+    for i in "''${tmpfiles_usr_lib[@]}"; do
+      install -vD "$tmpfiles_usr_lib_src/$i" $out/lib/tmpfiles.d
+    done
   '';
 
   fixupPhase = ''
