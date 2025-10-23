@@ -118,6 +118,30 @@ self: super: { # final: prev:
     };
   });
 
+  raspberrypiWirelessFirmware_20251008 = super.raspberrypiWirelessFirmware.overrideAttrs (old: {
+    version = "2025-10-02";
+    srcs = [
+      # https://github.com/RPi-Distro/bluez-firmware/commits/pios/trixie
+      # 1.2-13+rpt2 release – 20251002
+      (super.fetchFromGitHub {
+        name = "bluez-firmware";
+        owner = "RPi-Distro";
+        repo = "bluez-firmware";
+        rev = "cdf61dc691a49ff01a124752bd04194907f0f9cd";
+        hash = "sha256-00kKnOBeWxh0exu4400Z7cbr5ni4RA9vkWYb9sGMb8Q=";
+      })
+      # https://github.com/RPi-Distro/firmware-nonfree/commits/trixie
+      # 20241210-1+rpt3 - 20250930
+      (super.fetchFromGitHub {
+        name = "firmware-nonfree";
+        owner = "RPi-Distro";
+        repo = "firmware-nonfree";
+        rev = "e90d6888e745eb9ee1aab098fff001edc31b95b7";
+        hash = "sha256-00wIPs3lpmqVOV00B75H577fYkkucDqB7htY2U1DW8U=";
+      })
+    ];
+  });
+
   raspberrypiWirelessFirmware_20250408 = super.raspberrypiWirelessFirmware.overrideAttrs (old: {
     version = "2025-04-08";
     srcs = [
