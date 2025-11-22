@@ -153,6 +153,11 @@ let
       "-f ${cfg.firmwarePath}"
       "-c"
     ];
+    kernelboot-legacy-unsupported = builtins.concatStringsSep " " [
+      "${kernelbootBuilder}"
+      "-f ${cfg.firmwarePath}"
+      "-c"
+    ];
     kernel = builtins.concatStringsSep " " [
       "${mkBootloader pkgs}"
       "-g ${toString cfg.configurationLimit}"
@@ -169,6 +174,10 @@ let
       boot = "${populateUbootBuilder}";
     };
     kernelboot = {
+      firmware = "${populateKernelbootBuilder}";
+      boot = "${populateKernelbootBuilder}";
+    };
+    kernelboot-legacy-unsupported = {
       firmware = "${populateKernelbootBuilder}";
       boot = "${populateKernelbootBuilder}";
     };
@@ -311,7 +320,7 @@ in
 
       bootloader = mkOption {
         default = if cfg.variant == "5" then "kernelboot" else "uboot";
-        type = types.enum [ "kernel" "kernelboot" "uboot" ];
+        type = types.enum [ "kernel" "uboot" "kernelboot" "kernelboot-legacy-unsupported" ];
         description = ''
           Bootloader to use:
           - `"uboot"`: U-Boot
@@ -394,6 +403,24 @@ in
 
   config = mkMerge [
     (mkIf cfg.enable {
+      warnings =
+        lib.optional (cfg.bootloader == "kernelboot") ''
+          RaspberryPi bootloader: "kernelboot" is deprecated, please migrate to "kernel"
+
+          You're using boot.loader.raspberryPi.bootloader = "${config.boot.loader.raspberryPi.bootloader}",
+          which is deprecated and will be removed in the future versions of nixos-raspberrypi.
+          Please migrate to `kernel` bootloader, which provides many advantages over the legacy `kernelboot`.
+          See [PR#61](https://github.com/nvmd/nixos-raspberrypi/pull/61) for more information.
+
+          If you still want to keep the behavior of the old bootloader,
+          please let us know about your usecase and enforce it explicitly with
+          `boot.loader.raspberryPi.bootloader = "kernelboot-legacy-unsupported"` in your configuration.
+
+          This will ensure that your bootloader stays "kernelboot" even when the default booloader
+          will be changed to "kernel" (for selected boards currently using "kernelboot").
+          The "-legacy-unsupported" suffix will silence this warning until the final deletion.
+        '';
+
       assertions = let
         supportAarch64 = [ "02" "3" "4" "5" ];
       in singleton {
@@ -431,7 +458,7 @@ in
       };
     })
 
-    (mkIf (cfg.enable && (builtins.elem cfg.bootloader [ "kernelboot" "kernel" ])) {
+    (mkIf (cfg.enable && (builtins.elem cfg.bootloader [ "kernel" "kernelboot" "kernelboot-legacy-unsupported" ])) {
       hardware.raspberry-pi.config = {
         all = {
           options = {
