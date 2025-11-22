@@ -26,6 +26,7 @@ let
   in {
     # matching first on arch, and the on the board model to easier handle 
     # unsupported (arch,board) combinations
+    # https://www.raspberrypi.com/documentation/computers/linux_kernel.html#native-build-configuration
     armv6l = {
       "0" = mkConfig "bcmrpi";
       "1" = mkConfig "bcmrpi";
