@@ -4,7 +4,7 @@
   nixpkgs.overlays = [
     (final: prev: {
       rpi = import self.inputs.nixpkgs {
-        inherit (prev) system;
+        inherit (prev.stdenv.hostPlatform) system;
         config = {
           inherit (prev.config) allowUnfree allowUnfreePredicate;
         };
