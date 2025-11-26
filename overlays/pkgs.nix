@@ -113,14 +113,14 @@ self: super: { # final: prev:
 
   vlc = super.vlc.overrideAttrs (old: {
     pname = old.pname + "-rpi";
-    version = "3.0.21-0+rpt5";
+    version = "3.0.21-10+rpt3";
 
     # https://github.com/RPi-Distro/vlc/commits/bookworm-rpt/
     src = super.fetchFromGitHub {
       owner = "RPi-Distro";
       repo = "vlc";
-      rev = "dad001256a4fbd50c6691e6bf094758f48dc8b61";
-      hash = "sha256-UhY0Q/19ZL7CaX5R7t23SSntP1OXctT+8Afy/bSy3bk";
+      rev = "ebde9019db4ddda815d42c8ead11269bba427a9e";
+      hash = "sha256-+JLw1FoymFAH2IXDPuhqdSMUiMQm9qEQeu7PLeKNOhI=";
     };
   });
 
