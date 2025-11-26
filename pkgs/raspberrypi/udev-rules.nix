@@ -9,14 +9,14 @@
 
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "raspberrypi-udev-rules";
-  version = "20251014";
+  version = "20251028";
 
   # https://github.com/RPi-Distro/raspberrypi-sys-mods/tree/pios/trixie
   src = fetchFromGitHub {
     owner = "RPi-Distro";
     repo = "raspberrypi-sys-mods";
-    rev = "964f9b797fddbe1982d086707846a9135b8ebe36";
-    hash = "sha256-yFgRjPDQ8NoNFXM8ezMrQUeWFVv3fypshpLScRZaOGg=";
+    rev = "147bccd7db1a32468fac69a89a05d6b93c6f1796";
+    hash = "sha256-+PWf3fy14Pb51ee8BueCnLR6OnUD3Htgd6r1321crhk=";
   };
 
   installPhase = ''
@@ -51,7 +51,6 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
     tmpfiles_usr_lib_src=usr/lib/tmpfiles.d
     declare -a tmpfiles_usr_lib=(
-      raspberrypi-sys-mods-mglru.conf
       ${if withCpuGovernorConfig then "raspberrypi-sys-mods-ondemand-governor.conf" else ""}
       sys-kernel-debug.conf
     )
