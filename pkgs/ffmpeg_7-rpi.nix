@@ -5,14 +5,14 @@
 }:
 
 let
-  # https://github.com/jc-kynesim/rpi-ffmpeg/tree/test/7.1.1/main
-  ffmpegVersion = "7.1.1";
+  # https://github.com/jc-kynesim/rpi-ffmpeg/tree/test/7.1.2/main
+  ffmpegVersion = "7.1.2";
   rpiFfmpegSrc = fetchFromGitHub {
     owner = "jc-kynesim";
     repo  = "rpi-ffmpeg";
     # rev   = "test/${ffmpegVersion}/main"; # this branch is being forced-push to
-    rev = "857f6c0ab47578dbd4153b4ed41eefbd488fd7fe";
-    hash  = "sha256-8hb85ZwCaJBbJFaVBXNIZdxYfrHXs7TrpsunlaOTlwg=";
+    rev = "de943d66dab18e89fc10c74459bea1d787edc49d";
+    hash  = "sha256-Qbgos7uzYXF5E557kR2EXhX9eJRmO0LVmSE2NOpEZY0=";
   };
 
 in callPackage ./ffmpeg-rpi.nix {
