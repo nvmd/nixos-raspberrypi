@@ -1,7 +1,7 @@
 let
 
   mkLinuxFor = pkgs: version: models: let
-    argsFor = (import ./kernels.nix { inherit pkgs; }).${version};
+    argsFor = (import ./kernels.nix { inherit pkgs; })."v${version}";
     linuxVersionForModel = rpiModel: {
       # in nixpkgs this is also in pkgs.linuxKernel.packages.<...>
       # see also https://github.com/NixOS/nixos-hardware/pull/927
