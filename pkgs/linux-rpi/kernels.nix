@@ -9,8 +9,8 @@ let
   listToAttrsWName = nameGen: vs: builtins.listToAttrs (map (v: { name = nameGen v; value = v; }) vs);
   listToAttrsWLVer = listToAttrsWName (v: "v${builtins.replaceStrings ["."] ["_"] v.modDirVersion}");
 
-  patches = import ../pkgs/linux-rpi/linux-patches.nix { inherit pkgs; };
-  linux = listToAttrsWLVer (import ../pkgs/linux-rpi/linux-sources.nix);
+  patches = import ./linux-patches.nix { inherit pkgs; };
+  linux = listToAttrsWLVer (import ./linux-sources.nix);
 
 in listToAttrsWLVer [
   linux.v6_12_44
