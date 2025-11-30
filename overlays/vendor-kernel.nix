@@ -1,7 +1,7 @@
 let
 
   mkLinuxFor = pkgs: version: models: let
-    argsFor = (import ./kernels.nix { inherit pkgs; })."v${version}";
+    argsFor = (import ../pkgs/linux-rpi/kernels.nix { inherit pkgs; })."v${version}";
     linuxVersionForModel = rpiModel: {
       # in nixpkgs this is also in pkgs.linuxKernel.packages.<...>
       # see also https://github.com/NixOS/nixos-hardware/pull/927
@@ -10,7 +10,7 @@ let
       # };
 
       # as in https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/linux-kernels.nix#L91
-      "linux_rpi${rpiModel}_v${version}" = pkgs.callPackage ../pkgs/linux-rpi.nix (let
+      "linux_rpi${rpiModel}_v${version}" = pkgs.callPackage ../pkgs/linux-rpi/package.nix (let
         # the latter value is retained when can't be merged
         recursiveMerge = with pkgs.lib; attrList:
           let f = attrPath:
