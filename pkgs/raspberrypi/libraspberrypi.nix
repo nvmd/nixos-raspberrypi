@@ -21,6 +21,7 @@ stdenv.mkDerivation (finalAttrs: {
     # the package to build on aarch64 and other architectures
     "-DARM64=${if stdenv.hostPlatform.isAarch32 then "OFF" else "ON"}"
     "-DVMCS_INSTALL_PREFIX=${placeholder "out"}"
+    (lib.cmakeFeature "CMAKE_POLICY_VERSION_MINIMUM" "3.10")
   ];
 
   meta = with lib; {
