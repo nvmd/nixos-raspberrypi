@@ -193,6 +193,10 @@ let
 in
 
 {
+  imports = [
+    (mkRenamedOptionModule [ "boot" "loader" "raspberryPi" ] [ "boot" "loader" "raspberry-pi" ])
+  ];
+
   disabledModules = [
     # the module has been remove in nixpkgs, but that shouldn't prevent us
     # from using the now free (!) name for our module
