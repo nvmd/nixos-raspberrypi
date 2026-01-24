@@ -22,11 +22,11 @@
 
   # Use generation bootloader for RPi5 by default for all sd-images
   # TODO: Remove when it is default for all RPi5 installations
-  boot.loader.raspberryPi.bootloader = lib.mkIf
-    (config.boot.loader.raspberryPi.variant == "5") "kernel";
+  boot.loader.raspberry-pi.bootloader = lib.mkIf
+    (config.boot.loader.raspberry-pi.variant == "5") "kernel";
 
   image.baseName = let
-    cfg = config.boot.loader.raspberryPi;
+    cfg = config.boot.loader.raspberry-pi;
   in "nixos-image-rpi${cfg.variant}-${cfg.bootloader}";
 
   sdImage = {
@@ -34,12 +34,12 @@
     firmwareSize = 1024;
     firmwarePartitionID = "0x2175794e";
     populateFirmwareCommands = ''
-      ${config.boot.loader.raspberryPi.firmwarePopulateCmd} -c ${config.system.build.toplevel} -f ./firmware
+      ${config.boot.loader.raspberry-pi.firmwarePopulateCmd} -c ${config.system.build.toplevel} -f ./firmware
     '';
     populateRootCommands = ''
       # create with a mount point for FIRMWARE
       mkdir -p ./files/boot/firmware
-      ${config.boot.loader.raspberryPi.bootPopulateCmd} -c ${config.system.build.toplevel} -b ./files/boot
+      ${config.boot.loader.raspberry-pi.bootPopulateCmd} -c ${config.system.build.toplevel} -b ./files/boot
     '';
   };
 }
