@@ -6,11 +6,11 @@ It will let you deploy [NixOS](https://nixos.org/) fully declaratively in one st
 
 ## Provides bootloader infrastructure
 
-Manages Raspberry Pi firmware partition `/boot/firmware` (the path is configurable with `boot.loader.raspberryPi.firmwarePath`).
+Manages Raspberry Pi firmware partition `/boot/firmware` (the path is configurable with `boot.loader.raspberry-pi.firmwarePath`).
 
 Partition provisioning is integrated with bootloader activation scripts, happening on NixOS generation switch, enabling to use deployment tools like `nixos-anywhere` without any interactive intervention.
 
-Supported boot methods (configurable with `boot.loader.raspberryPi.bootloader`):
+Supported boot methods (configurable with `boot.loader.raspberry-pi.bootloader`):
 - `kernelboot` (legacy), default for RPi5
 - `uboot`, default bootloader for all other boards
 - `kernel`, new generation of `kernelboot`, supporting multiple NixOS generations (see #60), default for RPi5 sd-image/installer images, _recommended_ for new installations.
@@ -85,7 +85,7 @@ nixosConfigurations.rpi5-demo = nixos-raspberrypi.lib.nixosSystem {
       networking.hostName = "rpi5-demo";
 
       system.nixos.tags = let
-        cfg = config.boot.loader.raspberryPi;
+        cfg = config.boot.loader.raspberry-pi;
       in [
         "raspberry-pi-${cfg.variant}"
         cfg.bootloader
@@ -133,7 +133,7 @@ imports = with nixos-raspberrypi.nixosModules; [
 
 Sane default configuration is provided by the base module for a corresponding Raspberry board, but further configuration is, of course, possible:
 
-Configuration options for the bootloader are in `boot.loader.raspberryPi` (defined in `modules/system/boot/loader/raspberrypi/default.nix`).
+Configuration options for the bootloader are in `boot.loader.raspberry-pi` (defined in `modules/system/boot/loader/raspberrypi/default.nix`).
 
 Raspberry's `config.txt` can be configured with `hardware.raspberry-pi.config` options, see `modules/configtxt.nix` as an example (this is the default configuration as provided by RaspberryPi OS, but translated to nix format).
 
@@ -176,7 +176,7 @@ This can helpful for boards with a single storage device option, like RPi Zero/Z
 
 > [!TIP]
 > installer images use new generational bootloader for RPi5 by default (see #60),
-> to keep that in your configuration, set `boot.loader.raspberryPi.bootloader = "kernel"`.
+> to keep that in your configuration, set `boot.loader.raspberry-pi.bootloader = "kernel"`.
 > This is _recommended_ for new installations.
 
 See `nixosConfigurations.rpi{02,4,5}-installer` in `flake.nix`.
