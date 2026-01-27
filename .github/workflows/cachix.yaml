@@ -1,0 +1,98 @@
+name: Build and Push to cachix
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build-raspberrypi-kernels:
+    strategy:
+      # Continue with the remaining packages if one fails
+      fail-fast: false
+
+      matrix:
+        # ~1.5 hours per job—well under the 6-hour per-job time limit.
+        version: ["02", "3", "4", "5"]
+
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v14
+        with:
+          name: "${{ secrets.CACHIX_CACHE_NAME }}"
+          # # if you chose signing key for write access
+          # signingkey: "${{ secrets.cachix_signing_key }}"
+          # # if you chose api tokens for write access or if you have a private cache
+          authtoken: ${{ secrets.cachix_auth_token }}
+      - run: nix --accept-flake-config build .#packages.aarch64-linux.linux_rpi${{ matrix.version }}
+      - run: nix --accept-flake-config build .#nixosConfigurations.rpi${{ matrix.version }}-installer.config.system.build.toplevel
+
+  build-vendor-packages-1:
+    strategy:
+      # Continue with the remaining packages if one fails
+      fail-fast: false
+
+      matrix:
+        package:
+          - raspberrypifw # ~1 minutes
+          - raspberrypiWirelessFirmware # ~1 minutes
+          - raspberrypi-utils # ~1 minutes
+          - raspberrypi-udev-rules # ~1 minutes
+
+          # - pisugar3-kmod
+          # - pisugar2-kmod
+          - pisugar-power-manager-rs # ~3 minutes
+
+          - ffmpeg_7-headless # ~5 minutes
+
+          # - kodi
+          - kodi-gbm # ~40 minutes
+          # - kodi-wayland
+
+          - rpicam-apps # ~3 minutes
+          - libcamera # ~3 minutes
+          - libpisp # ~1 minutes
+          # - libraspberrypi
+
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v14
+        with:
+          name: "${{ secrets.CACHIX_CACHE_NAME }}"
+          # # if you chose signing key for write access
+          # signingkey: "${{ secrets.cachix_signing_key }}"
+          # # if you chose api tokens for write access or if you have a private cache
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+      - run: nix --accept-flake-config build .#packages.aarch64-linux.${{ matrix.package }}
+
+  build-vendor-packages-2:
+    needs: build-vendor-packages-1
+
+    strategy:
+      # Continue with the remaining packages if one fails
+      fail-fast: false
+
+      matrix:
+        package:
+          # Depends on ffmpeg-headless. Avoid concurrent builds to prevent OOM errors.
+          - ffmpeg_7
+          - vlc
+
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v14
+        with:
+          name: "${{ secrets.CACHIX_CACHE_NAME }}"
+          # # if you chose signing key for write access
+          # signingkey: "${{ secrets.cachix_signing_key }}"
+          # # if you chose api tokens for write access or if you have a private cache
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+      - run: nix --accept-flake-config build .#packages.aarch64-linux.${{ matrix.package }}
