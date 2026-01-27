@@ -5,13 +5,14 @@
 , ninja
 , pkg-config
 , boost
-, ffmpeg
 , libcamera
 , libdrm
 , libexif
 , libjpeg
 , libpng
 , libtiff
+, withLibavEncoder ? true
+, ffmpeg
 , withDrmPreview ? true
 , withEglPreview ? true
 , libepoxy
@@ -21,17 +22,19 @@
 , qt5
 , withOpenCVPostProc ? true  #default=false
 , opencv
+, withIMX500 ? true  #default=false
+, withRpiFeatures ? true
 }:
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "rpicam-apps";
-  version = "1.10.0";
+  version = "1.11.0";
 
   src = fetchFromGitHub {
     owner = "raspberrypi";
     repo = "rpicam-apps";
     rev = "v${finalAttrs.version}";
-    hash = "sha256-yyZlZSpYYt1DLAI7rW8lnpR6p9HnqcV6SrEJcAyS6Aw=";
+    hash = "sha256-3f0ThN4C9ZZ/6Is51Q6QA2tnEDnLKCLbxlCNqsGzw14=";
   };
 
   nativeBuildInputs = [
@@ -39,28 +42,28 @@ stdenv.mkDerivation (finalAttrs: {
   ] ++ lib.optional withQtPreview qt5.wrapQtAppsHook;
 
   buildInputs = [
-    boost ffmpeg libexif libcamera
+    boost
+    libexif
+    libcamera
     libdrm  # needed even with drm preview disabled
     libjpeg libpng libtiff
-  ] ++ lib.optionals withQtPreview (with qt5; [ qtbase qttools ])
+  ] ++ lib.optionals withLibavEncoder [ ffmpeg ]
+    ++ lib.optionals withQtPreview (with qt5; [ qtbase qttools ])
     ++ lib.optionals withEglPreview [ libepoxy libX11 libGL ]
     ++ lib.optionals withOpenCVPostProc [ opencv ];
 
+  # https://github.com/raspberrypi/rpicam-apps/blob/main/meson_options.txt
   mesonFlags = [
-    # https://github.com/raspberrypi/rpicam-apps/blob/main/meson_options.txt
+    (lib.mesonEnable "enable_libav" withLibavEncoder)
     # preview
     (lib.mesonEnable "enable_drm" withDrmPreview)
     (lib.mesonEnable "enable_egl" withEglPreview)
     (lib.mesonEnable "enable_qt" withQtPreview)
     # postprocessing
     (lib.mesonEnable "enable_opencv" withOpenCVPostProc)
-    "-Denable_hailo=disabled" #default=enabled, hailort (HailoRT)
-    # explicitly disable, fails with:
-    # FAILED: post_processing_stages/imx500/imx500-models
-    # /bin/sh: /build/source/utils/download-imx500-models.sh: not found
-    # Shouldn't it have been implicitly disabled
-    # because wrap_mode=nodownload?
-    "-Ddownload_imx500_models=false" #default=true
+    (lib.mesonEnable "enable_hailo" false) #default=auto, hailort (HailoRT)
+    (lib.mesonBool "enable_imx500" withIMX500)
+    (lib.mesonBool "disable_rpi_features" (!withRpiFeatures))
   ];
 
   meta = with lib; {
