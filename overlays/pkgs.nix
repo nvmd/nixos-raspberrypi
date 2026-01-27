@@ -85,13 +85,13 @@ self: super: { # final: prev:
 
   libcamera_rpi = super.libcamera.overrideAttrs (old: rec {
     pname = old.pname + "-rpi";
-    version = "0.5.2+rpt20250903";
+    version = "0.6.0+rpt20251202";
 
     src = super.fetchFromGitHub {
       owner = "raspberrypi";
       repo = "libcamera";
       rev = "v${version}";
-      hash = "sha256-4rNV9TMDvVpMBmgeRftO51ptOyHh4QOgoyZ6F/Iwdnw";
+      hash = "sha256-sJKzmeeXD/66P5o+X9w3J2gwxDNsdBUdXEqU6goJdN4=";
     };
 
     mesonFlags = old.mesonFlags ++ [
@@ -103,6 +103,7 @@ self: super: { # final: prev:
       "-Dtest=false"
       "-Dcam=disabled"
       "-Dpycamera=enabled"
+      (super.lib.mesonEnable "libunwind" false)
     ];
 
     meta = old.meta // {
