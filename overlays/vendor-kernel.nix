@@ -1,4 +1,17 @@
 let
+  # the latter value is retained when can't be merged
+  recursiveMerge = pkgs: with pkgs.lib; attrList:
+    let f = attrPath:
+      zipAttrsWith (n: values:
+        if tail values == []
+          then head values
+        else if all isList values
+          then unique (concatLists values)
+        else if all isAttrs values
+          then f (attrPath ++ [n]) values
+        else last values
+      );
+    in f [] attrList;
 
   mkLinuxFor = pkgs: version: models: let
     argsFor = (import ../pkgs/linux-rpi/kernels.nix { inherit pkgs; })."v${version}";
@@ -10,21 +23,7 @@ let
       # };
 
       # as in https://github.com/NixOS/nixpkgs/blob/master/pkgs/top-level/linux-kernels.nix#L91
-      "linux_rpi${rpiModel}_v${version}" = pkgs.callPackage ../pkgs/linux-rpi/package.nix (let
-        # the latter value is retained when can't be merged
-        recursiveMerge = with pkgs.lib; attrList:
-          let f = attrPath:
-            zipAttrsWith (n: values:
-              if tail values == []
-                then head values
-              else if all isList values
-                then unique (concatLists values)
-              else if all isAttrs values
-                then f (attrPath ++ [n]) values
-              else last values
-            );
-          in f [] attrList;
-      in recursiveMerge [{
+      "linux_rpi${rpiModel}_v${version}" = pkgs.callPackage ../pkgs/linux-rpi/package.nix (recursiveMerge pkgs [{
         # argsOverride = argsFor.argsOverride;
         kernelPatches = with pkgs.kernelPatches; [
           bridge_stp_helper
