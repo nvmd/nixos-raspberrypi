@@ -1,122 +1,29 @@
-self: super: { # final: prev:
+let
+  allFirmware = import ./firmware-sources.nix;
 
-  # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/os-specific/linux/firmware/raspberrypi/default.nix
-  # pkgs/os-specific/linux/firmware/raspberrypi/default.nix
-  # https://github.com/raspberrypi/firmware/commits/stable/
+  firmwareVersion = pkgs: attrsFor: let
+    # Gets date of the release from the `version` which is always on the
+    # last position in the list of strings splitted by version separators
+    cleanVersion = let
+      noDots = builtins.replaceStrings ["." "-"] ["_" "_"] attrsFor.version;
+      splittedVersion = (pkgs.lib.splitString "_" noDots);
+    in builtins.elemAt splittedVersion ((builtins.length splittedVersion) - 1);
+  in {
+    "raspberrypifw_${cleanVersion}" = pkgs.raspberrypifw.overrideAttrs (old: {
+      inherit (attrsFor) version;
+      src = pkgs.fetchFromGitHub {
+        owner = "raspberrypi";
+        repo = "firmware";
 
-  # see `extra/git_hash` for a matching hash of the `raspberrypi/linux`
+        # rev can be used both for rev hash and the tag
+        rev = if (attrsFor ? rev) then attrsFor.rev else attrsFor.tag;
+        hash = attrsFor.srcHash;
+      };
+    });
+  };
 
-  raspberrypifw_20250915 = super.raspberrypifw.overrideAttrs (old: {
-    # https://github.com/raspberrypi/firmware/releases/tag/1.20250915
-    version = "1.20250915";
-    src = super.fetchFromGitHub {
-      owner = "raspberrypi";
-      repo = "firmware";
-      rev = "676efed1194de38975889a34276091da1f5aadd3";
-      hash = "sha256-DqVgsPhppxCsZ+H6S7XY5bBoRhOgPipKibDwikqBk08=";
-    };
-  });
-
-  raspberrypifw_20250829 = super.raspberrypifw.overrideAttrs (old: {
-    # this release is untagged in the upstream for linux 6.12.44
-    version = "unstable_20250829";
-    src = super.fetchFromGitHub {
-      owner = "raspberrypi";
-      repo = "firmware";
-      rev = "73065c21a0337eac9de13521fc1254cdadd3bd0a";
-      hash = "sha256-cprLY/xtYuE2LjgbQGuPlHBlIYLS5YSp/URvgCLMB14=";
-    };
-  });
-
-  raspberrypifw_20250702 = super.raspberrypifw.overrideAttrs (old: {
-    # this release is untagged in the upstream
-    # this the the version of the matching stable kernel from `raspberrypi/linux`
-    version = "1.20250702";
-    src = super.fetchFromGitHub {
-      owner = "raspberrypi";
-      repo = "firmware";
-      rev = "7022a895240b2f853d9035ab61616b646caf7b3a";
-      hash = "sha256-VpjzwVzjgwBRXIfeGblnPzgjYyw7Nr1GqyjKtGnuduk=";
-    };
-  });
-
-  raspberrypifw_20250430 = super.raspberrypifw.overrideAttrs (old: rec {
-    # https://github.com/raspberrypi/firmware/releases/tag/1.20250430
-    version = "1.20250430";
-    src = super.fetchFromGitHub {
-      owner = "raspberrypi";
-      repo = "firmware";
-      rev = "${version}";
-      hash = "sha256-U41EgEDny1R+JFktSC/3CE+2Qi7GJludj929ft49Nm0=";
-    };
-  });
-
-  raspberrypifw_20250127 = super.raspberrypifw.overrideAttrs (old: rec {
-    # https://github.com/raspberrypi/firmware/releases/tag/1.20250127
-    version = "1.20250127";
-    src = super.fetchFromGitHub {
-      owner = "raspberrypi";
-      repo = "firmware";
-      rev = "${version}";
-      hash = "sha256-gdZt9xS3X1Prh+TU0DLy6treFoJjiUUUiZ3IoDbopzI=";
-    };
-  });
-
-  raspberrypifw_20241008 = super.raspberrypifw.overrideAttrs (old: rec {
-    # https://github.com/raspberrypi/firmware/releases/tag/1.20241008
-    version = "1.20241008";
-    src = super.fetchFromGitHub {
-      owner = "raspberrypi";
-      repo = "firmware";
-      rev = "${version}";
-      hash = "sha256-4gnK0KbqFnjBmWia9Jt2gveVWftmHrprpwBqYVqE/k0=";
-    };
-  });
-
-  raspberrypifw_20240529 = super.raspberrypifw.overrideAttrs (old: rec {
-    # https://github.com/raspberrypi/firmware/releases/tag/1.20240529
-    version = "1.20240529";
-    src = super.fetchFromGitHub {
-      owner = "raspberrypi";
-      repo = "firmware";
-      rev = "${version}";
-      hash = "sha256-KsCo7ZG6vKstxRyFljZtbQvnDSqiAPdUza32xTY/tlA=";
-    };
-  });
-
-  raspberrypifw_20240424 = super.raspberrypifw.overrideAttrs (old: rec {
-    # they seem to got back to releases
-    # https://github.com/raspberrypi/firmware/releases/tag/1.20240424
-    version = "1.20240424";
-    # release tarball contains only the files we need
-    src = super.fetchFromGitHub {
-      owner = "raspberrypi";
-      repo = "firmware";
-      rev = "${version}";
-      hash = "sha256-X5OinkLh/+mx34DM8mCk4tqOGuJdYxkvygv3gA77NJI=";
-    };
-  });
-
-  raspberrypifw_20240124 = super.raspberrypifw.overrideAttrs (old: {
-    version = "stable_20240124";
-    src = super.fetchFromGitHub {
-      owner = "raspberrypi";
-      repo = "firmware";
-      rev = "4649b6d52005b52b1d23f553b5e466941bc862dc";
-      hash = "sha256-K+5QBjsic3c2OTi8ROot3BVDnIrXDjZ4C6k3WKWogxI=";
-    };
-  });
-
-  # as in nixpkgs-unstable
-  raspberrypifw_20231123 = super.raspberrypifw.overrideAttrs (old: {
-    version = "stable_20231123";
-    src = super.fetchFromGitHub {
-      owner = "raspberrypi";
-      repo = "firmware";
-      rev = "524247ac6d8b1f4ddd53730e978a70c76a320bd6";
-      hash = "sha256-rESwkR7pc5MTwIZ8PaMUPXuzxfv+jVpdRp8ijvxHGcg=";
-    };
-  });
+in self: super:
+  super.lib.mergeAttrsList (map (firmwareVersion super) allFirmware) // {
 
   raspberrypiWirelessFirmware_20251008 = super.raspberrypiWirelessFirmware.overrideAttrs (old: {
     version = "2025-10-02";
