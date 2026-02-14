@@ -85,7 +85,7 @@ in
   postFixup = let
     armArch = if stdenv.isAarch64 then "arm64" else "arm";
   in ''
-    # Provide overlays together with README just like `raspberrypifw`
+    # Provide README together with overlays just like `raspberrypifw`
     # (https://github.com/raspberrypi/firmware/) does
     # Raspberry's bootloader may check if it's present in `overlays/` on
     # FIRMWARE partition
