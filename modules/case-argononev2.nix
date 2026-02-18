@@ -1,5 +1,10 @@
 { argononed }:
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
   # module in nixpkgs is outdated (Aug 2022)

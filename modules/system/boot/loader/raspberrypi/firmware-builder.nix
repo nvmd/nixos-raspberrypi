@@ -1,6 +1,7 @@
-{ pkgs
-, configTxt
-, firmware ? pkgs.raspberrypifw
+{
+  pkgs,
+  configTxt,
+  firmware ? pkgs.raspberrypifw,
 }:
 
 pkgs.replaceVarsWith {

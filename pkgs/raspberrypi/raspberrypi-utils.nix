@@ -1,9 +1,11 @@
 # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/development/libraries/libraspberrypi/default.nix#L28
 # because libraspberrypi is outdated and deprecated
-{ lib, stdenv
-, fetchFromGitHub
-, cmake
-, dtc
+{
+  lib,
+  stdenv,
+  fetchFromGitHub,
+  cmake,
+  dtc,
 }:
 
 stdenv.mkDerivation (finalAttrs: {
@@ -27,7 +29,11 @@ stdenv.mkDerivation (finalAttrs: {
     description = "A collection of scripts and simple applications for Raspberry Pi hardware";
     homepage = "https://github.com/raspberrypi/utils";
     license = licenses.bsd3;
-    platforms = [ "armv6l-linux" "armv7l-linux" "aarch64-linux" ];
+    platforms = [
+      "armv6l-linux"
+      "armv7l-linux"
+      "aarch64-linux"
+    ];
     maintainers = with maintainers; [ kazenyuk ];
   };
 })

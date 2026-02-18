@@ -1,5 +1,6 @@
-{ pkgs
-, firmwareBuilder
+{
+  pkgs,
+  firmwareBuilder,
 }:
 
 pkgs.replaceVarsWith {

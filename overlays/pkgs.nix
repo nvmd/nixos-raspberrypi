@@ -1,12 +1,15 @@
-self: super: { # final: prev:
+self: super: {
+  # final: prev:
 
   ffmpeg = self.ffmpeg_7;
   ffmpeg-headless = self.ffmpeg_7-headless;
   ffmpeg-full = self.ffmpeg_7-full;
 
-  ffmpeg_4 = (super.callPackage ../pkgs/ffmpeg_4-rpi.nix {
-    ffmpeg = super.ffmpeg;
-  }); # small
+  ffmpeg_4 = (
+    super.callPackage ../pkgs/ffmpeg_4-rpi.nix {
+      ffmpeg = super.ffmpeg;
+    }
+  ); # small
   ffmpeg_4-headless = self.ffmpeg_4.override {
     ffmpegVariant = "headless";
   };
@@ -14,9 +17,11 @@ self: super: { # final: prev:
     ffmpegVariant = "full";
   };
 
-  ffmpeg_5 = (super.callPackage ../pkgs/ffmpeg_5-rpi.nix {
-    ffmpeg = super.ffmpeg;
-  }); # small
+  ffmpeg_5 = (
+    super.callPackage ../pkgs/ffmpeg_5-rpi.nix {
+      ffmpeg = super.ffmpeg;
+    }
+  ); # small
   ffmpeg_5-headless = self.ffmpeg_5.override {
     ffmpegVariant = "headless";
   };
@@ -24,9 +29,11 @@ self: super: { # final: prev:
     ffmpegVariant = "full";
   };
 
-  ffmpeg_6 = (super.callPackage ../pkgs/ffmpeg_6-rpi.nix {
-    ffmpeg = super.ffmpeg;
-  }); # small
+  ffmpeg_6 = (
+    super.callPackage ../pkgs/ffmpeg_6-rpi.nix {
+      ffmpeg = super.ffmpeg;
+    }
+  ); # small
   ffmpeg_6-headless = self.ffmpeg_6.override {
     ffmpegVariant = "headless";
   };
@@ -34,9 +41,11 @@ self: super: { # final: prev:
     ffmpegVariant = "full";
   };
 
-  ffmpeg_7 = (super.callPackage ../pkgs/ffmpeg_7-rpi.nix {
-    ffmpeg = super.ffmpeg;
-  }); # small
+  ffmpeg_7 = (
+    super.callPackage ../pkgs/ffmpeg_7-rpi.nix {
+      ffmpeg = super.ffmpeg;
+    }
+  ); # small
   ffmpeg_7-headless = self.ffmpeg_7.override {
     ffmpegVariant = "headless";
   };
@@ -44,31 +53,39 @@ self: super: { # final: prev:
     ffmpegVariant = "full";
   };
 
-
-  kodi = (super.kodi.overrideAttrs (old: {
-    pname = old.pname + "-rpi";
-    buildInputs = old.buildInputs ++ [ self.dav1d ];
-    cmakeFlags = let
-      enableFeature = enable: feature:
-        assert (super.lib.isString feature);
-        "-DENABLE_${feature}=${if enable then "ON" else "OFF"}";
-    in old.cmakeFlags ++ [
-      "-DENABLE_INTERNAL_DAV1D=OFF"
-    ] ++ [
-      # inspired by being hardcoded in libreelec
-      # leaving because this is potentially due to performance considerations
-      "-DENABLE_LCMS2=OFF"
-    ] ++ [
-      (enableFeature true  "NEON")
-      (enableFeature false "VAAPI")
-    ] ++ [
-      "-DENABLE_CEC=ON"
-      "-DENABLE_AVAHI=ON"
-      #-DAPP_RENDER_SYSTEM=
-    ];
-  })).override {
-    vdpauSupport = false;
-  };
+  kodi =
+    (super.kodi.overrideAttrs (old: {
+      pname = old.pname + "-rpi";
+      buildInputs = old.buildInputs ++ [ self.dav1d ];
+      cmakeFlags =
+        let
+          enableFeature =
+            enable: feature:
+            assert (super.lib.isString feature);
+            "-DENABLE_${feature}=${if enable then "ON" else "OFF"}";
+        in
+        old.cmakeFlags
+        ++ [
+          "-DENABLE_INTERNAL_DAV1D=OFF"
+        ]
+        ++ [
+          # inspired by being hardcoded in libreelec
+          # leaving because this is potentially due to performance considerations
+          "-DENABLE_LCMS2=OFF"
+        ]
+        ++ [
+          (enableFeature true "NEON")
+          (enableFeature false "VAAPI")
+        ]
+        ++ [
+          "-DENABLE_CEC=ON"
+          "-DENABLE_AVAHI=ON"
+          #-DAPP_RENDER_SYSTEM=
+        ];
+    })).override
+      {
+        vdpauSupport = false;
+      };
 
   kodi-gbm = self.kodi.override {
     gbmSupport = true;
@@ -79,7 +96,6 @@ self: super: { # final: prev:
     # nixos defaults to "gl" for wayland, but libreelec uses "gles"
     # renderSystem = "gles";
   };
-
 
   libcamera = self.libcamera_rpi;
 
