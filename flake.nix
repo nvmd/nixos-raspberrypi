@@ -54,6 +54,7 @@
       };
     mkLegacyPackagesFor = nixpkgs: forSystems rpiSystems (mkRpiPkgs nixpkgs);
   in {
+    formatter = forSystems allSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-tree);
 
     devShells = forSystems allSystems (system: let
       pkgs = nixpkgs.legacyPackages.${system};
@@ -62,7 +63,7 @@
         name = "nixos-raspberrypi";
         nativeBuildInputs = with pkgs; [
           nil # lsp language server for nix
-          nixpkgs-fmt
+          nixfmt-tree
           nix-output-monitor
           bash-language-server
           shellcheck
