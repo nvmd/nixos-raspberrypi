@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 with lib;
 
@@ -8,102 +13,121 @@ let
 
   ubootBinName = if isAarch64 then "u-boot-rpi-arm64.bin" else "u-boot-rpi.bin";
 
-
-  mkBootloader = pkgs: bootloader {
-    inherit pkgs;
-    inherit (cfg) nixosGenerationsDir;
-
-    firmwareInstaller = "${raspberryPiFirmware {
+  mkBootloader =
+    pkgs:
+    bootloader {
       inherit pkgs;
-      firmware = cfg.firmwarePackage;
-      configTxt = cfg.configTxtPackage;
-    }}";
+      inherit (cfg) nixosGenerationsDir;
 
-    nixosGenBuilder = "${kernelbootGenBuilder {
-      inherit pkgs;
-      deviceTreeInstaller = let
-        cmd = deviceTree {
-          inherit pkgs;
-          firmware = cfg.firmwarePackage;
-        };
-        args = lib.optionalString (!cfg.useGenerationDeviceTree) " -r";
-      in "${cmd} ${args}";
-    }}";
+      firmwareInstaller = "${raspberryPiFirmware {
+        inherit pkgs;
+        firmware = cfg.firmwarePackage;
+        configTxt = cfg.configTxtPackage;
+      }}";
 
-  };
+      nixosGenBuilder = "${kernelbootGenBuilder {
+        inherit pkgs;
+        deviceTreeInstaller =
+          let
+            cmd = deviceTree {
+              inherit pkgs;
+              firmware = cfg.firmwarePackage;
+            };
+            args = lib.optionalString (!cfg.useGenerationDeviceTree) " -r";
+          in
+          "${cmd} ${args}";
+      }}";
 
-  bootloader = ({ pkgs
-                , nixosGenerationsDir
-                , firmwareInstaller
-                , nixosGenBuilder
-                }: pkgs.replaceVarsWith {
-    src = ./generational/nixos-generations-builder.sh;
-    isExecutable = true;
-
-    replacements = {
-      inherit (pkgs) bash;
-      path = pkgs.lib.makeBinPath [
-        pkgs.coreutils
-        pkgs.gnused
-      ];
-
-      # NixOS-generations -independent
-      installFirmwareBuilder = firmwareInstaller;
-      # NixOS-generations -dependent
-      inherit nixosGenerationsDir nixosGenBuilder;
     };
-  });
 
-  kernelbootGenBuilder = ({ pkgs
-                          , deviceTreeInstaller
-                          }: pkgs.replaceVarsWith {
-    src = ./generational/kernelboot-gen-builder.sh;
-    isExecutable = true;
+  bootloader = (
+    {
+      pkgs,
+      nixosGenerationsDir,
+      firmwareInstaller,
+      nixosGenBuilder,
+    }:
+    pkgs.replaceVarsWith {
+      src = ./generational/nixos-generations-builder.sh;
+      isExecutable = true;
 
-    replacements = {
-      inherit (pkgs) bash;
-      path = pkgs.lib.makeBinPath [
-        pkgs.coreutils
-      ];
+      replacements = {
+        inherit (pkgs) bash;
+        path = pkgs.lib.makeBinPath [
+          pkgs.coreutils
+          pkgs.gnused
+        ];
 
-      installDeviceTree = deviceTreeInstaller;
-    };
-  });
+        # NixOS-generations -independent
+        installFirmwareBuilder = firmwareInstaller;
+        # NixOS-generations -dependent
+        inherit nixosGenerationsDir nixosGenBuilder;
+      };
+    }
+  );
 
-  deviceTree = ({ pkgs
-                , firmware
-                }: pkgs.replaceVarsWith {
-    src = ./generational/install-device-tree.sh;
-    isExecutable = true;
+  kernelbootGenBuilder = (
+    {
+      pkgs,
+      deviceTreeInstaller,
+    }:
+    pkgs.replaceVarsWith {
+      src = ./generational/kernelboot-gen-builder.sh;
+      isExecutable = true;
 
-    replacements = {
-      inherit (pkgs) bash;
-      path = pkgs.lib.makeBinPath [
-        pkgs.coreutils
-      ];
+      replacements = {
+        inherit (pkgs) bash;
+        path = pkgs.lib.makeBinPath [
+          pkgs.coreutils
+        ];
 
-      inherit firmware;
-    };
-  });
+        installDeviceTree = deviceTreeInstaller;
+      };
+    }
+  );
+
+  deviceTree = (
+    {
+      pkgs,
+      firmware,
+    }:
+    pkgs.replaceVarsWith {
+      src = ./generational/install-device-tree.sh;
+      isExecutable = true;
+
+      replacements = {
+        inherit (pkgs) bash;
+        path = pkgs.lib.makeBinPath [
+          pkgs.coreutils
+        ];
+
+        inherit firmware;
+      };
+    }
+  );
 
   # installs raspberry's firmware independent of the nixos generations
   # sometimes referred to as "boot code"
-  raspberryPiFirmware = ({ pkgs
-                         , firmware
-                         , configTxt
-                         }: pkgs.replaceVarsWith {
-    src = ./generational/install-firmware.sh;
-    isExecutable = true;
+  raspberryPiFirmware = (
+    {
+      pkgs,
+      firmware,
+      configTxt,
+    }:
+    pkgs.replaceVarsWith {
+      src = ./generational/install-firmware.sh;
+      isExecutable = true;
 
-    replacements = {
-      inherit (pkgs) bash;
-      path = pkgs.lib.makeBinPath [
-        pkgs.coreutils
-      ];
+      replacements = {
+        inherit (pkgs) bash;
+        path = pkgs.lib.makeBinPath [
+          pkgs.coreutils
+        ];
 
-      inherit firmware configTxt;
-    };
-  });
+        inherit firmware configTxt;
+      };
+    }
+  );
 
   # Builders used to write during system activation
   firmwareBuilder = import ./firmware-builder.nix {
@@ -123,7 +147,7 @@ let
   };
 
   # Builders exposed via populateCmd, which run on the build architecture
-  populateFirmwareBuilder = import  ./firmware-builder.nix {
+  populateFirmwareBuilder = import ./firmware-builder.nix {
     pkgs = pkgs.buildPackages;
     configTxt = cfg.configTxtPackage;
     firmware = cfg.firmwarePackage;
@@ -181,14 +205,17 @@ let
       firmware = "${populateKernelbootBuilder}";
       boot = "${populateKernelbootBuilder}";
     };
-    kernel = let cmd = builtins.concatStringsSep " " [
-      "${mkBootloader pkgs.buildPackages}"
-      "-g ${toString cfg.configurationLimit}"
-    ];
-    in {
-      firmware = "${cmd}";
-      boot = "${cmd}";
-    };
+    kernel =
+      let
+        cmd = builtins.concatStringsSep " " [
+          "${mkBootloader pkgs.buildPackages}"
+          "-g ${toString cfg.configurationLimit}"
+        ];
+      in
+      {
+        firmware = "${cmd}";
+        boot = "${cmd}";
+      };
   };
 in
 
@@ -271,8 +298,7 @@ in
       };
 
       useGenerationDeviceTree = mkOption {
-        default = if cfg.bootloader == "kernel" then true
-                  else false;  # generic-extlinux-compatible defaults to `true`
+        default = if cfg.bootloader == "kernel" then true else false; # generic-extlinux-compatible defaults to `true`
         type = types.bool;
         description = ''
           Whether to use device tree supplied by:
@@ -324,7 +350,12 @@ in
 
       bootloader = mkOption {
         default = if cfg.variant == "5" then "kernelboot" else "uboot";
-        type = types.enum [ "kernel" "uboot" "kernelboot" "kernelboot-legacy-unsupported" ];
+        type = types.enum [
+          "kernel"
+          "uboot"
+          "kernelboot"
+          "kernelboot-legacy-unsupported"
+        ];
         description = ''
           Bootloader to use:
           - `"uboot"`: U-Boot
@@ -354,7 +385,7 @@ in
           Used only by `kernel` bootloader!
 
           Maximum number of configurations to keep on FIRMWARE partition.
-          
+
           This is quite space-consuming, because to keep the NixOS generations 
           as independent as possible the following files are need to be copied
           and kept for each generation (no symlinks allowed):
@@ -371,35 +402,45 @@ in
       };
 
       variant = mkOption {
-        type = types.enum [ "0" "02" "1" "2" "3" "4" "5" ];
+        type = types.enum [
+          "0"
+          "02"
+          "1"
+          "2"
+          "3"
+          "4"
+          "5"
+        ];
         description = "";
       };
 
       ubootPackage = mkOption {
-        default = {
-          "0" = {
-            armhf = pkgs.ubootRaspberryPiZero;
-          };
-          "02" = {
-            aarch64 = pkgs.ubootRaspberryPi_64bit;
-          };
-          "1" = {
-            armhf = pkgs.ubootRaspberryPi;
-          };
-          "2" = {
-            armhf = pkgs.ubootRaspberryPi2;
-          };
-          "3" = {
-            armhf = pkgs.ubootRaspberryPi3_32bit;
-            aarch64 = pkgs.ubootRaspberryPi_64bit;
-          };
-          "4" = {
-            aarch64 = pkgs.ubootRaspberryPi_64bit;
-          };
-          "5" = {
-            aarch64 = pkgs.ubootRaspberryPi_64bit;
-          };
-        }.${cfg.variant}.${if isAarch64 then "aarch64" else "armhf"};
+        default =
+          {
+            "0" = {
+              armhf = pkgs.ubootRaspberryPiZero;
+            };
+            "02" = {
+              aarch64 = pkgs.ubootRaspberryPi_64bit;
+            };
+            "1" = {
+              armhf = pkgs.ubootRaspberryPi;
+            };
+            "2" = {
+              armhf = pkgs.ubootRaspberryPi2;
+            };
+            "3" = {
+              armhf = pkgs.ubootRaspberryPi3_32bit;
+              aarch64 = pkgs.ubootRaspberryPi_64bit;
+            };
+            "4" = {
+              aarch64 = pkgs.ubootRaspberryPi_64bit;
+            };
+            "5" = {
+              aarch64 = pkgs.ubootRaspberryPi_64bit;
+            };
+          }
+          .${cfg.variant}.${if isAarch64 then "aarch64" else "armhf"};
       };
 
     };
@@ -407,34 +448,39 @@ in
 
   config = mkMerge [
     (mkIf cfg.enable {
-      warnings =
-        lib.optional (cfg.bootloader == "kernelboot") ''
-          RaspberryPi bootloader: "kernelboot" is deprecated, please migrate to "kernel"
+      warnings = lib.optional (cfg.bootloader == "kernelboot") ''
+        RaspberryPi bootloader: "kernelboot" is deprecated, please migrate to "kernel"
 
-          You're using boot.loader.raspberry-pi.bootloader = "${config.boot.loader.raspberry-pi.bootloader}",
-          which is deprecated and will be removed in the future versions of nixos-raspberrypi.
-          Please migrate to `kernel` bootloader, which provides many advantages over the legacy `kernelboot`.
-          See [PR#61](https://github.com/nvmd/nixos-raspberrypi/pull/61) for more information.
+        You're using boot.loader.raspberry-pi.bootloader = "${config.boot.loader.raspberry-pi.bootloader}",
+        which is deprecated and will be removed in the future versions of nixos-raspberrypi.
+        Please migrate to `kernel` bootloader, which provides many advantages over the legacy `kernelboot`.
+        See [PR#61](https://github.com/nvmd/nixos-raspberrypi/pull/61) for more information.
 
-          If you still want to keep the behavior of the old bootloader,
-          please let us know about your usecase and enforce it explicitly with
-          `boot.loader.raspberry-pi.bootloader = "kernelboot-legacy-unsupported"` in your configuration.
+        If you still want to keep the behavior of the old bootloader,
+        please let us know about your usecase and enforce it explicitly with
+        `boot.loader.raspberry-pi.bootloader = "kernelboot-legacy-unsupported"` in your configuration.
 
-          This will ensure that your bootloader stays "kernelboot" even when the default booloader
-          will be changed to "kernel" (for selected boards currently using "kernelboot").
-          The "-legacy-unsupported" suffix will silence this warning until the final deletion.
-        '';
+        This will ensure that your bootloader stays "kernelboot" even when the default booloader
+        will be changed to "kernel" (for selected boards currently using "kernelboot").
+        The "-legacy-unsupported" suffix will silence this warning until the final deletion.
+      '';
 
-      assertions = let
-        supportAarch64 = [ "02" "3" "4" "5" ];
-      in singleton {
-        assertion = !pkgs.stdenv.hostPlatform.isAarch64
-                    || builtins.elem cfg.variant supportAarch64;
-        message = ''
-          Only Raspberry Pi versions
-          ${builtins.concatStringsSep ", " supportAarch64} support aarch64.
-        '';
-      };
+      assertions =
+        let
+          supportAarch64 = [
+            "02"
+            "3"
+            "4"
+            "5"
+          ];
+        in
+        singleton {
+          assertion = !pkgs.stdenv.hostPlatform.isAarch64 || builtins.elem cfg.variant supportAarch64;
+          message = ''
+            Only Raspberry Pi versions
+            ${builtins.concatStringsSep ", " supportAarch64} support aarch64.
+          '';
+        };
       boot.loader.grub.enable = false;
       boot.loader.raspberry-pi.firmwarePopulateCmd = populateCmds.${cfg.bootloader}.firmware;
       boot.loader.raspberry-pi.bootPopulateCmd = populateCmds.${cfg.bootloader}.boot;
@@ -462,34 +508,46 @@ in
       };
     })
 
-    (mkIf (cfg.enable && (builtins.elem cfg.bootloader [ "kernel" "kernelboot" "kernelboot-legacy-unsupported" ])) {
-      hardware.raspberry-pi.config = {
-        all = {
-          options = {
-            # https://www.raspberrypi.com/documentation/computers/config_txt.html#cmdline
-            # https://www.raspberrypi.com/documentation/computers/config_txt.html#kernel
-            kernel = {
-              enable = true;
-              value = "kernel.img";
+    (mkIf
+      (
+        cfg.enable
+        && (builtins.elem cfg.bootloader [
+          "kernel"
+          "kernelboot"
+          "kernelboot-legacy-unsupported"
+        ])
+      )
+      {
+        hardware.raspberry-pi.config = {
+          all = {
+            options = {
+              # https://www.raspberrypi.com/documentation/computers/config_txt.html#cmdline
+              # https://www.raspberrypi.com/documentation/computers/config_txt.html#kernel
+              kernel = {
+                enable = true;
+                value = "kernel.img";
+              };
             };
           };
         };
-      };
-      hardware.raspberry-pi.extra-config = let
-        # https://www.raspberrypi.com/documentation/computers/config_txt.html#initramfs
-        ramfsfile = "initrd";
-        ramfsaddr = "followkernel"; # same as 0 = "after the kernel image"
-      in ''
-        [all]
-        initramfs ${ramfsfile} ${ramfsaddr}
-      '';
+        hardware.raspberry-pi.extra-config =
+          let
+            # https://www.raspberrypi.com/documentation/computers/config_txt.html#initramfs
+            ramfsfile = "initrd";
+            ramfsaddr = "followkernel"; # same as 0 = "after the kernel image"
+          in
+          ''
+            [all]
+            initramfs ${ramfsfile} ${ramfsaddr}
+          '';
 
-      system = {
-        build.installBootLoader = builder.${cfg.bootloader};
-        boot.loader.id = "raspberrypi-${cfg.bootloader}";
-        boot.loader.kernelFile = pkgs.stdenv.hostPlatform.linux-kernel.target;
-      };
-    })
+        system = {
+          build.installBootLoader = builder.${cfg.bootloader};
+          boot.loader.id = "raspberrypi-${cfg.bootloader}";
+          boot.loader.kernelFile = pkgs.stdenv.hostPlatform.linux-kernel.target;
+        };
+      }
+    )
 
     (mkIf (cfg.enable && (cfg.bootloader == "uboot")) {
       hardware.raspberry-pi.config = {

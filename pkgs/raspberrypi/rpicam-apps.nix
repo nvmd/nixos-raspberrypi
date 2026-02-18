@@ -1,29 +1,30 @@
-{ lib
-, stdenv
-, fetchFromGitHub
-, meson
-, ninja
-, pkg-config
-, boost
-, libcamera
-, libdrm
-, libexif
-, libjpeg
-, libpng
-, libtiff
-, withLibavEncoder ? true
-, ffmpeg
-, withDrmPreview ? true
-, withEglPreview ? true
-, libepoxy
-, libGL
-, libX11
-, withQtPreview ? true
-, qt5
-, withOpenCVPostProc ? true  #default=false
-, opencv
-, withIMX500 ? true  #default=false
-, withRpiFeatures ? true
+{
+  lib,
+  stdenv,
+  fetchFromGitHub,
+  meson,
+  ninja,
+  pkg-config,
+  boost,
+  libcamera,
+  libdrm,
+  libexif,
+  libjpeg,
+  libpng,
+  libtiff,
+  withLibavEncoder ? true,
+  ffmpeg,
+  withDrmPreview ? true,
+  withEglPreview ? true,
+  libepoxy,
+  libGL,
+  libX11,
+  withQtPreview ? true,
+  qt5,
+  withOpenCVPostProc ? true, # default=false
+  opencv,
+  withIMX500 ? true, # default=false
+  withRpiFeatures ? true,
 }:
 
 stdenv.mkDerivation (finalAttrs: {
@@ -38,19 +39,35 @@ stdenv.mkDerivation (finalAttrs: {
   };
 
   nativeBuildInputs = [
-    meson ninja pkg-config
-  ] ++ lib.optional withQtPreview qt5.wrapQtAppsHook;
+    meson
+    ninja
+    pkg-config
+  ]
+  ++ lib.optional withQtPreview qt5.wrapQtAppsHook;
 
   buildInputs = [
     boost
     libexif
     libcamera
-    libdrm  # needed even with drm preview disabled
-    libjpeg libpng libtiff
-  ] ++ lib.optionals withLibavEncoder [ ffmpeg ]
-    ++ lib.optionals withQtPreview (with qt5; [ qtbase qttools ])
-    ++ lib.optionals withEglPreview [ libepoxy libX11 libGL ]
-    ++ lib.optionals withOpenCVPostProc [ opencv ];
+    libdrm # needed even with drm preview disabled
+    libjpeg
+    libpng
+    libtiff
+  ]
+  ++ lib.optionals withLibavEncoder [ ffmpeg ]
+  ++ lib.optionals withQtPreview (
+    with qt5;
+    [
+      qtbase
+      qttools
+    ]
+  )
+  ++ lib.optionals withEglPreview [
+    libepoxy
+    libX11
+    libGL
+  ]
+  ++ lib.optionals withOpenCVPostProc [ opencv ];
 
   # https://github.com/raspberrypi/rpicam-apps/blob/main/meson_options.txt
   mesonFlags = [
@@ -61,7 +78,7 @@ stdenv.mkDerivation (finalAttrs: {
     (lib.mesonEnable "enable_qt" withQtPreview)
     # postprocessing
     (lib.mesonEnable "enable_opencv" withOpenCVPostProc)
-    (lib.mesonEnable "enable_hailo" false) #default=auto, hailort (HailoRT)
+    (lib.mesonEnable "enable_hailo" false) # default=auto, hailort (HailoRT)
     (lib.mesonBool "enable_imx500" withIMX500)
     (lib.mesonBool "disable_rpi_features" (!withRpiFeatures))
   ];

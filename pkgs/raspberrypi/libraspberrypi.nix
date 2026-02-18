@@ -1,7 +1,9 @@
-{ lib, stdenv
-, fetchFromGitHub
-, cmake
-, pkg-config
+{
+  lib,
+  stdenv,
+  fetchFromGitHub,
+  cmake,
+  pkg-config,
 }:
 
 stdenv.mkDerivation (finalAttrs: {
@@ -15,7 +17,10 @@ stdenv.mkDerivation (finalAttrs: {
     hash = "sha256-Edca6nkykdXKFF5MGq6LeKirMLHTZBCbFWvHTNHMWJ4=";
   };
 
-  nativeBuildInputs = [ cmake pkg-config ];
+  nativeBuildInputs = [
+    cmake
+    pkg-config
+  ];
   env.NIX_CFLAGS_COMPILE = "-std=gnu17";
   cmakeFlags = [
     # -DARM64=ON disables all targets that only build on 32-bit ARM; this allows
@@ -29,7 +34,15 @@ stdenv.mkDerivation (finalAttrs: {
     description = "ARM side libraries for interfacing to Raspberry Pi GPU (deprecated as of 27.08.2025)";
     homepage = "https://github.com/raspberrypi/userland";
     license = licenses.bsd3;
-    platforms = [ "armv6l-linux" "armv7l-linux" "aarch64-linux" "x86_64-linux" ];
-    maintainers = with maintainers; [ dezgeg tkerber ];
+    platforms = [
+      "armv6l-linux"
+      "armv7l-linux"
+      "aarch64-linux"
+      "x86_64-linux"
+    ];
+    maintainers = with maintainers; [
+      dezgeg
+      tkerber
+    ];
   };
 })

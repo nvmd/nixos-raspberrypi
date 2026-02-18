@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   imports = [
@@ -31,7 +36,10 @@
   boot.consoleLogLevel = lib.mkDefault 7;
   # https://github.com/raspberrypi/firmware/issues/1539#issuecomment-784498108
   # https://github.com/RPi-Distro/pi-gen/blob/master/stage1/00-boot-files/files/cmdline.txt
-  boot.kernelParams = [ "console=serial0,115200n8" "console=tty1" ];
+  boot.kernelParams = [
+    "console=serial0,115200n8"
+    "console=tty1"
+  ];
 
   boot.initrd.availableKernelModules = [
     "xhci_pci"
@@ -53,8 +61,7 @@
   #     https://github.com/NixOS/nixpkgs/issues/154163#issuecomment-1350599022
   nixpkgs.overlays = [
     (final: super: {
-      makeModulesClosure = x:
-        super.makeModulesClosure (x // { allowMissing = true; });
+      makeModulesClosure = x: super.makeModulesClosure (x // { allowMissing = true; });
     })
   ];
 }

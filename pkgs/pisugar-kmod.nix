@@ -1,4 +1,11 @@
-{ stdenv, lib, fetchFromGitHub, kernel, kmod, pisugarVersion }:
+{
+  stdenv,
+  lib,
+  fetchFromGitHub,
+  kernel,
+  kmod,
+  pisugarVersion,
+}:
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "pisugar${pisugarVersion}-kmod";
@@ -23,7 +30,8 @@ stdenv.mkDerivation (finalAttrs: {
   makeFlags = [
     "V=1"
     "ARCH=${stdenv.hostPlatform.linuxArch}"
-  ] ++ lib.optionals (stdenv.hostPlatform != stdenv.buildPlatform) [
+  ]
+  ++ lib.optionals (stdenv.hostPlatform != stdenv.buildPlatform) [
     "CROSS_COMPILE=${stdenv.cc.targetPrefix}"
   ];
   KSRC = "${kernel.dev}/lib/modules/${kernel.modDirVersion}/build";

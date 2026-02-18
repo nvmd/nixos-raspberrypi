@@ -1,14 +1,22 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
   hardware.raspberry-pi.config.all.dt-overlays = {
     dwc2 = {
       enable = true;
-      params = {};
+      params = { };
     };
   };
 
-  boot.kernelModules = [ "dwc2" "g_ether" ];
+  boot.kernelModules = [
+    "dwc2"
+    "g_ether"
+  ];
 
   boot.kernel.sysctl = {
     # ignore linkdown routes in case they won't be removed when device isn't
@@ -18,8 +26,10 @@
     "net.ipv4.conf.all.ignore_routes_with_linkdown" = 1;
   };
 
-  networking.interfaces.usb0.ipv4.addresses = lib.mkDefault [ {
-    address = "10.0.0.2";
-    prefixLength = 24;
-  } ];
+  networking.interfaces.usb0.ipv4.addresses = lib.mkDefault [
+    {
+      address = "10.0.0.2";
+      prefixLength = 24;
+    }
+  ];
 }

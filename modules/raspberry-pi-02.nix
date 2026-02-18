@@ -1,4 +1,9 @@
-{ self, lib, pkgs, ... }:
+{
+  self,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   imports = [ ./raspberrypi.nix ];
@@ -9,5 +14,7 @@
     firmwarePackage = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.raspberrypifw;
   };
 
-  boot.kernelPackages = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.linuxPackages_rpi02;
+  boot.kernelPackages =
+    lib.mkDefault
+      self.packages.${pkgs.stdenv.hostPlatform.system}.linuxPackages_rpi02;
 }

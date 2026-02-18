@@ -1,10 +1,11 @@
-{ lib
-, stdenvNoCC
-, fetchFromGitHub
-, bash
-, gnugrep
-, coreutils
-, withCpuGovernorConfig ? false
+{
+  lib,
+  stdenvNoCC,
+  fetchFromGitHub,
+  bash,
+  gnugrep,
+  coreutils,
+  withCpuGovernorConfig ? false,
 }:
 
 stdenvNoCC.mkDerivation (finalAttrs: {

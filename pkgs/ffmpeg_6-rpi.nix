@@ -1,7 +1,9 @@
-{ lib, fetchFromGitHub
-, callPackage
-, ffmpeg
-, ffmpegVariant ? "small"
+{
+  lib,
+  fetchFromGitHub,
+  callPackage,
+  ffmpeg,
+  ffmpegVariant ? "small",
 }:
 
 let
@@ -18,16 +20,17 @@ let
   ffmpegVersion = "6.0.1";
   rpiFfmpegSrc = fetchFromGitHub {
     owner = "jc-kynesim";
-    repo  = "rpi-ffmpeg";
+    repo = "rpi-ffmpeg";
     # rev   = "test/${ffmpegVersion}/main";
-    rev   = "fa6bc5dc62b4fb98f25701424e00cd17a8dabe6d";
-    hash  = "sha256-p/33/Fe+pz9pIuYH7gYjGTi3uOnGYCxHenkqOpC+LBA=";
+    rev = "fa6bc5dc62b4fb98f25701424e00cd17a8dabe6d";
+    hash = "sha256-p/33/Fe+pz9pIuYH7gYjGTi3uOnGYCxHenkqOpC+LBA=";
     # hash  = lib.fakeHash;
   };
   # see also for configure flags
   # https://github.com/jc-kynesim/rpi-ffmpeg/blob/test/6.0.1/main/pi-util/conf_native.sh#L110
 
-in callPackage ./ffmpeg-rpi.nix {
+in
+callPackage ./ffmpeg-rpi.nix {
   inherit ffmpeg;
   version = ffmpegVersion;
   source = rpiFfmpegSrc;
