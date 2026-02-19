@@ -34,6 +34,11 @@
     };
 
     flake-compat.url = "github:edolstra/flake-compat";
+
+    matrix-bot-haskell = {
+      url = "github:nvmd/matrix-bot-haskell/fosdem2026";
+      # inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = { self, nixpkgs, argononed, nixos-images, ... }@inputs: let
@@ -222,7 +227,72 @@
         ] ++ modules;
       };
 
-      custom-user-config = ({ config, pkgs, lib, nixos-raspberrypi, ... }: {
+      custom-user-config = ({ config, pkgs, lib, nixos-raspberrypi, ... }: let
+        matrix-bot-haskell = inputs.matrix-bot-haskell.packages.${pkgs.stdenv.hostPlatform.system}.default;
+      in {
+
+        networking.interfaces."wlan0".useDHCP = true;
+
+        networking.useNetworkd = true;
+        # mdns
+        networking.firewall.allowedUDPPorts = [ 5353 ];
+        systemd.network.networks = {
+          "99-ethernet-default-dhcp".networkConfig.MulticastDNS = "yes";
+          "99-wireless-client-dhcp".networkConfig.MulticastDNS = "yes";
+        };
+
+        # This comment was lifted from `srvos`
+        # Do not take down the network for too long when upgrading,
+        # This also prevents failures of services that are restarted instead of stopped.
+        # It will use `systemctl restart` rather than stopping it with `systemctl stop`
+        # followed by a delayed `systemctl start`.
+        systemd.services = {
+          systemd-networkd.stopIfChanged = false;
+          # Services that are only restarted might be not able to resolve when resolved is stopped before
+          systemd-resolved.stopIfChanged = false;
+        };
+
+        networking.wireless.iwd.enable = true;
+        networking.wireless.iwd.settings = {
+          General = {
+            EnableNetworkConfiguration = true;
+          };
+          Network = {
+            EnableIPv6 = true;
+            RoutePriorityOffset = 300;
+          };
+          Settings = {
+            AutoConnect = true;
+          };
+        };
+
+        services.tailscale = {
+          enable = true;
+          extraDaemonFlags = [ "--no-logs-no-support" ];
+          openFirewall = true;
+        };
+
+        systemd.services.matrix-bot-haskell = let
+          environmentFile = "/var/lib/matrix-bot-haskell.env";
+        in {
+          enable = true;
+
+          after = [ "network.target" "nss-lookup.target" ];
+          wantedBy = [ "multi-user.target" ];
+
+          serviceConfig = {
+            ExecStart = "${matrix-bot-haskell}/bin/matrix-bot-haskell";
+            DynamicUser = true;
+
+            EnvironmentFile = environmentFile;
+
+            StandardError="journal";
+            StandardOutput="journal";
+
+            Restart = "always";
+            RestartSec = "3";
+          };
+        };
 
         users.users.nixos.openssh.authorizedKeys.keys = [
           # YOUR SSH PUB KEY HERE #
@@ -235,6 +305,8 @@
 
         environment.systemPackages = with pkgs; [
           tree
+          matrix-bot-haskell
+          htop
         ];
 
         system.nixos.tags = let
@@ -257,6 +329,27 @@
           ];
         })
         custom-user-config
+        ({ config, pkgs, lib, ... }: let
+            kernelBundle = pkgs.linuxAndFirmware.v6_6_31;
+          in {
+            boot = {
+              loader.raspberry-pi.firmwarePackage = kernelBundle.raspberrypifw;
+              loader.raspberry-pi.bootloader = "kernel";
+              kernelPackages = kernelBundle.linuxPackages_rpi4;
+            };
+
+            nixpkgs.overlays = lib.mkAfter [
+              (self: super: {
+                # This is used in (modulesPath + "/hardware/all-firmware.nix") when at least 
+                # enableRedistributableFirmware is enabled
+                # I know no easier way to override this package
+                inherit (kernelBundle) raspberrypiWirelessFirmware;
+                # Some derivations want to use it as an input,
+                # e.g. raspberrypi-dtbs, omxplayer, sd-image-* modules
+                inherit (kernelBundle) raspberrypifw;
+              })
+            ];
+          })
       ];
 
       rpi3-installer = mkNixOSRPiInstaller [
