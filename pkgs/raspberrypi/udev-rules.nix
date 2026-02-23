@@ -1,22 +1,23 @@
-{ lib
-, stdenvNoCC
-, fetchFromGitHub
-, bash
-, gnugrep
-, coreutils
-, withCpuGovernorConfig ? false
+{
+  lib,
+  stdenvNoCC,
+  fetchFromGitHub,
+  bash,
+  gnugrep,
+  coreutils,
+  withCpuGovernorConfig ? false,
 }:
 
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "raspberrypi-udev-rules";
-  version = "20251028";
+  version = "20260202";
 
   # https://github.com/RPi-Distro/raspberrypi-sys-mods/tree/pios/trixie
   src = fetchFromGitHub {
     owner = "RPi-Distro";
     repo = "raspberrypi-sys-mods";
-    rev = "147bccd7db1a32468fac69a89a05d6b93c6f1796";
-    hash = "sha256-+PWf3fy14Pb51ee8BueCnLR6OnUD3Htgd6r1321crhk=";
+    rev = "49b5eb5aa5038b468e4bc077cfa433630a895ea2";
+    hash = "sha256-Yp0gey6FbFHDaZEQBNGDwZ4rhF7l9xgj/Cg/9h5PXkY=";
   };
 
   installPhase = ''
@@ -29,21 +30,22 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     declare -a rules_usr_lib=(
       10-vc.rules
 
-      # disable until i know what to do with /usr/lib/raspberrypi-sys-mods/i2cprobe
-      # is it even still needed?
+      # Disabled: requires the i2cprobe helper script with NixOS path fixes.
+      # Likely unnecessary - modern kernels handle I2C/SPI module loading natively.
       # 15-i2c-modprobe.rules
 
       60-backlight.rules
       60-dma-heap.rules
-      60-gpiochip4.rules
+      # Symlinks gpiochip0 to gpiochip4 for Pi 5 userspace compat (e.g. gpiozero).
+      # 60-gpiochip4.rules
       60-i2c-aliases.rules
       ${if withCpuGovernorConfig then "60-ondemand-governor.rules" else ""}
-      60-pico.rules
       60-piolib.rules
       61-drm.rules
       70-microbit.rules
 
-      # doesn't seem to provide any value on nixos
+      # Hides a NOOBS "SETTINGS" ext4 partition from UDisks.
+      # NOOBS was discontinued in 2020 and NixOS was never installed via it.
       # 80-noobs.rules
 
       99-com.rules
@@ -64,8 +66,8 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     done
   '';
 
-  fixupPhase = ''
-    for i in $out/{etc,lib}/udev/rules.d/*.rules; do
+  postFixup = ''
+    for i in $out/lib/udev/rules.d/*.rules; do
       substituteInPlace $i \
         --replace-quiet \"/bin/sh \"${bash}/bin/sh \
         --replace-quiet \"/bin/grep \"${lib.getExe gnugrep} \
