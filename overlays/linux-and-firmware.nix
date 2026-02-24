@@ -29,7 +29,12 @@ in self: super: {
 
     { default = self.linuxAndFirmware.v6_12_34; }
 
-    { latest = self.linuxAndFirmware.v6_12_44; }
+    { latest = self.linuxAndFirmware.v6_12_47; }
+
+    (mkBundle self "v6_12_47" {
+      fw = self.raspberrypifw_20250915;
+      wFw = self.raspberrypiWirelessFirmware_20251008;
+    })
 
     (mkBundle self "v6_12_44" {
       fw = self.raspberrypifw_20250829;
