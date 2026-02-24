@@ -159,7 +159,7 @@ imports = with nixos-raspberrypi.nixosModules; [
   # Optional: All RPi and RPi-optimised packages to be available in `pkgs.rpi`
   nixpkgs-rpi
 
-  # Optonal: add overlays with optimised packages into the global scope
+  # Optional: add overlays with optimised packages into the global scope
   # provides: ffmpeg_{4,6,7}, kodi, libcamera, vlc, etc.
   # This overlay may cause lots of rebuilds (however many
   #  packages should be available from the binary cache)
@@ -184,10 +184,12 @@ See `nixosConfigurations.rpi{02,4,5}-installer` in `flake.nix`.
 SD image can be built with:
 
 ```
-nix build .#installerImages.rpi02
-nix build .#installerImages.rpi3
-nix build .#installerImages.rpi4
-nix build .#installerImages.rpi5
+# By accepting the flake configuration, you can trust our binary cache and 
+# avoid building the kernel package yourself.
+nix --accept-flake-config build .#installerImages.rpi02
+nix --accept-flake-config build .#installerImages.rpi3
+nix --accept-flake-config build .#installerImages.rpi4
+nix --accept-flake-config build .#installerImages.rpi5
 ```
 
 Randomly generated connection credentials will be displayed on the screen, once the system is booted.
