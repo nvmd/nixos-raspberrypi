@@ -7,10 +7,9 @@
     , rpiModules
     }:
     { modules, ... }@args:
-    assert nixpkgs.lib.assertMsg (args.specialArgs ? nixos-raspberrypi)
-      "specialArgs must provide nixos-raspberrypi";
     nixpkgs.lib.nixosSystem (
       builtins.removeAttrs args [ "nixpkgs" "trustCaches" ] // {
+        specialArgs = (args.specialArgs or {}) // { nixos-raspberrypi = self; };
         modules = rpiModules
           # Nix cache with prebuilt packages,
           # see `devshells/nix-build-to-cachix.nix` for a list
