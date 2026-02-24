@@ -12,7 +12,13 @@ let
       linuxPackages_rpi3 = self.linuxPackagesFor linux_rpi3;
       linuxPackages_rpi02 = self.linuxPackagesFor linux_rpi02;
     } // (with firmware; {
+      # used by
+      # - `modules/installer/sd-card/sd-image-{aarch64,armv7l-multiplatform,raspberrypi}`,
+      # - `omxplayer` (likely broken)
+      # - `device-tree_rpi` (`raspberrypi-dtbs`)
       raspberrypifw = fw;
+      # used by
+      # - `modules/hardware/all-firmware.nix` to populate `hardware.firmware` on aarch64
       raspberrypiWirelessFirmware = wFw;
     });
   };
