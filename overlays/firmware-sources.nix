@@ -1,8 +1,5 @@
 # sources for raspberrypi-firmware
 # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/os-specific/linux/firmware/raspberrypi/default.nix
-#
-# https://github.com/raspberrypi/firmware/
-# see `extra/git_hash` for a matching hash of the `raspberrypi/linux`
 [
   {
     # https://github.com/raspberrypi/firmware/releases/tag/1.20250915

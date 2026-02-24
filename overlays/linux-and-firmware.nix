@@ -12,6 +12,11 @@ let
       linuxPackages_rpi3 = self.linuxPackagesFor linux_rpi3;
       linuxPackages_rpi02 = self.linuxPackagesFor linux_rpi02;
     } // (with firmware; {
+      # Matching versions of the firmware to the kernel:
+      # - https://downloads.raspberrypi.com/raspios_arm64/release_notes.txt
+      # - `extra/git_hash` https://github.com/raspberrypi/firmware/ matches
+      #   the hash of the https://github.com/raspberrypi/linux
+
       # used by
       # - `modules/installer/sd-card/sd-image-{aarch64,armv7l-multiplatform,raspberrypi}`,
       # - `omxplayer` (likely broken)
