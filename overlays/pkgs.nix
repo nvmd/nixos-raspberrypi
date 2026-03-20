@@ -1,58 +1,61 @@
-final: prev: {
-
+let
+  mkFfmpegRpi =
+    final: prev: version:
+    let
+      base = prev.callPackage (../pkgs + "/ffmpeg_${version}-rpi.nix") {
+        ffmpeg = prev."ffmpeg_${version}";
+      };
+    in
+    {
+      "ffmpeg_${version}" = base;
+      "ffmpeg_${version}-headless" = base.override { ffmpegVariant = "headless"; };
+      "ffmpeg_${version}-full" = base.override { ffmpegVariant = "full"; };
+    };
+in
+final: prev:
+prev.lib.mergeAttrsList (
+  map (mkFfmpegRpi final prev) [
+    "7"
+    "8"
+  ]
+)
+// {
   ffmpeg = final.ffmpeg_8;
   ffmpeg-headless = final.ffmpeg_8-headless;
   ffmpeg-full = final.ffmpeg_8-full;
 
-  ffmpeg_7 = (
-    prev.callPackage ../pkgs/ffmpeg_7-rpi.nix {
-      ffmpeg = prev.ffmpeg_7;
-    }
-  ); # small
-  ffmpeg_7-headless = final.ffmpeg_7.override {
-    ffmpegVariant = "headless";
-  };
-  ffmpeg_7-full = final.ffmpeg_7.override {
-    ffmpegVariant = "full";
-  };
-
-  ffmpeg_8 = (
-    prev.callPackage ../pkgs/ffmpeg_8-rpi.nix {
-      ffmpeg = prev.ffmpeg_8;
-    }
-  ); # small
-  ffmpeg_8-headless = final.ffmpeg_8.override {
-    ffmpegVariant = "headless";
-  };
-  ffmpeg_8-full = final.ffmpeg_8.override {
-    ffmpegVariant = "full";
-  };
-
-
-  kodi = (prev.kodi.overrideAttrs (old: {
-    pname = old.pname + "-rpi";
-    buildInputs = old.buildInputs ++ [ final.dav1d ];
-    cmakeFlags = let
-      enableFeature = enable: feature:
-        assert (prev.lib.isString feature);
-        "-DENABLE_${feature}=${if enable then "ON" else "OFF"}";
-    in old.cmakeFlags ++ [
-      "-DENABLE_INTERNAL_DAV1D=OFF"
-    ] ++ [
-      # inspired by being hardcoded in libreelec
-      # leaving because this is potentially due to performance considerations
-      "-DENABLE_LCMS2=OFF"
-    ] ++ [
-      (enableFeature true  "NEON")
-      (enableFeature false "VAAPI")
-    ] ++ [
-      "-DENABLE_CEC=ON"
-      "-DENABLE_AVAHI=ON"
-      #-DAPP_RENDER_SYSTEM=
-    ];
-  })).override {
-    vdpauSupport = false;
-  };
+  kodi =
+    (prev.kodi.overrideAttrs (old: {
+      pname = old.pname + "-rpi";
+      buildInputs = old.buildInputs ++ [ final.dav1d ];
+      cmakeFlags =
+        let
+          enableFeature =
+            enable: feature:
+            assert (prev.lib.isString feature);
+            "-DENABLE_${feature}=${if enable then "ON" else "OFF"}";
+        in
+        old.cmakeFlags
+        ++ [
+          (enableFeature false "INTERNAL_DAV1D")
+        ]
+        ++ [
+          # inspired by being hardcoded in libreelec
+          # leaving because this is potentially due to performance considerations
+          (enableFeature false "LCMS2")
+        ]
+        ++ [
+          (enableFeature true "NEON")
+          (enableFeature false "VAAPI")
+        ]
+        ++ [
+          (enableFeature true "CEC")
+          (enableFeature true "AVAHI")
+        ];
+    })).override
+      {
+        vdpauSupport = false;
+      };
 
   kodi-gbm = final.kodi.override {
     gbmSupport = true;
@@ -63,7 +66,6 @@ final: prev: {
     # nixos defaults to "gl" for wayland, but libreelec uses "gles"
     # renderSystem = "gles";
   };
-
 
   libcamera = final.libcamera_rpi;
 

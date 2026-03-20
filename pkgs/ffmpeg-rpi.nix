@@ -9,7 +9,6 @@
   # disabled because i can't solve libepoxy not being found by ffmpeg confgure script
   withVoutEgl ? false,
   withVoutDrm ? true,
-  withSand ? true,
   version ? null,
   source ? null,
   ffmpegVariant ? "small",
@@ -37,7 +36,7 @@ in
       "--disable-mmal"
       "--enable-neon"
     ]
-    ++ lib.optionals withSand [
+    ++ [
       "--enable-sand"
     ]
     ++ lib.optionals withVoutEgl [
@@ -84,4 +83,3 @@ in
     # `av_vdpau_get_surface_parameters'' otherwise
     withVdpau = true;
   }
-
