@@ -13,10 +13,13 @@ let
     kernel-and-firmware = import ./linux-and-firmware.nix;
 
     libpisp-default-config-path = import ./libpisp-default-config-path.nix;
+
+    cross-fixes = import ./cross-fixes.nix;
   };
 
   # Ordered list of overlays applied to RPi package sets.
   # Order matters — dependency chain:
+  #   cross-fixes: must be first (fixes cross-compilation issues for all subsequent overlays)
   #   pkgs: ffmpeg/kodi/vlc/libcamera overrides (no kernel deps)
   #   bootloader: bootloader config (no kernel deps)
   #   vendor-kernel: defines linux_rpiN_vX_Y_Z kernels
@@ -24,6 +27,7 @@ let
   #   kernel-and-firmware: bundles kernels + firmware (depends on vendor-kernel + vendor-firmware)
   #   vendor-pkgs: packages that may depend on kernel/firmware selections
   rpiOverlaysList = with outputOverlays; [
+    cross-fixes
     pkgs
     bootloader
     vendor-kernel
