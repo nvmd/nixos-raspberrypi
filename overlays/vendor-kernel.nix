@@ -1,5 +1,62 @@
 let
-  # the latter value is retained when can't be merged
+  # Kernel version → supported RPi model suffixes.
+  # RPi3 is missing from 6.6.x and 6.1.x: those kernel branches dropped
+  # support for the bcm2837 SoC used in RPi 3.
+  kernelMatrix = {
+    "6_12_47" = [
+      "02"
+      "3"
+      "4"
+      "5"
+    ];
+    "6_12_44" = [
+      "02"
+      "3"
+      "4"
+      "5"
+    ];
+    "6_12_34" = [
+      "02"
+      "3"
+      "4"
+      "5"
+    ];
+    "6_12_25" = [
+      "02"
+      "3"
+      "4"
+      "5"
+    ];
+    "6_6_74" = [
+      "02"
+      "4"
+      "5"
+    ];
+    "6_6_51" = [
+      "02"
+      "4"
+      "5"
+    ];
+    "6_6_31" = [
+      "4"
+      "5"
+    ];
+    "6_6_28" = [
+      "4"
+      "5"
+    ];
+    "6_1_73" = [
+      "4"
+      "5"
+    ];
+    "6_1_63" = [
+      "4"
+      "5"
+    ];
+  };
+
+  # Deep merge that concatenates lists (for kernelPatches) and recurses into
+  # attrsets, unlike lib.recursiveUpdate which replaces attrsets wholesale.
   recursiveMerge =
     lib: attrList:
     let
@@ -43,16 +100,5 @@ let
 in
 final: prev:
 prev.lib.mergeAttrsList (
-  builtins.concatLists [
-    (mkLinuxFor prev "6_12_47" [ "02" "3" "4" "5" ])
-    (mkLinuxFor prev "6_12_44" [ "02" "3" "4" "5" ])
-    (mkLinuxFor prev "6_12_34" [ "02" "3" "4" "5" ])
-    (mkLinuxFor prev "6_12_25" [ "02" "3" "4" "5" ])
-    (mkLinuxFor prev "6_6_74" [ "02" "4" "5" ])
-    (mkLinuxFor prev "6_6_51" [ "02" "4" "5" ])
-    (mkLinuxFor prev "6_6_31" [ "4" "5" ])
-    (mkLinuxFor prev "6_6_28" [ "4" "5" ])
-    (mkLinuxFor prev "6_1_73" [ "4" "5" ])
-    (mkLinuxFor prev "6_1_63" [ "4" "5" ])
-  ]
+  builtins.concatLists (prev.lib.mapAttrsToList (mkLinuxFor prev) kernelMatrix)
 )
