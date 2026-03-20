@@ -49,6 +49,38 @@ let
     };
   };
 
+  # Common kernel config fixups: enforce RPi defconfig options that NixOS
+  # overrides. These restore the upstream RPi defaults for networking,
+  # preemption, and memory management.
+  commonFixupStructuredConfig = with pkgs.lib.kernel; {
+    NET_CLS_BPF = mkKernelOverride yes; # =module in nixos
+    NR_CPUS = mkKernelOverride (freeform "4"); # RPi has 4 cores; =384 in nixos
+    PREEMPT = mkKernelOverride yes;
+    # override what nixos sets in `linux/kernel/preempt.common-config.nix`
+    PREEMPT_VOLUNTARY = mkKernelOverride no;
+    CMA_SIZE_MBYTES = mkKernelOverride (freeform "5"); # RPi limited RAM; =32 in nixos
+    FB_SIMPLE = yes;
+    IP_PNP = mkKernelOverride yes;
+    IP_PNP_DHCP = yes;
+    IP_PNP_RARP = yes;
+    LOGO = mkKernelOverride yes;
+    NFS_FS = mkKernelOverride yes; # =module in nixos
+    NFS_V4 = yes; # =module in nixos
+    NLS_CODEPAGE_437 = mkKernelOverride yes; # =module in nixos
+    ROOT_NFS = yes;
+  };
+
+  # Per-SoC fixup config applied to both bcm2711 (RPi4) and bcm2712 (RPi5)
+  mkFixupStructuredConfig =
+    extra:
+    let
+      config = commonFixupStructuredConfig // extra;
+    in
+    {
+      bcm2711.aarch64 = config;
+      bcm2712.aarch64 = config;
+    };
+
   # Linux kernel version args
 
   linux_v6_12_47_argsOverride = {
@@ -79,30 +111,12 @@ let
     tag = "stable_20250428";
     srcHash = "sha256-jVvJJJP4wSJm91jOz8QMXIujjGZ+IisTMCvusxarons";
 
-    fixupStructuredConfig =
-      let
-        common = with pkgs.lib.kernel; {
-          NET_CLS_BPF = mkKernelOverride yes;
-          NR_CPUS = mkKernelOverride (freeform "4");
-          PREEMPT = mkKernelOverride yes;
-          PREEMPT_VOLUNTARY = mkKernelOverride no;
-          CMA_SIZE_MBYTES = mkKernelOverride (freeform "5");
-          CPU_FREQ_DEFAULT_GOV_ONDEMAND = yes;
-          FB_SIMPLE = yes;
-          IP_PNP = mkKernelOverride yes;
-          IP_PNP_DHCP = yes;
-          IP_PNP_RARP = yes;
-          LOGO = mkKernelOverride yes;
-          NFS_FS = mkKernelOverride yes;
-          NFS_V4 = yes;
-          NLS_CODEPAGE_437 = mkKernelOverride yes;
-          ROOT_NFS = yes;
-        };
-      in
+    fixupStructuredConfig = mkFixupStructuredConfig (
+      with pkgs.lib.kernel;
       {
-        bcm2711.aarch64 = common;
-        bcm2712.aarch64 = common;
-      };
+        CPU_FREQ_DEFAULT_GOV_ONDEMAND = yes;
+      }
+    );
   };
 
   linux_v6_6_74_argsOverride = {
@@ -138,28 +152,7 @@ let
       ir-rx51_-_pwm_apply_might_sleep
     ];
 
-    fixupStructuredConfig =
-      let
-        common = with pkgs.lib.kernel; {
-          NET_CLS_BPF = mkKernelOverride yes;
-          PREEMPT = mkKernelOverride yes;
-          PREEMPT_VOLUNTARY = mkKernelOverride no;
-          CMA_SIZE_MBYTES = mkKernelOverride (freeform "5");
-          FB_SIMPLE = yes;
-          IP_PNP = mkKernelOverride yes;
-          IP_PNP_DHCP = yes;
-          IP_PNP_RARP = yes;
-          LOGO = mkKernelOverride yes;
-          NFS_FS = mkKernelOverride yes;
-          NFS_V4 = yes;
-          NLS_CODEPAGE_437 = mkKernelOverride yes;
-          ROOT_NFS = yes;
-        };
-      in
-      {
-        bcm2711.aarch64 = common;
-        bcm2712.aarch64 = common;
-      };
+    fixupStructuredConfig = mkFixupStructuredConfig { };
   };
 
   linux_v6_6_28_argsOverride = {
