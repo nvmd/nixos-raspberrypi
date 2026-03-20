@@ -1,5 +1,6 @@
 {
-  nixos-raspberrypi,
+  nixos-raspberrypi ? null,
+  self ? nixos-raspberrypi,
   lib,
   ...
 }:
@@ -9,6 +10,6 @@
   # See also: https://github.com/nvmd/nixos-raspberrypi/issues/64
 
   nixpkgs.overlays = lib.mkBefore [
-    nixos-raspberrypi.overlays.jemalloc-page-size-16k
+    self.overlays.jemalloc-page-size-16k
   ];
 }

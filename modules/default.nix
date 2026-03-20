@@ -11,11 +11,11 @@
       ...
     }:
     import ./nixpkgs-rpi.nix {
-      nixos-raspberrypi = self;
       inherit
         config
         lib
         pkgs
+        self
         ;
     };
 
@@ -28,11 +28,11 @@
       ...
     }:
     import ./raspberrypi.nix {
-      nixos-raspberrypi = self;
       inherit
         config
         lib
         pkgs
+        self
         ;
     };
 
@@ -51,11 +51,11 @@
         ...
       }:
       import ./raspberry-pi-5 {
-        nixos-raspberrypi = self;
         inherit
           config
           lib
           pkgs
+          self
           ;
       };
     display-vc4 = import ./display-vc4.nix;
@@ -69,11 +69,11 @@
         ...
       }:
       import ./raspberry-pi-5/page-size-16k.nix {
-        nixos-raspberrypi = self;
         inherit
           config
           lib
           pkgs
+          self
           ;
       };
   };
@@ -87,11 +87,11 @@
         ...
       }:
       import ./raspberry-pi-4.nix {
-        nixos-raspberrypi = self;
         inherit
           config
           lib
           pkgs
+          self
           ;
       };
     display-vc4 = import ./display-vc4.nix;
@@ -109,11 +109,11 @@
         ...
       }:
       import ./raspberry-pi-3.nix {
-        nixos-raspberrypi = self;
         inherit
           config
           lib
           pkgs
+          self
           ;
       };
   };
@@ -127,11 +127,11 @@
         ...
       }:
       import ./raspberry-pi-02.nix {
-        nixos-raspberrypi = self;
         inherit
           config
           lib
           pkgs
+          self
           ;
       };
     display-vc4 = import ./display-vc4.nix;
