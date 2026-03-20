@@ -1,4 +1,7 @@
-{ nixos-raspberrypi, ... }:
+{
+  nixos-raspberrypi,
+  ...
+}:
 
 {
   nixpkgs.overlays = [
@@ -25,3 +28,4 @@
     })
   ];
 }
+

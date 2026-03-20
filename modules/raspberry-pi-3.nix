@@ -1,4 +1,9 @@
-{ nixos-raspberrypi, lib, pkgs, ... }:
+{
+  nixos-raspberrypi,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   imports = [ ./raspberrypi.nix ];
@@ -11,3 +16,4 @@
 
   boot.kernelPackages = lib.mkDefault nixos-raspberrypi.packages.${pkgs.stdenv.hostPlatform.system}.linuxPackages_rpi3;
 }
+

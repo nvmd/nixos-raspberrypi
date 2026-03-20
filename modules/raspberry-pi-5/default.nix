@@ -1,4 +1,9 @@
-{ nixos-raspberrypi, lib, pkgs, ... }:
+{
+  nixos-raspberrypi,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   imports = [ ../raspberrypi.nix ];
@@ -14,3 +19,4 @@
     "nvme" # nvme drive connected with pcie
   ];
 }
+

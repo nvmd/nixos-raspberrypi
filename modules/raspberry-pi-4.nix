@@ -1,4 +1,9 @@
-{ nixos-raspberrypi, lib, pkgs, ... }:
+{
+  nixos-raspberrypi,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   imports = [ ./raspberrypi.nix ];
@@ -14,3 +19,4 @@
     "nvme" # cm4 may have nvme drive connected with pcie
   ];
 }
+

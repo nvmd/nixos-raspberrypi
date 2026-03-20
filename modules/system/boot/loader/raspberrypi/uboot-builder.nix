@@ -1,8 +1,9 @@
-{ pkgs
-, ubootPackage
-, ubootBinName ? "u-boot-rpi.bin"
-, extlinuxConfBuilder
-, firmwareBuilder
+{
+  pkgs,
+  ubootPackage,
+  ubootBinName ? "u-boot-rpi.bin",
+  extlinuxConfBuilder,
+  firmwareBuilder,
 }:
 
 pkgs.replaceVarsWith {
