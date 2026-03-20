@@ -1,5 +1,9 @@
 # nixos-raspberrypi
 
+<p align="center">
+  <img src="docs/raspberry-pi-logo.png" alt="Raspberry Pi" width="400">
+</p>
+
 Unopinionated Nix flake for infrastructure, vendor packages, kernel, and some optimized third-party packages for [NixOS](https://nixos.org/) running on Raspberry Pi devices.
 
 It will let you deploy [NixOS](https://nixos.org/) fully declaratively in one step with tools like [nixos-anywhere](https://github.com/nix-community/nixos-anywhere/) (note: `kexec` is, unfortunately, not supported)
