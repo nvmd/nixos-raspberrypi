@@ -6,9 +6,58 @@
 
 Unopinionated Nix flake for infrastructure, vendor packages, kernel, and some optimized third-party packages for [NixOS](https://nixos.org/) running on Raspberry Pi devices.
 
-It will let you deploy [NixOS](https://nixos.org/) fully declaratively in one step with tools like [nixos-anywhere](https://github.com/nix-community/nixos-anywhere/) (note: `kexec` is, unfortunately, not supported)
+## Table of Contents
 
-## Provides bootloader infrastructure
+- [Quick Start](#quick-start)
+- [Features](#features)
+- [Usage](#usage)
+- [Installer Images](#installer-images)
+- [Deployment](#deployment)
+- [Alternative Ways to Get Individual Packages](#alternative-ways-to-get-individual-packages)
+- [Project Structure](#project-structure)
+- [Design Goals](#design-goals)
+
+## Quick Start
+
+### Prerequisites
+
+- [Nix](https://nixos.org/download/) installed with flakes enabled
+- For native builds: an aarch64 machine (Raspberry Pi running NixOS, or any aarch64-linux host)
+- For cross-compilation: an x86_64 Linux machine
+
+### Option A: Build on a Raspberry Pi (native, aarch64)
+
+```bash
+# Clone the repository
+git clone https://github.com/nvmd/nixos-raspberrypi.git
+cd nixos-raspberrypi
+
+# Build an installer image (choose your board)
+nix build .#installerImages.rpi5
+
+# Flash the resulting image to an SD card
+# (image path will be in ./result/)
+```
+
+### Option B: Cross-compile from x86_64/AMD64
+
+```bash
+# Clone the repository
+git clone https://github.com/nvmd/nixos-raspberrypi.git
+cd nixos-raspberrypi
+
+# Cross-compile an installer image from x86_64
+nix build .#installerImagesCross.x86_64-linux.rpi5
+
+# Flash the resulting image to an SD card
+# (image path will be in ./result/)
+```
+
+Boot the Raspberry Pi from the flashed SD card. Randomly generated connection credentials will be displayed on the screen once the system is booted.
+
+## Features
+
+### Bootloader infrastructure
 
 Manages Raspberry Pi firmware partition `/boot/firmware` (the path is configurable with `boot.loader.raspberry-pi.firmwarePath`).
 
@@ -19,8 +68,7 @@ Supported boot methods (configurable with `boot.loader.raspberry-pi.bootloader`)
 - `uboot`, default bootloader for all other boards
 - `kernel`, new generation of `kernelboot`, supporting multiple NixOS generations (see #60), default for RPi5 sd-image/installer images, _recommended_ for new installations.
 
-
-## Provides vendor kernel packages with matched firmware
+### Vendor kernel packages with matched firmware
 
 `pkgs.linuxAndFirmware.default` contains compatible:
 ```nix
@@ -29,15 +77,37 @@ raspberrypifw                   # Raspberry firmware, device trees (DTBs), devic
 raspberrypiWirelessFirmware     # wireless firmware
 ```
 
-Latest stable version compatible with the board is selected in the flake module by default.
+Two kernel channels are available:
+- **stable** (= default) — well-tested kernel version, suitable for production use
+- **latest** — newest available kernel, bumped first when new versions are added
 
-## Provides 3rd-party optimised packages
+Both are accessible via `pkgs.linuxAndFirmware.stable` and `pkgs.linuxAndFirmware.latest`, and as flake package outputs with `_stable` / `_latest` suffixes (e.g. `linux_rpi5_stable`, `linux_rpi5_latest`).
 
-overlays, containing vendor, and optimized packages, like `libcamera`, `ffmpeg`, etc.
+### 3rd-party optimised packages
 
-# Usage
+Overlays containing vendor and optimized packages, like `libcamera`, `vlc`, `kodi`, and RPi-optimized FFmpeg builds from the [official Raspberry Pi fork](https://github.com/jc-kynesim/rpi-ffmpeg) with hardware-accelerated video decode via V4L2 and zero-copy GPU pipelines. See the [FFmpeg documentation](docs/ffmpeg.md) for details.
 
-## Adding flake input
+### Cross-compilation support
+
+Build Raspberry Pi packages and installer images directly from your x86_64 (AMD64) workstation without QEMU emulation:
+
+```bash
+# Cross-compile RPi 5 kernel from x86_64:
+nix build .#packages.x86_64-linux.linux_rpi5
+
+# Cross-compile stable/latest kernel variants:
+nix build .#packages.x86_64-linux.linux_rpi5_stable
+nix build .#packages.x86_64-linux.linux_rpi5_latest
+
+# Cross-compile RPi 5 installer image:
+nix build .#installerImagesCross.x86_64-linux.rpi5
+```
+
+This uses native cross-compiler toolchains for fast builds. Supported build hosts are `x86_64-linux` and `aarch64-linux` — the two architectures with well-tested nixpkgs cross-compilation and Hydra binary cache coverage. See the [Cross-Compilation Guide](docs/cross-compilation.md) for detailed documentation.
+
+## Usage
+
+### Adding the flake input
 
 ```nix
 inputs = {
@@ -56,9 +126,9 @@ nixConfig = {
 };
 ```
 
-## Using the flake to create NixOS configuration
+### Creating a NixOS configuration
 
-There're helper functions intended to be used as a drop-in replacement for
+There are helper functions intended to be used as a drop-in replacement for
 `nixpkgs.lib.nixosSystem`:
 
 - `nixos-raspberrypi.lib.nixosSystem`
@@ -103,11 +173,11 @@ nixosConfigurations.rpi5-demo = nixos-raspberrypi.lib.nixosSystem {
 };
 ```
 
-See also: <https://github.com/nvmd/nixos-raspberrypi-demo>, [Installers and examples](#installer-configurations-and-configuration-examples).
+See also: <https://github.com/nvmd/nixos-raspberrypi-demo>, [Installer Images](#installer-images).
 
-## Choosing modules corresponding to your hardware
+### Choosing hardware modules
 
-See `flake.nix`, `nixosModules` for a full list of configuration modules for your hardware.
+See `modules/default.nix` for a full list of configuration modules for your hardware.
 Here is the list of the most important:
 
 ```nix
@@ -133,7 +203,7 @@ imports = with nixos-raspberrypi.nixosModules; [
 ];
 ```
 
-## Configure the bootloader and firmware (`config.txt`)
+### Configuring the bootloader and firmware (`config.txt`)
 
 Sane default configuration is provided by the base module for a corresponding Raspberry board, but further configuration is, of course, possible:
 
@@ -141,7 +211,7 @@ Configuration options for the bootloader are in `boot.loader.raspberry-pi` (defi
 
 Raspberry's `config.txt` can be configured with `hardware.raspberry-pi.config` options, see `modules/configtxt.nix` as an example (this is the default configuration as provided by RaspberryPi OS, but translated to nix format).
 
-## Options for advanced usage
+### Advanced usage
 
 Options for a more fine-grained control:
 
@@ -150,18 +220,6 @@ Options for a more fine-grained control:
 - Use regular `nixpkgs.lib.nixosSystem` importing the modules manually, see
 below
 
-> [!IMPORTANT]
-> When using `nixpkgs.lib.nixosSystem` directly you **must** pass
-> `nixos-raspberrypi` in `specialArgs` so that board modules can find the
-> flake reference:
-> ```nix
-> nixpkgs.lib.nixosSystem {
->   specialArgs = { inherit (inputs) nixos-raspberrypi; };
->   modules = [ ... ];
-> };
-> ```
-> The `nixos-raspberrypi.lib.nixosSystem` helpers do this automatically.
-
 ```nix
 imports = with nixos-raspberrypi.nixosModules; [
 
@@ -169,33 +227,33 @@ imports = with nixos-raspberrypi.nixosModules; [
   nixos-raspberrypi.lib.inject-overlays
 
   # Binary cache with prebuilt packages for the currently locked `nixpkgs`,
-  # see `devshells/nix-build-to-cachix.nix` for a list
+  # see `dev-shells/nix-build-to-cachix.nix` for a list
   trusted-nix-caches
 
   # Optional: All RPi and RPi-optimised packages to be available in `pkgs.rpi`
   nixpkgs-rpi
 
-  # Optonal: add overlays with optimised packages into the global scope
-  # provides: ffmpeg_{4,6,7}, kodi, libcamera, vlc, etc.
+  # Optional: add overlays with optimised packages into the global scope
+  # provides: ffmpeg_{7,8}, kodi, libcamera, vlc, etc.
   # This overlay may cause lots of rebuilds (however many
   #  packages should be available from the binary cache)
   nixos-raspberrypi.lib.inject-overlays-global
 ];
 ```
 
-# Installer configurations
+## Installer Images
 
 The flake provides installation SD card images for Raspberry Pi Zero2, 3, 4, and 5, based on <https://github.com/nix-community/nixos-images>. They have several advantages over the "standard" ones, making the installation more user-friendly: mDNS enabled, `iwd` for easier wlan configuration, etc.
 
 Note: these images are mutable, i.e. they're suitable to be used both as an installation media, and as a ready to use system on the sd-card. The partition table will be expanded to use all the available space during the first boot.
-This can helpful for boards with a single storage device option, like RPi Zero/Zero 2.
+This can be helpful for boards with a single storage device option, like RPi Zero/Zero 2.
 
 > [!TIP]
-> installer images use new generational bootloader for RPi5 by default (see #60),
+> Installer images use new generational bootloader for RPi5 by default (see #60),
 > to keep that in your configuration, set `boot.loader.raspberry-pi.bootloader = "kernel"`.
 > This is _recommended_ for new installations.
 
-See `nixosConfigurations.rpi{02,4,5}-installer` in `flake.nix`.
+See `installers/default.nix` for installer configurations (`nixosConfigurations.rpi{02,3,4,5}-installer`).
 
 SD image can be built with:
 
@@ -206,41 +264,69 @@ nix build .#installerImages.rpi4
 nix build .#installerImages.rpi5
 ```
 
+Zstd-compressed images (smaller, need to be decompressed before flashing):
+
+```
+nix build .#installerImagesZstd.rpi02
+nix build .#installerImagesZstd.rpi3
+nix build .#installerImagesZstd.rpi4
+nix build .#installerImagesZstd.rpi5
+```
+
+Flash the resulting image to an SD card (replace `/dev/sdX` with your SD card device):
+
+```bash
+sudo dd if=./result/sd-image/nixos-installer-rpi5-kernel.img of=/dev/sdX bs=10M oflag=dsync status=progress
+```
+
+For zstd-compressed images, decompress and flash in one step:
+
+```bash
+zstdcat ./result/sd-image/nixos-installer-rpi5-kernel.img.zst | sudo dd of=/dev/sdX bs=10M oflag=dsync status=progress
+```
+
+To build all installer images at once (4 models × raw + zstd-compressed = 8 images):
+
+```bash
+nix build .#checks.x86_64-linux.all-installer-images
+```
+
 Randomly generated connection credentials will be displayed on the screen, once the system is booted.
 
 Network access to Raspberry Pi Zero2 (RPi02) boards is also possible via USB Gadget/Ethernet functionality.
 
 > [!TIP]
 > You can optionally replace `# YOUR SSH PUB KEY HERE #` in `custom-user-config`
-> with your SSH public key to generate the image with your SSH key already baked in
+> (in `installers/default.nix`) with your SSH public key to generate the image with
+> your SSH key already baked in
 
-`.#nixosConfigurations.rpi{02,4,5}-installer.config.system.build.toplevel` are included in the binary cache.
-
-# NixOS configuration examples
+`.#nixosConfigurations.rpi{02,3,4,5}-installer.config.system.build.toplevel` are included in the binary cache.
 
 Sophisticated demo configurations are available in <https://github.com/nvmd/nixos-raspberrypi-demo>.
 
-Installer configurations can also double as the configuration examples.
+Installer configurations can also double as configuration examples.
 
-# Deployment
+## Deployment
 
-for example, with `nixos-anywhere` to the system running installer image (will use [disko](https://github.com/nix-community/disko/) to set the disks up):
+For example, with `nixos-anywhere` to the system running installer image (will use [disko](https://github.com/nix-community/disko/) to set the disks up):
 
 ```shell
 nixos-anywhere --flake .#<system> root@<hostname>"
 ```
 
-or, to an already running system (to change configuration of it):
+Or, to an already running system (to change configuration of it):
 
 ```shell
 nixos-rebuild switch --flake .#<system> --target-host root@<hostname>
 ```
 
-# Alternative ways to get individual packages
+It will let you deploy [NixOS](https://nixos.org/) fully declaratively in one step with tools like [nixos-anywhere](https://github.com/nix-community/nixos-anywhere/) (note: `kexec` is, unfortunately, not supported).
 
-An alternative ways to consume individual packages without overlays are:
+## Alternative Ways to Get Individual Packages
 
-- to get it directly from the flake, it will based on stable `nixpkgs` _without_ any of other optimisations transitively applied (i.e. only this particular package is optimised):
+Alternative ways to consume individual packages without overlays:
+
+- Get it directly from the flake, it will be based on stable `nixpkgs` _without_ any of other optimisations transitively applied (i.e. only this particular package is optimised):
 
 ```nix
   environment.systemPackages = [
@@ -248,9 +334,33 @@ An alternative ways to consume individual packages without overlays are:
   ];
 ```
 
-- to get it from `nixos-raspberrypi.legacyPackages.<system>`. Here all overlays are applied.
+  Kernel packages are also available with `_stable` and `_latest` suffixes (e.g. `linux_rpi5_stable`, `linux_rpi5_latest`).
 
-# Design goals
+- Get it from `nixos-raspberrypi.legacyPackages.<system>`. Here all overlays are applied.
+
+## Project Structure
+
+```
+.
+├── flake.nix              # Thin orchestrator — wires outputs from each directory
+├── lib/                   # Public library, system lists, package set constructors
+│   ├── default.nix        # Public API: nixosSystem, nixosSystemFull, nixosInstaller
+│   ├── internal.nix       # Implementation details
+│   ├── systems.nix        # Target/build system lists and iteration helpers
+│   └── pkgs.nix           # Package set constructors (native, cross, smart)
+├── modules/               # NixOS modules (bootloader, board configs, features)
+│   └── default.nix        # `nixosModules` flake output
+├── overlays/              # Nixpkgs overlays (kernel, firmware, vendor packages)
+│   └── default.nix        # Overlay definitions and canonical RPi overlay list
+├── pkgs/                  # Package definitions (kernels, ffmpeg, camera, etc.)
+│   └── default.nix        # `packages` flake output
+├── installers/            # Installer builders, nixosConfigurations, installer images
+│   └── default.nix        # Installer output definitions
+├── dev-shells/            # `devShells` flake output and helpers
+└── docs/                  # Additional documentation (cross-compilation guide)
+```
+
+## Design Goals
 
 This is basically [`boot.loader.raspberryPi` options](https://search.nixos.org/options?channel=unstable&show=boot.loader.raspberryPi), which are deprecated in nixpkgs, but updated and improved upon.
 
@@ -260,7 +370,7 @@ Design objectives:
 - reuse of the existing nixos/nixpkgs infrastructure and idiomatic approaches to the maximum extent possible
 - integration with the existing nixos system activation
 
-## Historical background
+### Historical background
 
 This project grew naturally out of the need to configure and extend rather great [tstat's raspberry pi support repository](https://github.com/tstat/raspberry-pi-nix), which we used for some time.
 
