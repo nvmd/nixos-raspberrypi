@@ -1,0 +1,201 @@
+{ pkgs, ... }:
+
+let
+  # Default priority is 100 for common kernel options (see common-config.nix
+  # file), we need something lower to override them, but we still want users to
+  # override options if they need using lib.mkForce (that has 50 priority)
+  mkKernelOverride = pkgs.lib.mkOverride 90;
+
+  # Patches
+
+  # are drm-rp1-depends-on-instead-of-select-MFD_RP1 and
+  # iommu-bcm2712-don-t-allow-building-as-module relevant only for RPi3?
+  # see https://github.com/NixOS/nixpkgs/commit/bb51848e23465846f5823d1bacbed808a4469fcd
+  drm-rp1-depends-on-instead-of-select-MFD_RP1 = {
+    # Fix "WARNING: unmet direct dependencies detected for MFD_RP1", and
+    # subsequent build failure.
+    # https://github.com/NixOS/nixpkgs/pull/268280#issuecomment-1911839809
+    # https://github.com/raspberrypi/linux/pull/5900
+    name = "drm-rp1-depends-on-instead-of-select-MFD_RP1.patch";
+    patch = pkgs.fetchpatch {
+      url = "https://github.com/peat-psuwit/rpi-linux/commit/6de0bb51929cd3ad4fa27b2a421a2af12e6468f5.patch";
+      hash = "sha256-9pHcbgWTiztu48SBaLPVroUnxnXMKeCGt5vEo9V8WGw=";
+    };
+  };
+  iommu-bcm2712-don-t-allow-building-as-module = {
+    # Fix `ERROR: modpost: missing MODULE_LICENSE() in <...>/bcm2712-iommu.o`
+    # by preventing such code from being built as module.
+    # https://github.com/NixOS/nixpkgs/pull/284035#issuecomment-1913015802
+    # https://github.com/raspberrypi/linux/pull/5910
+    name = "iommu-bcm2712-don-t-allow-building-as-module.patch";
+    patch = pkgs.fetchpatch {
+      url = "https://github.com/peat-psuwit/rpi-linux/commit/693a5e69bddbcbe1d1b796ebc7581c3597685b1b.patch";
+      hash = "sha256-8BYYQDM5By8cTk48ASYKJhGVQnZBIK4PXtV70UtfS+A=";
+    };
+  };
+
+  gpio-pwm_-_pwm_apply_might_sleep = {
+    name = "gpio-pwm_-_pwm_apply_might_sleep.patch";
+    patch = pkgs.fetchpatch {
+      url = "https://github.com/peat-psuwit/rpi-linux/commit/879f34b88c60dd59765caa30576cb5bfb8e73c56.patch";
+      hash = "sha256-HlOkM9EFmlzOebCGoj7lNV5hc0wMjhaBFFZvaRCI0lI=";
+    };
+  };
+  ir-rx51_-_pwm_apply_might_sleep = {
+    name = "ir-rx51_-_pwm_apply_might_sleep.patch";
+    patch = pkgs.fetchpatch {
+      url = "https://github.com/peat-psuwit/rpi-linux/commit/23431052d2dce8084b72e399fce82b05d86b847f.patch";
+      hash = "sha256-UDX/BJCJG0WVndP/6PbPK+AZsfU3vVxDCrpn1kb1kqE=";
+    };
+  };
+
+  # Common kernel config fixups: enforce RPi defconfig options that NixOS
+  # overrides. These restore the upstream RPi defaults for networking,
+  # preemption, and memory management.
+  commonFixupStructuredConfig = with pkgs.lib.kernel; {
+    NET_CLS_BPF = mkKernelOverride yes; # =module in nixos
+    NR_CPUS = mkKernelOverride (freeform "4"); # RPi has 4 cores; =384 in nixos
+    PREEMPT = mkKernelOverride yes;
+    # override what nixos sets in `linux/kernel/preempt.common-config.nix`
+    PREEMPT_VOLUNTARY = mkKernelOverride no;
+    CMA_SIZE_MBYTES = mkKernelOverride (freeform "5"); # RPi limited RAM; =32 in nixos
+    FB_SIMPLE = yes;
+    IP_PNP = mkKernelOverride yes;
+    IP_PNP_DHCP = yes;
+    IP_PNP_RARP = yes;
+    LOGO = mkKernelOverride yes;
+    NFS_FS = mkKernelOverride yes; # =module in nixos
+    NFS_V4 = yes; # =module in nixos
+    NLS_CODEPAGE_437 = mkKernelOverride yes; # =module in nixos
+    ROOT_NFS = yes;
+  };
+
+  # Per-SoC fixup config applied to both bcm2711 (RPi4) and bcm2712 (RPi5)
+  mkFixupStructuredConfig =
+    extra:
+    let
+      config = commonFixupStructuredConfig // extra;
+    in
+    {
+      bcm2711.aarch64 = config;
+      bcm2712.aarch64 = config;
+    };
+
+  # Linux kernel version args
+
+  linux_v6_12_47_argsOverride = {
+    # https://github.com/raspberrypi/linux/releases/tag/stable_20250916
+    modDirVersion = "6.12.47";
+    tag = "stable_20250916";
+    srcHash = "sha256-HG8Oc04V2t54l0SOn4gKmNJWQUrZfjWusgKcWvx74H0=";
+  };
+
+  linux_v6_12_44_argsOverride = {
+    modDirVersion = "6.12.44";
+    tag = "unstable_20250829";
+    rev = "6c61955254d5c1af6687e79b1de4db7e76c9ff68"; # 6.12.44
+    srcHash = "sha256-5v28FioaPYSV6HYGiJn4X+PZ7byOPDCVKZfU0JukV3A=";
+  };
+
+  linux_v6_12_34_argsOverride = {
+    # https://github.com/raspberrypi/linux/releases/tag/stable_20250702
+    modDirVersion = "6.12.34";
+    tag = "stable_20250702"; # 8f77e03530f65209a377d25023e912b288e039cd
+    srcHash = "sha256-lK0esjFhLvtBbyddMfa1H7ZcBbcOm2ygor338ZT5VpI=";
+  };
+
+  linux_v6_12_25_argsOverride = {
+    # https://github.com/raspberrypi/linux/releases/tag/stable_20250428
+    # this version seems to be released as a part of "2025-04-30"
+    modDirVersion = "6.12.25";
+    tag = "stable_20250428";
+    srcHash = "sha256-jVvJJJP4wSJm91jOz8QMXIujjGZ+IisTMCvusxarons";
+
+    fixupStructuredConfig = mkFixupStructuredConfig (
+      with pkgs.lib.kernel;
+      {
+        CPU_FREQ_DEFAULT_GOV_ONDEMAND = yes;
+      }
+    );
+  };
+
+  linux_v6_6_74_argsOverride = {
+    # https://github.com/raspberrypi/linux/releases/tag/stable_20250127
+    modDirVersion = "6.6.74";
+    tag = "stable_20250127";
+    srcHash = "sha256-17PrkPUGBKU+nO40OP+O9dzZeCfRPlKnnk/PJOGamU8=";
+  };
+
+  linux_v6_6_51_argsOverride = {
+    # https://github.com/raspberrypi/linux/releases/tag/stable_20240529
+    modDirVersion = "6.6.51";
+    tag = "stable_20241008";
+    srcHash = "sha256-phCxkuO+jUGZkfzSrBq6yErQeO2Td+inIGHxctXbD5U=";
+  };
+
+  linux_v6_6_31_argsOverride = {
+    # https://github.com/raspberrypi/linux/releases/tag/stable_20240529
+    modDirVersion = "6.6.31";
+    tag = "stable_20240529";
+    srcHash = "sha256-UWUTeCpEN7dlFSQjog6S3HyEWCCnaqiUqV5KxCjYink=";
+
+    structuredExtraConfig = with pkgs.lib.kernel; {
+      # Workaround https://github.com/raspberrypi/linux/issues/6198
+      # Needed because NixOS 24.05+ sets DRM_SIMPLEDRM=y which pulls in
+      # DRM_KMS_HELPER=y.
+      BACKLIGHT_CLASS_DEVICE = yes;
+    };
+    kernelPatches = [
+      # Fix compilation errors due to incomplete patch backport.
+      # https://github.com/raspberrypi/linux/pull/6223
+      gpio-pwm_-_pwm_apply_might_sleep
+      ir-rx51_-_pwm_apply_might_sleep
+    ];
+
+    fixupStructuredConfig = mkFixupStructuredConfig { };
+  };
+
+  linux_v6_6_28_argsOverride = {
+    # https://github.com/raspberrypi/linux/releases/tag/stable_20240423
+    modDirVersion = "6.6.28";
+    tag = "stable_20240423";
+    srcHash = "sha256-mlsDuVczu0e57BlD/iq7IEEluOIgqbZ+W4Ju30E/zhw=";
+    structuredExtraConfig = with pkgs.lib.kernel; {
+      GPIO_PWM = no;
+    };
+  };
+
+  linux_v6_1_73_argsOverride = {
+    # https://github.com/raspberrypi/linux/releases/tag/stable_20240124
+    modDirVersion = "6.1.73";
+    tag = "stable_20240124";
+    srcHash = "sha256-P4ExzxWqZj+9FZr9U2tmh7rfs/3+iHEv0m74PCoXVuM=";
+    kernelPatches = [
+      drm-rp1-depends-on-instead-of-select-MFD_RP1
+      iommu-bcm2712-don-t-allow-building-as-module
+    ];
+  };
+
+  linux_v6_1_63_argsOverride = {
+    # https://github.com/raspberrypi/linux/releases/tag/stable_20231123
+    modDirVersion = "6.1.63";
+    tag = "stable_20231123";
+    srcHash = "sha256-4Rc57y70LmRFwDnOD4rHoHGmfxD9zYEAwYm9Wvyb3no=";
+    kernelPatches = [
+      drm-rp1-depends-on-instead-of-select-MFD_RP1
+      iommu-bcm2712-don-t-allow-building-as-module
+    ];
+  };
+in
+{
+  "6_12_47" = linux_v6_12_47_argsOverride;
+  "6_12_44" = linux_v6_12_44_argsOverride;
+  "6_12_34" = linux_v6_12_34_argsOverride;
+  "6_12_25" = linux_v6_12_25_argsOverride;
+  "6_6_74" = linux_v6_6_74_argsOverride;
+  "6_6_51" = linux_v6_6_51_argsOverride;
+  "6_6_31" = linux_v6_6_31_argsOverride;
+  "6_6_28" = linux_v6_6_28_argsOverride;
+  "6_1_73" = linux_v6_1_73_argsOverride;
+  "6_1_63" = linux_v6_1_63_argsOverride;
+}

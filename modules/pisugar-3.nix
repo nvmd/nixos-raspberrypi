@@ -1,35 +1,48 @@
-{ config, pkgs, ... }:
-
 {
-  nixpkgs.overlays = [
-    (self: super: {
-      linuxPackages = super.linuxPackages.extend (lpself: lpsuper: {
-        pisugar3 = super.linuxPackages.callPackage ../pkgs/pisugar-kmod.nix {
-          pisugarVersion = "3";
-        };
-      });
-    })
-  ];
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
-  boot = {
-    extraModulePackages = with config.boot.kernelPackages; [
-      pisugar3-kmod
-    ];
+let
+  cfg = config.hardware.raspberry-pi.pisugar3;
+in
+{
+  options.hardware.raspberry-pi.pisugar3 = {
+    i2cBus = lib.mkOption {
+      type = lib.types.str;
+      default = "0x01";
+      description = "I2C bus address for the PiSugar 3 battery module.";
+    };
 
-    kernelModules = [ "pisugar_3_battery" ];
-
-    extraModprobeConfig = let
-      i2cBus = "0x01";
-      i2cAddr = "0x57";
-    in ''
-      options pisugar_3_battery i2c_bus=${i2cBus} i2c_addr=${i2cAddr}
-    '';
+    i2cAddr = lib.mkOption {
+      type = lib.types.str;
+      default = "0x57";
+      description = "I2C device address for the PiSugar 3 battery module.";
+    };
   };
 
-  hardware.raspberry-pi.config.all.base-dt-params = {
-    i2c = {
-      enable = true;
-      value = "on";
+  config = {
+    boot = {
+      extraModulePackages = [
+        (config.boot.kernelPackages.callPackage ../pkgs/pisugar-kmod.nix {
+          pisugarVersion = "3";
+        })
+      ];
+
+      kernelModules = [ "pisugar_3_battery" ];
+
+      extraModprobeConfig = ''
+        options pisugar_3_battery i2c_bus=${cfg.i2cBus} i2c_addr=${cfg.i2cAddr}
+      '';
+    };
+
+    hardware.raspberry-pi.config.all.base-dt-params = {
+      i2c = {
+        enable = true;
+        value = "on";
+      };
     };
   };
 }

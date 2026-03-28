@@ -1,8 +1,14 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   environment.systemPackages = with pkgs; [
-    bluez bluez-tools
+    bluez
+    bluez-tools
   ];
 
   hardware = {

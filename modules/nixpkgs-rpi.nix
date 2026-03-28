@@ -1,25 +1,29 @@
-{ nixos-raspberrypi, ... }:
+{
+  nixos-raspberrypi ? null,
+  self ? nixos-raspberrypi,
+  ...
+}:
 
 {
   nixpkgs.overlays = [
     (final: prev: {
-      rpi = import nixos-raspberrypi.inputs.nixpkgs {
+      rpi = import self.inputs.nixpkgs {
         inherit (prev.stdenv.hostPlatform) system;
         config = {
           inherit (prev.config) allowUnfree allowUnfreePredicate;
         };
 
         overlays = [
-          nixos-raspberrypi.overlays.bootloader
+          self.overlays.bootloader
 
-          nixos-raspberrypi.overlays.pkgs
+          self.overlays.pkgs
 
-          nixos-raspberrypi.overlays.vendor-pkgs
+          self.overlays.vendor-pkgs
 
-          nixos-raspberrypi.overlays.vendor-firmware
-          nixos-raspberrypi.overlays.vendor-kernel
+          self.overlays.vendor-firmware
+          self.overlays.vendor-kernel
 
-          nixos-raspberrypi.overlays.kernel-and-firmware
+          self.overlays.kernel-and-firmware
         ];
       };
     })
