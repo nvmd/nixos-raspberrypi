@@ -31,7 +31,7 @@
   boot.consoleLogLevel = lib.mkDefault 7;
   # https://github.com/raspberrypi/firmware/issues/1539#issuecomment-784498108
   # https://github.com/RPi-Distro/pi-gen/blob/master/stage1/00-boot-files/files/cmdline.txt
-  boot.kernelParams = [ "console=serial0,115200n8" "console=tty1" ];
+  boot.kernelParams = [ "console=tty1" ];
 
   boot.initrd.availableKernelModules = [
     "xhci_pci"
