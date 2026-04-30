@@ -6,7 +6,6 @@ let
 
   ubootBinName = if isAarch64 then "u-boot-rpi-arm64.bin" else "u-boot-rpi.bin";
 
-
   mkBootloader = pkgs: bootloader {
     inherit pkgs;
     inherit (cfg) nixosGenerationsDir;
@@ -43,6 +42,7 @@ let
       path = pkgs.lib.makeBinPath [
         pkgs.coreutils
         pkgs.gnused
+        pkgs.jq
       ];
 
       # NixOS-generations -independent
@@ -62,9 +62,11 @@ let
       inherit (pkgs) bash;
       path = pkgs.lib.makeBinPath [
         pkgs.coreutils
+        pkgs.jq
       ];
 
       installDeviceTree = deviceTreeInstaller;
+      initrdSecrets = pkgs.writeText "raspberrypi-initrd-secrets.sh" (builtins.readFile ./initrd-secrets.sh);
     };
   });
 
@@ -121,7 +123,7 @@ let
   };
 
   # Builders exposed via populateCmd, which run on the build architecture
-  populateFirmwareBuilder = import  ./firmware-builder.nix {
+  populateFirmwareBuilder = import ./firmware-builder.nix {
     pkgs = pkgs.buildPackages;
     configTxt = cfg.configTxtPackage;
     firmware = cfg.firmwarePackage;
@@ -179,14 +181,17 @@ let
       firmware = "${populateKernelbootBuilder}";
       boot = "${populateKernelbootBuilder}";
     };
-    kernel = let cmd = lib.concatStringsSep " " [
-      "${mkBootloader pkgs.buildPackages}"
-      "-g ${toString cfg.configurationLimit}"
-    ];
-    in {
-      firmware = "${cmd}";
-      boot = "${cmd}";
-    };
+    kernel =
+      let
+        cmd = lib.concatStringsSep " " [
+          "${mkBootloader pkgs.buildPackages}"
+          "-g ${toString cfg.configurationLimit}"
+        ];
+      in
+      {
+        firmware = "${cmd}";
+        boot = "${cmd}";
+      };
   };
 in
 
@@ -257,8 +262,9 @@ in
       };
 
       useGenerationDeviceTree = lib.mkOption {
-        default = if cfg.bootloader == "kernel" then true
-                  else false;  # generic-extlinux-compatible defaults to `true`
+        default =
+          if cfg.bootloader == "kernel" then true
+          else false; # generic-extlinux-compatible defaults to `true`
         type = lib.types.bool;
         description = ''
           Whether to use device tree supplied by:
@@ -411,17 +417,20 @@ in
           The "-legacy-unsupported" suffix will silence this warning until the final deletion.
         '';
 
-      assertions = let
-        supportAarch64 = [ "02" "3" "4" "5" ];
-      in [{
-        assertion = !pkgs.stdenv.hostPlatform.isAarch64
-                    || lib.elem cfg.variant supportAarch64;
-        message = ''
-          Only Raspberry Pi versions
-          ${lib.concatStringsSep ", " supportAarch64} support aarch64.
-        '';
-      }];
+      assertions =
+        let
+          supportAarch64 = [ "02" "3" "4" "5" ];
+        in
+        [{
+          assertion = !pkgs.stdenv.hostPlatform.isAarch64
+            || lib.elem cfg.variant supportAarch64;
+          message = ''
+            Only Raspberry Pi versions
+            ${lib.concatStringsSep ", " supportAarch64} support aarch64.
+          '';
+        }];
       boot.loader.grub.enable = false;
+      boot.loader.supportsInitrdSecrets = true;
       boot.loader.raspberry-pi.firmwarePopulateCmd = populateCmds.${cfg.bootloader}.firmware;
       boot.loader.raspberry-pi.bootPopulateCmd = populateCmds.${cfg.bootloader}.boot;
     })
@@ -461,14 +470,16 @@ in
           };
         };
       };
-      hardware.raspberry-pi.extra-config = let
-        # https://www.raspberrypi.com/documentation/computers/config_txt.html#initramfs
-        ramfsfile = "initrd";
-        ramfsaddr = "followkernel"; # same as 0 = "after the kernel image"
-      in ''
-        [all]
-        initramfs ${ramfsfile} ${ramfsaddr}
-      '';
+      hardware.raspberry-pi.extra-config =
+        let
+          # https://www.raspberrypi.com/documentation/computers/config_txt.html#initramfs
+          ramfsfile = "initrd";
+          ramfsaddr = "followkernel"; # same as 0 = "after the kernel image"
+        in
+        ''
+          [all]
+          initramfs ${ramfsfile} ${ramfsaddr}
+        '';
 
       system = {
         build.installBootLoader = builder.${cfg.bootloader};

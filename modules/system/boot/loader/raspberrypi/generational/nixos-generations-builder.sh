@@ -1,6 +1,6 @@
 #! @bash@/bin/sh -e
 
-# shellcheck disable=SC3043,SC3044,SC3054
+# shellcheck shell=bash disable=SC2012,SC2239
 
 shopt -s nullglob
 
@@ -44,7 +44,7 @@ addEntry() {
     # For "default" generation: make backup and then replace with the new
     # "default", minimizing the time when where isn't any "default" generation
     # directory
-    if ! [ -e $dst ] || [ "$generationName" = "default" ]; then
+    if ! [ -e "$dst" ] || [ "$generationName" = "default" ]; then
         local dstTmp="$dst.tmp.$$"
         mkdir -p "$dstTmp" || true
 
@@ -63,7 +63,7 @@ removeObsoleteGenerations() {
     local path="$1"
 
     echo "removing obsolete generations in $path..."
-    for gen in $path/*; do
+    for gen in "$path"/*; do
         if ! [ "${activeGenerations["$(basename "$gen")"]}" = 1 ]; then
             echo "* $gen is obsolete"
             rm -vrf "$gen"
@@ -93,7 +93,7 @@ addAllEntries() {
             link=/nix/var/nix/profiles/system-$generation-link
             addEntry "$link" "${generation}-default" "$gensDir"
             for specialisation in $(
-                ls /nix/var/nix/profiles/system-$generation-link/specialisation \
+                ls "/nix/var/nix/profiles/system-$generation-link/specialisation" \
                 | sort -n -r); do
                 link=/nix/var/nix/profiles/system-$generation-link/specialisation/$specialisation
                 addEntry "$link" "${generation}-${specialisation}" "$gensDir"
@@ -112,8 +112,10 @@ usage() {
 
 default=                # Default configuration
 numGenerations=0        # Number of other generations to keep (kernel, initrd, DTBs, overlays)
+boottarget=
+fwtarget=
 
-echo "$0: $@"
+echo "$0: $*"
 while getopts "c:b:g:f:" opt; do
     case "$opt" in
         c) default="$OPTARG" ;;
