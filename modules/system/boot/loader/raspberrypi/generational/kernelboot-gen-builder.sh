@@ -1,10 +1,13 @@
 #! @bash@/bin/sh -e
 
-# shellcheck disable=SC3037,SC3043,SC3044
+# shellcheck shell=bash disable=SC2239
 
 shopt -s nullglob
 
 export PATH=/empty:@path@
+
+# shellcheck source=modules/system/boot/loader/raspberrypi/initrd-secrets.sh
+. @initrdSecrets@
 
 copyForced() {
     local src="$1"
@@ -28,14 +31,17 @@ addEntry() {
 
     echo -n "kernel..."
 
-    local kernel="$(readlink -f "$generationPath/kernel")"
-    local initrd="$(readlink -f "$generationPath/initrd")"
+    local kernel
+    local initrd
+    kernel="$(readlink -f "$generationPath/kernel")"
+    initrd="$(readlink -f "$generationPath/initrd")"
 
     readlink -f "$generationPath" > "$genDir/system-link"
     echo "$kernel" > "$genDir/kernel-link"
 
     copyForced "$kernel" "$genDir/kernel.img"
     copyForced "$initrd" "$genDir/initrd"
+    appendInitrdSecrets "$generationPath" "$genDir/initrd" "$generationName"
     echo "$(cat "$generationPath/kernel-params") init=$generationPath/init" > "$genDir/cmdline.txt"
 
     echo -n "device tree..."
@@ -54,7 +60,7 @@ generationPath=         # Path to nixos configuration/generation
 generationName=         # Name of the generation
 target=/boot/firmware   # Target directory
 
-echo "$0: $@"
+echo "$0: $*"
 while getopts "c:n:d:" opt; do
     case "$opt" in
         c) generationPath="$OPTARG" ;;
