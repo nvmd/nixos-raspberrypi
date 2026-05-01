@@ -218,6 +218,8 @@ let
 in
 
 {
+  imports = [ ../../../../configtxt-config.nix ];
+
   options = {
 
     boot.loader.raspberry-pi = {
