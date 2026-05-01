@@ -399,6 +399,7 @@ in
           "4"
           "5"
         ];
+        default = "5";
         description = "";
       };
 
