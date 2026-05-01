@@ -397,5 +397,10 @@
           rpi5 = mkImage nixos.rpi5-installer;
         };
 
+      checks = {
+        # Because we use nixos-raspberrypi.lib.nixosSystem,
+        # only aarch64-linux is supported.
+        aarch64-linux = import ./checks/options-doc.nix { inherit inputs; };
+      };
     };
 }
