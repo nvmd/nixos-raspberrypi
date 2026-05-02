@@ -10,6 +10,37 @@ named `luks-key` and the LUKS key file is `/run/secrets/luks.key`.
 The hook pattern is covered by
 `.#checks.x86_64-linux.rpi-otp-derived-key-disko-hooks`.
 
+## Key and salt lifecycle
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant DiskoInstall@{ "type": "control" }
+    participant PreCreateHook@{ "type": "control" }
+    participant RaspberryPiOTP@{ "type": "entity" }
+    participant InstallerRun@{ "type": "entity" }
+    participant LUKSPartition@{ "type": "database" }
+    participant PostMountHook@{ "type": "control" }
+    participant TargetRoot@{ "type": "database" }
+    participant InitrdService@{ "type": "control" }
+
+    DiskoInstall->>PreCreateHook: Before formatting LUKS
+    PreCreateHook->>RaspberryPiOTP: Check OTP private key is programmed
+    PreCreateHook->>InstallerRun: Stage fresh salt and derived key in /run
+    PreCreateHook-->>DiskoInstall: Return key file path
+    DiskoInstall->>LUKSPartition: Format partition using staged key
+    DiskoInstall->>PostMountHook: After target root is mounted
+    PostMountHook->>TargetRoot: Install salt as 0400 root:root
+    PostMountHook->>InstallerRun: Remove staged salt and key
+
+    Note over InstallerRun,TargetRoot: The derived key is transient. Only the salt persists in the target root.
+
+    InitrdService->>TargetRoot: Read installed salt on later boots
+    InitrdService->>RaspberryPiOTP: Derive the same key from OTP private key + salt
+    InitrdService->>InstallerRun: Write boot-time key file in /run
+    InitrdService->>LUKSPartition: Unlock encrypted root
+```
+
 ```nix
 { config, disko, lib, pkgs, nixos-raspberrypi, ... }:
 let
