@@ -1,7 +1,7 @@
-{ lib
-, pkgs
-, mockOtpHex ? "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
-,
+{
+  lib,
+  pkgs,
+  mockOtpHex ? "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
 }:
 
 let
@@ -54,23 +54,37 @@ let
     rpi-otp-derived-key =
       (prev.callPackage ../../pkgs/raspberrypi/rpi-otp-derived-key.nix {
         rpi-otp-private-key = final.rpi-otp-private-key;
-      }).overrideAttrs (old: {
-        meta = (old.meta or { }) // {
-          platforms = lib.platforms.linux;
-        };
-      });
+      }).overrideAttrs
+        (old: {
+          meta = (old.meta or { }) // {
+            platforms = lib.platforms.linux;
+          };
+        });
     rpi-otp-derived-key-provision =
       (prev.callPackage ../../pkgs/raspberrypi/rpi-otp-derived-key-provision.nix {
         rpi-otp-private-key = final.rpi-otp-private-key;
         rpi-otp-derived-key = final.rpi-otp-derived-key;
-      }).overrideAttrs (old: {
-        meta = (old.meta or { }) // {
-          platforms = lib.platforms.linux;
-        };
-      });
+      }).overrideAttrs
+        (old: {
+          meta = (old.meta or { }) // {
+            platforms = lib.platforms.linux;
+          };
+        });
   };
 in
 {
-  persistentSaltPathForName = name: "/var/lib/rpi-otp-derived-key/salt/${otpDerivedKeyLib.saltPathComponentForName name}";
+  persistentSaltPathForName =
+    name: "/var/lib/rpi-otp-derived-key/salt/${otpDerivedKeyLib.saltPathComponentForName name}";
+  supportedRaspberryPiVariantModule = {
+    options.boot.loader.raspberry-pi.variant = lib.mkOption {
+      type = lib.types.enum [
+        "02"
+        "4"
+        "5"
+      ];
+      default = "4";
+      description = "Test-only Raspberry Pi variant option for rpi-otp-derived-key.";
+    };
+  };
   testPkgs = pkgs.extend testOverlay;
 }

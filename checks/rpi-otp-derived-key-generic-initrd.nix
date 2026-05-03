@@ -1,14 +1,20 @@
-{ lib, nixpkgs, pkgs, self }:
+{
+  lib,
+  nixpkgs,
+  pkgs,
+  self,
+}:
 
 let
   testSupport = import ./lib/rpi-otp-derived-key-test-support.nix {
     inherit lib pkgs;
   };
-  inherit (testSupport) testPkgs;
+  inherit (testSupport) supportedRaspberryPiVariantModule testPkgs;
 
   evaluated = nixpkgs.lib.nixosSystem {
     system = pkgs.stdenv.hostPlatform.system;
     modules = [
+      supportedRaspberryPiVariantModule
       self.nixosModules.rpi-otp-derived-key
       {
         nixpkgs.pkgs = testPkgs;

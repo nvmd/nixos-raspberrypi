@@ -1,16 +1,21 @@
-{ lib, pkgs, self }:
+{
+  lib,
+  pkgs,
+  self,
+}:
 
 let
   testSupport = import ./lib/rpi-otp-derived-key-test-support.nix {
     inherit lib pkgs;
   };
-  inherit (testSupport) testPkgs;
+  inherit (testSupport) supportedRaspberryPiVariantModule testPkgs;
 in
 testPkgs.testers.runNixOSTest {
   name = "rpi-otp-derived-key-before";
 
   nodes.machine = {
     imports = [
+      supportedRaspberryPiVariantModule
       self.nixosModules.rpi-otp-derived-key
     ];
 

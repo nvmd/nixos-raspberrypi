@@ -206,6 +206,9 @@ Randomly generated connection credentials will be displayed on the screen, once 
 
 Network access to Raspberry Pi Zero2 (RPi02) boards is also possible via USB Gadget/Ethernet functionality.
 
+Installer images for Raspberry Pi Zero 2, 4, and 5 include `rpi-otp-private-key`
+for provisioning or checking OTP private key state on supported hardware.
+
 > [!TIP]
 > You can optionally replace `# YOUR SSH PUB KEY HERE #` in `custom-user-config`
 > with your SSH public key to generate the image with your SSH key already baked in
@@ -293,7 +296,7 @@ OTP private key.
 `nixosModules.rpi-otp-derived-key` manages named derived-key outputs under
 `services.rpiOtpDerivedKey.secrets`. Each secret gets a persistent module-owned
 salt under `/var/lib/rpi-otp-derived-key/salt/`; losing that salt rotates the
-derived key material.
+derived key material. The module supports Raspberry Pi Zero 2, 4, and 5.
 
 ```nix
 {
