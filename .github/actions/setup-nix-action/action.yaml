@@ -1,0 +1,16 @@
+name: Setup Nix
+description: Install Nix and set up the Nix configuration
+
+runs:
+  using: composite
+  steps:
+    - name: Install Nix
+      uses: cachix/install-nix-action@v31
+      with:
+        extra_nix_config: |
+          extra-experimental-features = nix-command flakes
+
+          accept-flake-config = false
+          connect-timeout = 5
+          extra-substituters = https://nixos-raspberrypi.cachix.org
+          extra-trusted-public-keys = nixos-raspberrypi.cachix.org-1:4iMO9LXa8BqhU+Rpg6LQKiGa2lsNh/j2oiYLNOQ5sPI=

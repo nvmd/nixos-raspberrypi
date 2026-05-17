@@ -1,4 +1,10 @@
-{ config, pkgs, lib, modulesPath, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  modulesPath,
+  ...
+}:
 
 {
   imports = [
@@ -18,28 +24,32 @@
   ];
   fileSystems."/".options = [ "noatime" ];
 
-  image.baseName = let
-    cfg = config.boot.loader.raspberry-pi;
-  in "nixos-image-rpi${cfg.variant}-${cfg.bootloader}";
+  image.baseName =
+    let
+      cfg = config.boot.loader.raspberry-pi;
+    in
+    "nixos-image-rpi${cfg.variant}-${cfg.bootloader}";
 
   sdImage = {
     firmwareSize = 128;
-    populateFirmwareCommands = let
-      uboot = config.boot.loader.raspberry-pi.ubootPackage;
-      raspberrypifw = config.boot.loader.raspberry-pi.firmwarePackage;
-      configTxt = config.hardware.raspberry-pi.config-output;
-      rpifwdir = "${raspberrypifw}/share/raspberrypi/boot";
-      populateFirmware = pkgs.writeShellApplication {
-        name = "raspberry-pi-firmware";
-        text = builtins.readFile ../../system/boot/loader/raspberrypi/firmware.sh;
-      };
-    in ''
-      # Add bootloader-independent firmware files: config.txt, bootcode, DTBs
-      ${populateFirmware}/bin/raspberry-pi-firmware ${configTxt} ${rpifwdir} ${rpifwdir} firmware/
+    populateFirmwareCommands =
+      let
+        uboot = config.boot.loader.raspberry-pi.ubootPackage;
+        raspberrypifw = config.boot.loader.raspberry-pi.firmwarePackage;
+        configTxt = config.hardware.raspberry-pi.config-output;
+        rpifwdir = "${raspberrypifw}/share/raspberrypi/boot";
+        populateFirmware = pkgs.writeShellApplication {
+          name = "raspberry-pi-firmware";
+          text = builtins.readFile ../../system/boot/loader/raspberrypi/firmware.sh;
+        };
+      in
+      ''
+        # Add bootloader-independent firmware files: config.txt, bootcode, DTBs
+        ${populateFirmware}/bin/raspberry-pi-firmware ${configTxt} ${rpifwdir} ${rpifwdir} firmware/
 
-      # Add U-Boot
-      cp ${uboot}/u-boot.bin firmware/u-boot-rpi-arm64.bin
-    '';
+        # Add U-Boot
+        cp ${uboot}/u-boot.bin firmware/u-boot-rpi-arm64.bin
+      '';
     populateRootCommands = ''
       # create with a mount point for FIRMWARE
       mkdir -p ./files/boot/firmware

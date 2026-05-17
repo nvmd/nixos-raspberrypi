@@ -1,30 +1,37 @@
 let
   allFirmware = import ./firmware-sources.nix;
 
-  firmwareVersion = pkgs: attrsFor: let
-    # Gets date of the release from the `version` which is always on the
-    # last position in the list of strings splitted by version separators
-    # e.g. `1.20250915` -> `20250915`
-    cleanVersion = let
-      noDots = builtins.replaceStrings ["." "-"] ["_" "_"] attrsFor.version;
-      splittedVersion = (pkgs.lib.splitString "_" noDots);
-    in builtins.elemAt splittedVersion ((builtins.length splittedVersion) - 1);
-  in {
-    "raspberrypifw_${cleanVersion}" = pkgs.raspberrypifw.overrideAttrs (old: {
-      inherit (attrsFor) version;
-      src = pkgs.fetchFromGitHub {
-        owner = "raspberrypi";
-        repo = "firmware";
+  firmwareVersion =
+    pkgs: attrsFor:
+    let
+      # Gets date of the release from the `version` which is always on the
+      # last position in the list of strings splitted by version separators
+      # e.g. `1.20250915` -> `20250915`
+      cleanVersion =
+        let
+          noDots = builtins.replaceStrings [ "." "-" ] [ "_" "_" ] attrsFor.version;
+          splittedVersion = (pkgs.lib.splitString "_" noDots);
+        in
+        builtins.elemAt splittedVersion ((builtins.length splittedVersion) - 1);
+    in
+    {
+      "raspberrypifw_${cleanVersion}" = pkgs.raspberrypifw.overrideAttrs (old: {
+        inherit (attrsFor) version;
+        src = pkgs.fetchFromGitHub {
+          owner = "raspberrypi";
+          repo = "firmware";
 
-        # rev can be used both for rev hash and the tag
-        rev = if (attrsFor ? rev) then attrsFor.rev else attrsFor.tag;
-        hash = attrsFor.srcHash;
-      };
-    });
-  };
+          # rev can be used both for rev hash and the tag
+          rev = if (attrsFor ? rev) then attrsFor.rev else attrsFor.tag;
+          hash = attrsFor.srcHash;
+        };
+      });
+    };
 
-in final: prev:
-  prev.lib.mergeAttrsList (map (firmwareVersion prev) allFirmware) // {
+in
+final: prev:
+prev.lib.mergeAttrsList (map (firmwareVersion prev) allFirmware)
+// {
 
   raspberrypiWirelessFirmware_20251008 = prev.raspberrypiWirelessFirmware.overrideAttrs (old: {
     version = "2025-10-02";
@@ -158,14 +165,16 @@ in final: prev:
   raspberrypiWirelessFirmware_20231115 = prev.raspberrypiWirelessFirmware.overrideAttrs (old: {
     version = "unstable-2023-11-15";
     srcs = [
-      (prev.fetchFromGitHub {  # 1.2-9+rpt2 release – 20231024
+      (prev.fetchFromGitHub {
+        # 1.2-9+rpt2 release – 20231024
         name = "bluez-firmware";
         owner = "RPi-Distro";
         repo = "bluez-firmware";
         rev = "d9d4741caba7314d6500f588b1eaa5ab387a4ff5";
         hash = "sha256-CjbZ3t3TW/iJ3+t9QKEtM9NdQU7SwcUCDYuTmFEwvhU=";
       })
-      (prev.fetchFromGitHub {  # 1:20230210-5+rpt2 release - 20231115
+      (prev.fetchFromGitHub {
+        # 1:20230210-5+rpt2 release - 20231115
         name = "firmware-nonfree";
         owner = "RPi-Distro";
         repo = "firmware-nonfree";

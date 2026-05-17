@@ -13,7 +13,7 @@ Partition provisioning is integrated with bootloader activation scripts, happeni
 Supported boot methods (configurable with `boot.loader.raspberry-pi.bootloader`):
 - `kernelboot` (legacy), default for RPi5
 - `uboot`, default bootloader for all other boards
-- `kernel`, new generation of `kernelboot`, supporting multiple NixOS generations (see #60), default for RPi5 sd-image/installer images, _recommended_ for new installations.
+- `kernel`, new generation of `kernelboot`, supporting multiple NixOS generations (see [#60](https://github.com/nvmd/nixos-raspberrypi/issues/60), default for RPi5 sd-image/installer images, _recommended_ for new installations.
 
 
 ## Provides vendor kernel packages with matched firmware

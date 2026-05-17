@@ -1,5 +1,12 @@
 # version of "modulesPath + /installer/sd-card/sd-image-aarch64.nix"
-{ config, pkgs, lib, modulesPath, ... }: {
+{
+  config,
+  pkgs,
+  lib,
+  modulesPath,
+  ...
+}:
+{
   imports = [
     (modulesPath + "/profiles/base.nix")
     (modulesPath + "/installer/sd-card/sd-image.nix")
@@ -22,12 +29,15 @@
 
   # Use generation bootloader for RPi5 by default for all sd-images
   # TODO: Remove when it is default for all RPi5 installations
-  boot.loader.raspberry-pi.bootloader = lib.mkIf
-    (config.boot.loader.raspberry-pi.variant == "5") "kernel";
+  boot.loader.raspberry-pi.bootloader = lib.mkIf (
+    config.boot.loader.raspberry-pi.variant == "5"
+  ) "kernel";
 
-  image.baseName = let
-    cfg = config.boot.loader.raspberry-pi;
-  in "nixos-image-rpi${cfg.variant}-${cfg.bootloader}";
+  image.baseName =
+    let
+      cfg = config.boot.loader.raspberry-pi;
+    in
+    "nixos-image-rpi${cfg.variant}-${cfg.bootloader}";
 
   sdImage = {
     # this needs to be big enough to accomodate all kernels and initrds of previous generations
