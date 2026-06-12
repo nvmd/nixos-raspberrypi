@@ -11,14 +11,10 @@
   boot.loader.raspberry-pi = {
     variant = "4";
     bootloader = lib.mkDefault "uboot";
-    firmwarePackage =
-      lib.mkDefault
-        pkgs.rpi.raspberrypifw;
+    firmwarePackage = lib.mkDefault pkgs.rpi.raspberrypifw;
   };
 
-  boot.kernelPackages =
-    lib.mkDefault
-      pkgs.rpi.linuxPackages_rpi4;
+  boot.kernelPackages = lib.mkDefault pkgs.rpi.linuxPackages_rpi4;
   boot.initrd.availableKernelModules = [
     "nvme" # cm4 may have nvme drive connected with pcie
   ];

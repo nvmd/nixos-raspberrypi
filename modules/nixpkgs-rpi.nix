@@ -19,11 +19,9 @@
             nixos-raspberrypi.overlays.kernel-and-firmware
           ];
         }
-        // prev.lib.optionalAttrs
-          (prev.stdenv.buildPlatform.system != prev.stdenv.hostPlatform.system)
-          {
-            crossSystem = { inherit (prev.stdenv.hostPlatform) system; };
-          }
+        // prev.lib.optionalAttrs (prev.stdenv.buildPlatform.system != prev.stdenv.hostPlatform.system) {
+          crossSystem = { inherit (prev.stdenv.hostPlatform) system; };
+        }
       );
     })
   ];
