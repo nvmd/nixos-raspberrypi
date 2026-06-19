@@ -97,7 +97,11 @@ in
   }
   // (args.argsOverride or { })
 )).overrideAttrs
-  {
+  (previousAttrs: {
+    passthru = (previousAttrs.passthru or { }) // {
+      buildDTBs = previousAttrs.passthru.buildDTBs or true;
+    };
+
     postConfigure = ''
       # The v7 defconfig has this set to '-v7' which screws up our modDirVersion.
       sed -i $buildRoot/.config -e 's/^CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION=""/'
@@ -124,4 +128,4 @@ in
         overlaySrcDir="$srcs/arch/${armArch}/boot/dts/overlays"
         cp "$overlaySrcDir/README" "$out/dtbs/overlays/"
       '';
-  }
+  })
