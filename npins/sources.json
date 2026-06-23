@@ -1,0 +1,44 @@
+{
+  "pins": {
+    "argononed": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "nvmd",
+        "repo": "argononed"
+      },
+      "branch": "master",
+      "submodules": false,
+      "revision": "16dbee54d49b66d5654d228d1061246b440ef7cf",
+      "url": "https://github.com/nvmd/argononed/archive/16dbee54d49b66d5654d228d1061246b440ef7cf.tar.gz",
+      "hash": "sha256-DPNI0Dpk5aym3Baf5UbEe5GENDrSmmXVdriRSWE+rgk="
+    },
+    "nixos-images": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "nvmd",
+        "repo": "nixos-images"
+      },
+      "branch": "sdimage-installer",
+      "submodules": false,
+      "revision": "cbbd6db325775096680b65e2a32fb6187c09bbb4",
+      "url": "https://github.com/nvmd/nixos-images/archive/cbbd6db325775096680b65e2a32fb6187c09bbb4.tar.gz",
+      "hash": "sha256-LUOH27unNWbGTvZFitHonraNx0JF/55h30r9WxqrznM="
+    },
+    "nixpkgs": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "NixOS",
+        "repo": "nixpkgs"
+      },
+      "branch": "nixos-25.11",
+      "submodules": false,
+      "revision": "d6df3513510aa548c83868fd22bfddd0a8c0a0d4",
+      "url": "https://github.com/NixOS/nixpkgs/archive/d6df3513510aa548c83868fd22bfddd0a8c0a0d4.tar.gz",
+      "hash": "sha256-uJZs9Di8I6ciTp6jiojj0HzlNpBkud8ax5aT/O5aJkw="
+    }
+  },
+  "version": 8
+}
