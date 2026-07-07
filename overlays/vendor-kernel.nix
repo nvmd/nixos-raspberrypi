@@ -67,6 +67,18 @@ in
 final: prev:
 prev.lib.mergeAttrsList (
   builtins.concatLists [
+    (mkLinuxFor prev "6_18_34" [
+      "02"
+      "3"
+      "4"
+      "5"
+    ])
+    (mkLinuxFor prev "6_18_33" [
+      "02"
+      "3"
+      "4"
+      "5"
+    ])
     (mkLinuxFor prev "6_12_87" [
       "02"
       "3"

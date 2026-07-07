@@ -6,21 +6,23 @@
   fetchFromGitHub,
   cmake,
   dtc,
+  ncurses,
 }:
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "raspberrypi-utils";
-  version = "unstable-2025-11-19";
+  version = "0-unstable-2026-06-23";
 
   src = fetchFromGitHub {
     owner = "raspberrypi";
     repo = "utils";
-    rev = "6e0779b1c552976e0da2374c0325a8c9c77b6010";
-    hash = "sha256-gzcQdchmYZ8NSGDnozUK3JgEQAO5b7GCOzQeRL0nDM8";
+    rev = "a30e7c7b227d9a5e6dbedc1d343077be7ad92959";
+    hash = "sha256-ayGsH9noSrmZQ99sQ1U/wYS6l7N5LWlr2xSvuoIw/qk=";
   };
 
   buildInputs = [
     dtc # dtmerge depends on libfdt
+    ncurses
   ];
 
   nativeBuildInputs = [ cmake ];

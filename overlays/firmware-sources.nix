@@ -2,6 +2,12 @@
 # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/os-specific/linux/firmware/raspberrypi/default.nix
 [
   {
+    # https://github.com/raspberrypi/firmware/releases/tag/1.20260521
+    version = "1.20260521";
+    tag = "1.20260521";
+    srcHash = "sha256-zoxAq2VewNqexO0MTknLdi/u3zVYGsS0mqlLyaAtJp8=";
+  }
+  {
     # https://github.com/raspberrypi/firmware/releases/tag/1.20260408
     version = "1.20260408";
     tag = "1.20260408";

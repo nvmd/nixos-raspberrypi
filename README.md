@@ -75,7 +75,6 @@ nixosConfigurations.rpi5-demo = nixos-raspberrypi.lib.nixosSystem {
       # list of modules
       imports = with nixos-raspberrypi.nixosModules; [
         raspberry-pi-5.base
-        raspberry-pi-5.page-size-16k
         raspberry-pi-5.display-vc4
         raspberry-pi-5.bluetooth
       ];
@@ -122,7 +121,7 @@ imports = with nixos-raspberrypi.nixosModules; [
   raspberry-pi-4.display-vc4
 
   # RPi5:
-  raspberry-pi-5.page-size-16k  # Recommended: optimizations and fixes for issues arising from 16k memory page size (only for systems running default rpi5 (bcm2712) kernel)
+  raspberry-pi-5.page-size-16k  # Optional memory optimization: use 16k pages instead of default 64k for jemalloc, saves memory, reduces fragmentation. May fix any issues caused by the memory page size discrepancy. May cause lots of rebuilds. (only for systems running default rpi5 (bcm2712) kernel with 16k memory page)
   # use one of following for the "PrimaryGPU" configuration:
   raspberry-pi-5.display-vc4  # "regular" display connected
   raspberry-pi-5.display-rp1  # for RP1-connected (DPI/composite/MIPI DSI) display
@@ -171,7 +170,7 @@ imports = with nixos-raspberrypi.nixosModules; [
   # Optional: All RPi and RPi-optimised packages to be available in `pkgs.rpi`
   nixpkgs-rpi
 
-  # Optonal: add overlays with optimised packages into the global scope
+  # Optional: add overlays with optimised packages into the global scope
   # provides: ffmpeg_{4,6,7}, kodi, libcamera, vlc, etc.
   # This overlay may cause lots of rebuilds (however many
   #  packages should be available from the binary cache)
@@ -196,10 +195,12 @@ See `nixosConfigurations.rpi{02,4,5}-installer` in `flake.nix`.
 SD image can be built with:
 
 ```
-nix build .#installerImages.rpi02
-nix build .#installerImages.rpi3
-nix build .#installerImages.rpi4
-nix build .#installerImages.rpi5
+# By accepting the flake configuration, you can trust our binary cache and 
+# avoid building the kernel package yourself.
+nix --accept-flake-config build .#installerImages.rpi02
+nix --accept-flake-config build .#installerImages.rpi3
+nix --accept-flake-config build .#installerImages.rpi4
+nix --accept-flake-config build .#installerImages.rpi5
 ```
 
 Randomly generated connection credentials will be displayed on the screen, once the system is booted.
