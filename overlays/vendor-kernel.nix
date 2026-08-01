@@ -67,83 +67,83 @@ in
 final: prev:
 prev.lib.mergeAttrsList (
   builtins.concatLists [
-    (mkLinuxFor prev "6_18_34" [
+    (mkLinuxFor final "6_18_34" [
       "02"
       "3"
       "4"
       "5"
     ])
-    (mkLinuxFor prev "6_18_33" [
+    (mkLinuxFor final "6_18_33" [
       "02"
       "3"
       "4"
       "5"
     ])
-    (mkLinuxFor prev "6_12_87" [
+    (mkLinuxFor final "6_12_87" [
       "02"
       "3"
       "4"
       "5"
     ])
-    (mkLinuxFor prev "6_12_85" [
+    (mkLinuxFor final "6_12_85" [
       "02"
       "3"
       "4"
       "5"
     ])
-    (mkLinuxFor prev "6_12_75" [
+    (mkLinuxFor final "6_12_75" [
       "02"
       "3"
       "4"
       "5"
     ])
-    (mkLinuxFor prev "6_12_47" [
+    (mkLinuxFor final "6_12_47" [
       "02"
       "3"
       "4"
       "5"
     ])
-    (mkLinuxFor prev "6_12_44" [
+    (mkLinuxFor final "6_12_44" [
       "02"
       "3"
       "4"
       "5"
     ])
-    (mkLinuxFor prev "6_12_34" [
+    (mkLinuxFor final "6_12_34" [
       "02"
       "3"
       "4"
       "5"
     ])
-    (mkLinuxFor prev "6_12_25" [
+    (mkLinuxFor final "6_12_25" [
       "02"
       "3"
       "4"
       "5"
     ])
-    (mkLinuxFor prev "6_6_74" [
+    (mkLinuxFor final "6_6_74" [
       "02"
       "4"
       "5"
     ])
-    (mkLinuxFor prev "6_6_51" [
+    (mkLinuxFor final "6_6_51" [
       "02"
       "4"
       "5"
     ])
-    (mkLinuxFor prev "6_6_31" [
+    (mkLinuxFor final "6_6_31" [
       "4"
       "5"
     ])
-    (mkLinuxFor prev "6_6_28" [
+    (mkLinuxFor final "6_6_28" [
       "4"
       "5"
     ])
-    (mkLinuxFor prev "6_1_73" [
+    (mkLinuxFor final "6_1_73" [
       "4"
       "5"
     ])
-    (mkLinuxFor prev "6_1_63" [
+    (mkLinuxFor final "6_1_63" [
       "4"
       "5"
     ])
