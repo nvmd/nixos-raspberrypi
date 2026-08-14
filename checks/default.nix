@@ -265,6 +265,11 @@ let
 
             touch $out
           '';
+    }
+    // lib.optionalAttrs (system == "aarch64-linux") {
+      rpi-otp-derived-key-initrd-bin = pkgs.callPackage ./rpi-otp-derived-key-initrd-bin.nix {
+        inherit self nixpkgs;
+      };
     };
 
   mkModuleChecks =

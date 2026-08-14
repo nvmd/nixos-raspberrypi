@@ -58,23 +58,25 @@ let
     });
   moduleRpiFwCryptoPackage = modulePackage.rpiFwCryptoPackage or rpiUtilsPackage;
   defaultOtpHelperPackage = lib.optional (lib.meta.availableOn pkgs.stdenv.hostPlatform otpHelperPackage) otpHelperPackage;
-  defaultOtpHelperRuntimePackages = [
+  defaultOtpHelperInitrdBinPackages = [
     pkgs.gawk
     pkgs.gnugrep
     pkgs.gnused
     pkgs.which
-  ]
-  ++ lib.optional (
+  ];
+  # The helper embeds absolute runtime paths. Copy libraspberrypi into the
+  # initrd store without merging its overlapping binaries into initrdBin.
+  legacyOtpHelperInitrdStorePackages = lib.optional (
     pkgs ? libraspberrypi && lib.meta.availableOn pkgs.stdenv.hostPlatform pkgs.libraspberrypi
   ) pkgs.libraspberrypi;
-  defaultInitrdPackages = [
+  defaultInitrdBinPackages = [
     pkgs.age
     pkgs.coreutils
     pkgs.openssl
     moduleRpiFwCryptoPackage
     pkgs.xxd
   ]
-  ++ defaultOtpHelperRuntimePackages
+  ++ defaultOtpHelperInitrdBinPackages
   ++ defaultOtpHelperPackage;
 
   secretType = lib.types.submodule (
@@ -174,7 +176,8 @@ let
     [
       modulePackage
     ]
-    ++ defaultInitrdPackages
+    ++ defaultInitrdBinPackages
+    ++ legacyOtpHelperInitrdStorePackages
   );
   mkRandomSaltCreationSnippet = saltPath: ''
     salt_dir=${lib.escapeShellArg (builtins.dirOf saltPath)}
@@ -527,7 +530,7 @@ in
         boot.initrd.secrets = lib.mkIf hasInitrdSecrets initrdBootSecrets;
 
         boot.initrd.systemd = lib.mkIf hasInitrdSecrets {
-          initrdBin = defaultInitrdPackages;
+          initrdBin = defaultInitrdBinPackages;
           storePaths = map (source: { inherit source; }) initrdServiceStorePaths;
           services = initrdSecretServices;
         };
