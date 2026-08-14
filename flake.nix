@@ -12,7 +12,7 @@
   };
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 
     argononed = {
       # url = "git+file:../argononed?shallow=1";
@@ -78,7 +78,7 @@
           default = pkgs.mkShell {
             name = "nixos-raspberrypi";
             nativeBuildInputs = with pkgs; [
-              nil # lsp language server for nix
+              nixd # lsp language server for nix
               nixfmt-tree
               nix-output-monitor
               bash-language-server
@@ -264,6 +264,11 @@
                         cfg = config.boot.loader.raspberry-pi;
                       in
                       lib.mkOverride 40 "nixos-installer-rpi${cfg.variant}-${cfg.bootloader}";
+
+                    # nixos-images' installer Wi-Fi module uses iwd and disables
+                    # the legacy wpa_supplicant path. NixOS 26.05 enables it via
+                    # NetworkManager, so keep the installer module's intent.
+                    networking.wireless.enable = lib.mkForce false;
                   }
                 )
               ]

@@ -33,6 +33,30 @@ final: prev:
 prev.lib.mergeAttrsList (map (firmwareVersion prev) allFirmware)
 // {
 
+  raspberrypiWirelessFirmware_20260321 = prev.raspberrypiWirelessFirmware.overrideAttrs (old: {
+    version = "2026-03-21";
+    srcs = [
+      # https://github.com/RPi-Distro/bluez-firmware/commits/pios/trixie
+      # 1.2-13+rpt2 release – 20251002
+      (prev.fetchFromGitHub {
+        name = "bluez-firmware";
+        owner = "RPi-Distro";
+        repo = "bluez-firmware";
+        rev = "cdf61dc691a49ff01a124752bd04194907f0f9cd";
+        hash = "sha256-35pnbQV/zcikz9Vic+2a1QAS72riruKklV8JHboL9NY=";
+      })
+      # https://github.com/RPi-Distro/firmware-nonfree/commits/trixie
+      # 1.20250410-2+rpt1 - 20260321
+      (prev.fetchFromGitHub {
+        name = "firmware-nonfree";
+        owner = "RPi-Distro";
+        repo = "firmware-nonfree";
+        rev = "9794282eb9f4a2de1f23b41a738926740e975d83";
+        hash = "sha256-OtA8yHvfusGP/ucf8Exzi+nSUmNoYp10u+luC2gbNZc=";
+      })
+    ];
+  });
+
   raspberrypiWirelessFirmware_20251008 = prev.raspberrypiWirelessFirmware.overrideAttrs (old: {
     version = "2025-10-02";
     srcs = [

@@ -46,9 +46,34 @@ final: prev: {
 
   linuxAndFirmware = prev.lib.mergeAttrsList [
 
-    { default = final.linuxAndFirmware.v6_12_85; }
+    { default = final.linuxAndFirmware.v6_18_42; }
 
-    { latest = final.linuxAndFirmware.v6_12_85; }
+    { latest = final.linuxAndFirmware.v6_18_42; }
+
+    (mkBundle final "v6_18_42" {
+      fw = final.raspberrypifw_20260806;
+      wFw = final.raspberrypiWirelessFirmware_20260321;
+    })
+
+    (mkBundle final "v6_18_39" {
+      fw = final.raspberrypifw_20260724;
+      wFw = final.raspberrypiWirelessFirmware_20260321;
+    })
+
+    (mkBundle final "v6_18_34" {
+      fw = final.raspberrypifw_20260521;
+      wFw = final.raspberrypiWirelessFirmware_20260321;
+    })
+
+    (mkBundle final "v6_18_33" {
+      fw = final.raspberrypifw_20260521;
+      wFw = final.raspberrypiWirelessFirmware_20260321;
+    })
+
+    (mkBundle final "v6_12_87" {
+      fw = final.raspberrypifw_20260408;
+      wFw = final.raspberrypiWirelessFirmware_20251008;
+    })
 
     (mkBundle final "v6_12_85" {
       fw = final.raspberrypifw_20260408;

@@ -78,7 +78,7 @@
 
         # Enable audio (loads snd_bcm2835)
         audio = {
-          enable = true;
+          enable = lib.mkDefault true;
           value = "on";
         };
       };

@@ -2,6 +2,28 @@
 # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/os-specific/linux/firmware/raspberrypi/default.nix
 [
   {
+    # this release is untagged in the upstream
+    # matches unstable kernel `raspberrypi/linux` 6.18.42
+    version = "0-unstable-20260806";
+    rev = "2cfe163628eb33eed11c97bfe3fb8169755d7e7a";
+    srcHash = "sha256-f/bqt0G56T/evXKbJiUf6+MWzytGhuJp9ZKPfiQKROQ=";
+  }
+  {
+    # this release is untagged in the upstream
+    # matches stable kernel `raspberrypi/linux` 6.18.39
+    # (from https://github.com/raspberrypi/linux/releases/tag/stable_20260724)
+    # see `extra/git_hash`
+    version = "0-unstable-20260724";
+    rev = "78e81e2cd6e00efeb79c169bff29ec457fa14b11";
+    srcHash = "sha256-QFHoVyZAVqS/ba79dpet0p0wlMIdjXQQcXDALKnfnXs=";
+  }
+  {
+    # https://github.com/raspberrypi/firmware/releases/tag/1.20260521
+    version = "1.20260521";
+    tag = "1.20260521";
+    srcHash = "sha256-zoxAq2VewNqexO0MTknLdi/u3zVYGsS0mqlLyaAtJp8=";
+  }
+  {
     # https://github.com/raspberrypi/firmware/releases/tag/1.20260408
     version = "1.20260408";
     tag = "1.20260408";
