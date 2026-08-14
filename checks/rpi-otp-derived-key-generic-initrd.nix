@@ -27,6 +27,7 @@ let
         services.rpiOtpDerivedKey = {
           enable = true;
           secrets.generic = {
+            scheme = "firmware-hmac-v1";
             format = "hex";
             path = "/run/generic.key";
             neededForBoot = true;

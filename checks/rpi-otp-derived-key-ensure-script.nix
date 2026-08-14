@@ -31,10 +31,12 @@ testPkgs.testers.runNixOSTest {
       services.rpiOtpDerivedKey = {
         enable = true;
         secrets.age = {
+          scheme = "firmware-hmac-v1";
           format = "age";
           path = "/run/age-keys.txt";
         };
         secrets."${unsafeSecretName}" = {
+          scheme = "firmware-hmac-v1";
           format = "hex";
           path = "/run/secondary-key.txt";
         };

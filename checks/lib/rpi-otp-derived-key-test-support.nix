@@ -49,10 +49,70 @@ let
     '';
   };
 
+  mockRpiFwCrypto = pkgs.writeShellApplication {
+    name = "rpi-fw-crypto";
+    runtimeInputs = [ pkgs.openssl ];
+    text = ''
+      set -euo pipefail
+
+      otp_hex='${mockOtpHex}'
+
+      case "''${1:-}" in
+        get-num-otp-keys)
+          [[ $# -eq 1 ]]
+          printf 'Number of OTP keys: 2\n'
+          ;;
+        hmac)
+          shift
+          input=""
+          output=""
+          key_id=""
+
+          while [[ $# -gt 0 ]]; do
+            case "$1" in
+              --in)
+                input="$2"
+                shift 2
+                ;;
+              --out)
+                output="$2"
+                shift 2
+                ;;
+              --key-id)
+                key_id="$2"
+                shift 2
+                ;;
+              *)
+                echo "unexpected argument: $1" >&2
+                exit 1
+                ;;
+            esac
+          done
+
+          [[ "$key_id" == 1 ]]
+          [[ -n "$input" ]]
+          [[ -n "$output" ]]
+          if [[ "$otp_hex" =~ ^0+$ ]]; then
+            echo "Last crypto error: 6 (Key is not set)" >&2
+            exit 250
+          fi
+          openssl dgst -sha256 -mac HMAC -macopt "hexkey:$otp_hex" \
+            -binary -out "$output" "$input"
+          ;;
+        *)
+          echo "unexpected command: ''${1:-}" >&2
+          exit 1
+          ;;
+      esac
+    '';
+  };
+
   testOverlay = final: prev: {
+    raspberrypi-utils = mockRpiFwCrypto;
     rpi-otp-private-key = mockRpiOtpPrivateKey;
     rpi-otp-derived-key =
       (prev.callPackage ../../pkgs/raspberrypi/rpi-otp-derived-key.nix {
+        raspberrypi-utils = final.raspberrypi-utils;
         rpi-otp-private-key = final.rpi-otp-private-key;
       }).overrideAttrs
         (old: {
@@ -62,7 +122,6 @@ let
         });
     rpi-otp-derived-key-provision =
       (prev.callPackage ../../pkgs/raspberrypi/rpi-otp-derived-key-provision.nix {
-        rpi-otp-private-key = final.rpi-otp-private-key;
         rpi-otp-derived-key = final.rpi-otp-derived-key;
       }).overrideAttrs
         (old: {

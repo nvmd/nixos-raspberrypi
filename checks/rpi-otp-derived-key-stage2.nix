@@ -24,6 +24,7 @@ testPkgs.testers.runNixOSTest {
     services.rpiOtpDerivedKey = {
       enable = true;
       secrets.stable = {
+        scheme = "firmware-hmac-v1";
         format = "hex";
         path = "/run/stable.key";
       };

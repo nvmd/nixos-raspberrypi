@@ -207,8 +207,9 @@ Randomly generated connection credentials will be displayed on the screen, once 
 
 Network access to Raspberry Pi Zero2 (RPi02) boards is also possible via USB Gadget/Ethernet functionality.
 
-Installer images for Raspberry Pi Zero 2, 4, and 5 include `rpi-otp-private-key`
-for provisioning or checking OTP private key state on supported hardware.
+Installer images for Raspberry Pi Zero 2, 4, and 5 include `rpi-fw-crypto` and
+the deprecated `rpi-otp-private-key` compatibility helper for provisioning or
+checking OTP private key state on supported hardware.
 
 > [!TIP]
 > You can optionally replace `# YOUR SSH PUB KEY HERE #` in `custom-user-config`
@@ -254,11 +255,13 @@ An alternative ways to consume individual packages without overlays are:
 
 The flake provides Raspberry Pi OTP key utilities:
 
-- `rpi-otp-private-key` packages Raspberry Pi's `rpi-eeprom` helper for reading
-  or programming the OTP private key.
-- `rpi-otp-derived-key` derives deterministic key material from the OTP private
-  key with HKDF-SHA256 and can emit hex, binary, Ed25519 PEM, or age identity
-  output.
+- `raspberrypi-utils` includes `rpi-fw-crypto`, Raspberry Pi's firmware crypto
+  client. Its HMAC operation derives keys without returning the raw OTP private
+  key to userspace.
+- `rpi-otp-private-key` packages Raspberry Pi's deprecated `rpi-eeprom` helper.
+  It remains available for provisioning and explicit legacy-key migration.
+- `rpi-otp-derived-key` derives deterministic key material using a required,
+  versioned scheme and can emit hex, binary, Ed25519 PEM, or age identities.
 - `rpi-otp-derived-key-provision` stages OTP-derived secrets and installs their
   salts for install-time workflows.
 
@@ -282,15 +285,36 @@ environment.systemPackages = with pkgs; [
 ];
 ```
 
-Example:
+For a new enrollment, select the firmware-backed scheme explicitly:
 
 ```shell
-rpi-otp-derived-key --salt-file /etc/machine-id --format age
+rpi-otp-derived-key \
+  --scheme firmware-hmac-v1 \
+  --salt-file /etc/machine-id \
+  --format age
 ```
 
-The OTP private key and anything derived from it should be treated as secret
-material. These tools are intended for Raspberry Pi hardware with a programmed
-OTP private key.
+`firmware-hmac-v1` uses a versioned HMAC-SHA256 counter KDF through the firmware
+crypto service. `legacy-hkdf-v1` reproduces the original HKDF-SHA256 output but
+reads the raw OTP key; use it only to unlock or migrate an existing enrollment.
+The command requires `--scheme` because switching schemes changes every derived
+key. To migrate encrypted storage, keep a recovery passphrase, unlock with
+`legacy-hkdf-v1`, enroll the `firmware-hmac-v1` result in another LUKS keyslot,
+verify it, and only then remove the legacy keyslot.
+
+The firmware API requires current Raspberry Pi firmware and a programmed device
+private key; key slot 1 is used by default. With secure boot, set
+`lock_device_private_key=1` so the authenticated `config.txt` disables raw OTP
+reads while HMAC remains available. The module applies this setting by default
+when all configured secrets use `firmware-hmac-v1` and the board module exposes
+the corresponding firmware configuration option.
+
+This is defense in depth, not a hardware security module. Root-level code can
+still access the firmware mailbox or OTP hardware, and an unauthenticated initrd
+can request derived keys. Raspberry Pi Zero 2 supports firmware-derived keys but
+not Raspberry Pi secure boot, so unattended unlock on that model does not
+provide an authenticated-boot boundary. Keep recovery credentials and a backup
+of every salt; losing or changing a salt changes the derived key.
 
 ## OTP-derived secrets module
 
@@ -306,6 +330,7 @@ derived key material. The module supports Raspberry Pi Zero 2, 4, and 5.
   services.rpiOtpDerivedKey = {
     enable = true;
     secrets.my-app = {
+      scheme = "firmware-hmac-v1";
       format = "age";
       path = "/run/rpi-otp-derived-key/my-app";
       before = [ "my-app.service" ];
@@ -335,6 +360,7 @@ programmed.
   services.rpiOtpDerivedKey = {
     enable = true;
     secrets.luks-key = {
+      scheme = "firmware-hmac-v1";
       format = "hex";
       path = "/run/secrets/luks.key";
       neededForBoot = true;

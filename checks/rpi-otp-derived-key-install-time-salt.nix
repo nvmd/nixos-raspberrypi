@@ -1,4 +1,8 @@
-{ lib, pkgs, self }:
+{
+  lib,
+  pkgs,
+  self,
+}:
 
 let
   testSupport = import ./lib/rpi-otp-derived-key-test-support.nix {
@@ -38,12 +42,14 @@ testPkgs.testers.runNixOSTest {
       enable = true;
 
       secrets.age = {
+        scheme = "firmware-hmac-v1";
         format = "age";
         path = "/run/age-keys.txt";
         neededForBoot = true;
       };
 
       secrets."${unsafeSecretName}" = {
+        scheme = "firmware-hmac-v1";
         format = "hex";
         path = "/run/secondary-key.txt";
         neededForBoot = true;
@@ -66,6 +72,13 @@ testPkgs.testers.runNixOSTest {
 
     machine.succeed("cp /run/current-system/initrd /tmp/expected-initrd")
     machine.succeed("/run/current-system/append-initrd-secrets /tmp/expected-initrd")
+    machine.succeed("cmp /tmp/expected-initrd /var/lib/rpi-boot/nixos/default/initrd")
+
+    # Reinstalling the same generation must recreate the boot initrd from the
+    # store source, not append another copy of the secret archive.
+    machine.succeed("sha256sum /var/lib/rpi-boot/nixos/default/initrd > /tmp/installed-initrd.sha256")
+    machine.succeed("/run/current-system/bin/switch-to-configuration boot")
+    machine.succeed("sha256sum --check /tmp/installed-initrd.sha256")
     machine.succeed("cmp /tmp/expected-initrd /var/lib/rpi-boot/nixos/default/initrd")
   '';
 }

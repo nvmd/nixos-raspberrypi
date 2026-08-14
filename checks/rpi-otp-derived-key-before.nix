@@ -24,6 +24,7 @@ testPkgs.testers.runNixOSTest {
     services.rpiOtpDerivedKey = {
       enable = true;
       secrets.age = {
+        scheme = "firmware-hmac-v1";
         format = "age";
         path = "/run/age-keys.txt";
         before = [ "otp-consumer.service" ];

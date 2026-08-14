@@ -1,21 +1,25 @@
-{ lib
-, writeShellApplication
-, age
-, coreutils
-, openssl
-, xxd
-, rpi-otp-private-key
-,
+{
+  lib,
+  writeShellApplication,
+  age,
+  coreutils,
+  openssl,
+  xxd,
+  raspberrypi-utils,
+  rpi-otp-private-key,
 }:
 
 writeShellApplication {
   name = "rpi-otp-derived-key";
+
+  passthru.rpiFwCryptoPackage = raspberrypi-utils;
 
   runtimeInputs = [
     age
     coreutils
     openssl
     xxd
+    raspberrypi-utils
     rpi-otp-private-key
   ];
 
@@ -29,10 +33,11 @@ writeShellApplication {
 
         usage() {
           cat <<'EOF'
-    Usage: rpi-otp-derived-key (--salt STRING | --salt-hex HEX | --salt-file PATH) [options]
+    Usage: rpi-otp-derived-key --scheme SCHEME \
+             (--salt STRING | --salt-hex HEX | --salt-file PATH) [options]
 
-    Derive deterministic key material from the Raspberry Pi OTP private key
-    using HKDF-SHA256.
+    Derive deterministic key material from a Raspberry Pi OTP private key.
+    SCHEME is mandatory so package upgrades cannot silently rotate existing keys.
 
     This outputs raw derived key material. If you need a private key for a
     specific algorithm, convert or validate the result for that algorithm
@@ -40,15 +45,27 @@ writeShellApplication {
 
     Options:
       --format FORMAT    Output format. Defaults to hex.
+      --scheme SCHEME    Versioned derivation scheme. Required.
       --salt STRING      Salt as a UTF-8 string.
       --salt-hex HEX     Salt as hexadecimal bytes.
       --salt-file PATH   Salt bytes read from a file.
       --length BYTES     Number of bytes to derive. Defaults to 32 for hex/binary.
       --binary           Shorthand for --format binary.
-      --otp-words WORDS  Number of 32-bit OTP words to read. Defaults to 8.
-      --otp-offset WORD  OTP word offset to start reading from. Defaults to 0.
+      --key-id ID        Firmware crypto OTP key slot. Defaults to 1.
+                        Only valid with firmware-hmac-v1.
+      --otp-words WORDS  Legacy OTP word count. Defaults to 8.
+                        Only valid with legacy-hkdf-v1.
+      --otp-offset WORD  Legacy OTP word offset. Defaults to 0.
+                        Only valid with legacy-hkdf-v1.
       --list-formats     Show supported output formats.
+      --list-schemes     Show supported derivation schemes.
       -h, --help         Show this help.
+
+    Supported SCHEME values:
+      firmware-hmac-v1  Firmware-side HMAC-SHA256 counter KDF. Recommended for
+                        new enrollment; the raw OTP key stays out of userspace.
+      legacy-hkdf-v1    Original HKDF-SHA256 construction. Migration only; it
+                        reads the raw OTP key and reproduces existing outputs.
 
     Supported FORMAT values:
       hex               Lowercase hexadecimal output.
@@ -58,6 +75,9 @@ writeShellApplication {
 
     Notes:
       - The OTP value must be programmed and non-zero.
+      - The schemes intentionally produce different outputs. To migrate an
+        existing encrypted volume, first enroll a firmware-hmac-v1 recovery key
+        while the legacy key can still unlock it.
       - FORMAT affects built-in domain separation for algorithm-specific outputs,
         so `ed25519` and `age` derive different outputs even with the same salt.
       - Salt is usually public. If you want to keep it out of the process list,
@@ -65,6 +85,13 @@ writeShellApplication {
       - `hex` and `binary` are two representations of the same generic derived
         key material.
       - OpenSSH private-key output is not implemented in this version.
+    EOF
+        }
+
+        list_schemes() {
+          cat <<'EOF'
+    firmware-hmac-v1
+    legacy-hkdf-v1
     EOF
         }
 
@@ -91,10 +118,6 @@ writeShellApplication {
 
         file_to_hex() {
           xxd -p -c 999999 "$1" | tr -d '\n'
-        }
-
-        canonical_hex() {
-          printf '%s' "$1" | tr -d '[:space:]:' | tr '[:upper:]' '[:lower:]'
         }
 
         age_identity_from_hex() {
@@ -181,17 +204,131 @@ writeShellApplication {
           printf '%s\n' "$identity"
         }
 
+        write_u32_be() {
+          local value="$1"
+
+          printf '%08x' "$value" | xxd -r -p
+        }
+
+        firmware_hmac_kdf() {
+          local output_file="$1"
+          local profile="$2"
+          local length="$3"
+          local salt_hex="$4"
+          local key_id="$5"
+          local label="rpi-otp-derived-key:firmware-hmac-v1:$profile"
+          local salt_file="$work_dir/salt"
+          local salt_digest_file="$work_dir/salt.sha256"
+          local message_file="$work_dir/message"
+          local block_file="$work_dir/block"
+          local material_file="$work_dir/material"
+          local output_bits=$((length * 8))
+          local blocks=$(((length + 31) / 32))
+          local block block_size num_keys num_keys_output
+
+          if ! num_keys_output="$(rpi-fw-crypto get-num-otp-keys)"; then
+            die "could not query firmware crypto OTP key slots"
+          fi
+          num_keys="''${num_keys_output##*: }"
+          is_uint "$num_keys" || die \
+            "unexpected response from rpi-fw-crypto get-num-otp-keys: $num_keys_output"
+          (( key_id < num_keys )) || die \
+            "OTP key slot $key_id is outside the firmware-reported range 0-$((num_keys - 1))"
+
+          # firmware-hmac-v1 is the HMAC-SHA256 counter KDF from NIST SP
+          # 800-108: [i]_32 || Label || 0x00 || Context || [L]_32. Hashing the
+          # public salt makes Context fixed-size and keeps every firmware
+          # request well below its 2 KiB message limit.
+          printf '%s' "$salt_hex" | xxd -r -p > "$salt_file"
+          openssl dgst -sha256 -binary "$salt_file" > "$salt_digest_file"
+          : > "$material_file"
+
+          for ((block = 1; block <= blocks; block++)); do
+            {
+              write_u32_be "$block"
+              printf '%s\0' "$label"
+              cat "$salt_digest_file"
+              write_u32_be "$output_bits"
+            } > "$message_file"
+
+            if ! rpi-fw-crypto hmac \
+              --in "$message_file" \
+              --key-id "$key_id" \
+              --out "$block_file"
+            then
+              die "firmware HMAC failed for OTP key slot $key_id"
+            fi
+
+            block_size="$(wc -c < "$block_file")"
+            (( block_size == 32 )) || die \
+              "rpi-fw-crypto returned $block_size bytes; expected 32"
+            cat "$block_file" >> "$material_file"
+          done
+
+          head -c "$length" "$material_file" > "$output_file"
+        }
+
+        legacy_hkdf() {
+          local output_file="$1"
+          local profile="$2"
+          local length="$3"
+          local salt_hex="$4"
+          local otp_words="$5"
+          local otp_offset="$6"
+          local info_hex otp_hex expected_hex_length
+
+          info_hex="$(utf8_to_hex "rpi-otp-derived-key:$profile")"
+          otp_hex="$(rpi-otp-private-key -l "$otp_words" -o "$otp_offset" | tr -d '[:space:]')"
+          is_hex "$otp_hex" || die "rpi-otp-private-key did not return hexadecimal key material"
+
+          expected_hex_length=$((otp_words * 8))
+          (( ''${#otp_hex} == expected_hex_length )) || die \
+            "expected $expected_hex_length hex digits from rpi-otp-private-key, got ''${#otp_hex}"
+
+          [[ ! "$otp_hex" =~ ^0+$ ]] || die "OTP private key is not programmed (all zeros)"
+
+          # This backend exists solely to reproduce keys enrolled by versions
+          # predating firmware-hmac-v1. It necessarily reads the raw OTP key.
+          openssl kdf \
+            -keylen "$length" \
+            -kdfopt digest:SHA256 \
+            -kdfopt "hexkey:$otp_hex" \
+            -kdfopt "hexsalt:$salt_hex" \
+            -kdfopt "hexinfo:$info_hex" \
+            -binary \
+            HKDF > "$output_file"
+        }
+
+        work_dir=""
+        cleanup() {
+          if [[ -n "$work_dir" ]]; then
+            rm -rf -- "$work_dir"
+          fi
+        }
+        trap cleanup EXIT
+
         salt_hex=""
         user_length=""
         format="hex"
+        scheme=""
+        key_id=1
+        key_id_set=0
         otp_words=8
+        otp_words_set=0
         otp_offset=0
+        otp_offset_set=0
 
         while [[ $# -gt 0 ]]; do
           case "$1" in
             --format)
               [[ $# -ge 2 ]] || die "--format requires an argument"
               format="''${2,,}"
+              shift 2
+              ;;
+            --scheme)
+              [[ $# -ge 2 ]] || die "--scheme requires an argument"
+              [[ -z "$scheme" ]] || die "--scheme specified more than once"
+              scheme="''${2,,}"
               shift 2
               ;;
             --salt)
@@ -226,21 +363,34 @@ writeShellApplication {
               format="binary"
               shift
               ;;
+            --key-id)
+              [[ $# -ge 2 ]] || die "--key-id requires an argument"
+              is_uint "$2" || die "--key-id expects a non-negative integer"
+              key_id="$2"
+              key_id_set=1
+              shift 2
+              ;;
             --otp-words)
               [[ $# -ge 2 ]] || die "--otp-words requires an argument"
               is_uint "$2" || die "--otp-words expects a positive integer"
               (( $2 > 0 )) || die "--otp-words expects a positive integer"
               otp_words="$2"
+              otp_words_set=1
               shift 2
               ;;
             --otp-offset)
               [[ $# -ge 2 ]] || die "--otp-offset requires an argument"
               is_uint "$2" || die "--otp-offset expects a non-negative integer"
               otp_offset="$2"
+              otp_offset_set=1
               shift 2
               ;;
             --list-formats)
               list_formats
+              exit 0
+              ;;
+            --list-schemes)
+              list_schemes
               exit 0
               ;;
             -h|--help)
@@ -281,58 +431,68 @@ writeShellApplication {
             ;;
         esac
 
-        info_hex="$(utf8_to_hex "rpi-otp-derived-key:$profile")"
+        [[ -n "$scheme" ]] || die \
+          "--scheme is required; choose firmware-hmac-v1 for new enrollment or legacy-hkdf-v1 for existing keys"
 
-        otp_hex="$(rpi-otp-private-key -l "$otp_words" -o "$otp_offset" | tr -d '[:space:]')"
-        is_hex "$otp_hex" || die "rpi-otp-private-key did not return hexadecimal key material"
+        case "$scheme" in
+          firmware-hmac-v1)
+            (( otp_words_set == 0 )) || die \
+              "--otp-words is only valid with --scheme legacy-hkdf-v1"
+            (( otp_offset_set == 0 )) || die \
+              "--otp-offset is only valid with --scheme legacy-hkdf-v1"
+            (( length <= 8192 )) || die \
+              "firmware-hmac-v1 supports at most 8192 output bytes"
+            ;;
+          legacy-hkdf-v1)
+            (( key_id_set == 0 )) || die \
+              "--key-id is only valid with --scheme firmware-hmac-v1"
+            ;;
+          *)
+            die "unsupported --scheme: $scheme"
+            ;;
+        esac
 
-        expected_hex_length=$((otp_words * 8))
-        (( ''${#otp_hex} == expected_hex_length )) || die \
-          "expected $expected_hex_length hex digits from rpi-otp-private-key, got ''${#otp_hex}"
+        umask 077
+        work_dir="$(mktemp -d)"
+        derived_file="$work_dir/derived"
 
-        [[ ! "$otp_hex" =~ ^0+$ ]] || die "OTP private key is not programmed (all zeros)"
-
-        declare -a cmd=(
-          openssl
-          kdf
-          -keylen "$length"
-          -kdfopt digest:SHA256
-          -kdfopt "hexkey:$otp_hex"
-          -kdfopt "hexsalt:$salt_hex"
-          -kdfopt "hexinfo:$info_hex"
-        )
-
-        if [[ "$format" == "binary" ]]; then
-          cmd+=(-binary)
-        fi
-
-        cmd+=(HKDF)
+        case "$scheme" in
+          firmware-hmac-v1)
+            firmware_hmac_kdf "$derived_file" "$profile" "$length" "$salt_hex" "$key_id"
+            ;;
+          legacy-hkdf-v1)
+            legacy_hkdf "$derived_file" "$profile" "$length" "$salt_hex" "$otp_words" "$otp_offset"
+            ;;
+        esac
 
         case "$format" in
           hex)
-            derived_hex="$("''${cmd[@]}")"
-            canonical_hex "$derived_hex"
+            file_to_hex "$derived_file"
             printf '\n'
             ;;
           binary)
-            "''${cmd[@]}"
+            cat "$derived_file"
             ;;
           ed25519)
-            derived_hex="$(canonical_hex "$("''${cmd[@]}")")"
+            derived_hex="$(file_to_hex "$derived_file")"
             emit_ed25519_pem "$derived_hex"
             ;;
           age)
-            derived_hex="$(canonical_hex "$("''${cmd[@]}")")"
+            derived_hex="$(file_to_hex "$derived_file")"
             emit_age_identity "$derived_hex"
             ;;
         esac
   '';
 
   meta = with lib; {
-    description = "Derive deterministic key material from the Raspberry Pi OTP private key using HKDF-SHA256";
+    description = "Derive deterministic keys through the Raspberry Pi firmware cryptography service";
     homepage = "https://github.com/nvmd/nixos-raspberrypi";
     license = licenses.mit;
     mainProgram = "rpi-otp-derived-key";
-    platforms = [ "armv6l-linux" "armv7l-linux" "aarch64-linux" ];
+    platforms = [
+      "armv6l-linux"
+      "armv7l-linux"
+      "aarch64-linux"
+    ];
   };
 }

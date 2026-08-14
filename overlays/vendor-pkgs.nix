@@ -8,16 +8,18 @@ final: prev: {
 
   raspberrypi-utils = prev.callPackage ../pkgs/raspberrypi/raspberrypi-utils.nix { };
 
-  rpi-otp-private-key = prev.callPackage ../pkgs/raspberrypi/rpi-otp-private-key.nix {};
+  rpi-otp-private-key = prev.callPackage ../pkgs/raspberrypi/rpi-otp-private-key.nix { };
 
   rpi-otp-derived-key = prev.callPackage ../pkgs/raspberrypi/rpi-otp-derived-key.nix {
+    raspberrypi-utils = final.raspberrypi-utils;
     rpi-otp-private-key = final.rpi-otp-private-key;
   };
 
-  rpi-otp-derived-key-provision = prev.callPackage ../pkgs/raspberrypi/rpi-otp-derived-key-provision.nix {
-    rpi-otp-private-key = final.rpi-otp-private-key;
-    rpi-otp-derived-key = final.rpi-otp-derived-key;
-  };
+  rpi-otp-derived-key-provision =
+    prev.callPackage ../pkgs/raspberrypi/rpi-otp-derived-key-provision.nix
+      {
+        rpi-otp-derived-key = final.rpi-otp-derived-key;
+      };
 
   rpi-userland = final.libraspberrypi;
 

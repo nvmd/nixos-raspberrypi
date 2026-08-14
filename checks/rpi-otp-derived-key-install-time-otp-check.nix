@@ -1,4 +1,8 @@
-{ lib, pkgs, self }:
+{
+  lib,
+  pkgs,
+  self,
+}:
 
 let
   testSupport = import ./lib/rpi-otp-derived-key-test-support.nix {
@@ -36,6 +40,7 @@ testPkgs.testers.runNixOSTest {
     services.rpiOtpDerivedKey = {
       enable = true;
       secrets.age = {
+        scheme = "firmware-hmac-v1";
         format = "age";
         path = "/run/age-keys.txt";
         neededForBoot = true;
@@ -47,9 +52,9 @@ testPkgs.testers.runNixOSTest {
     start_all()
 
     machine.fail("/run/current-system/bin/switch-to-configuration boot >/tmp/install.out 2>/tmp/install.err")
-    machine.succeed("grep -Fqx 'services.rpiOtpDerivedKey: Raspberry Pi OTP private key is not programmed.' /tmp/install.err")
-    machine.succeed("grep -Fqx '  rpi-otp-private-key -w \"$(cat d.hex)\"' /tmp/install.err")
-    machine.succeed("grep -Fqx 'Run `rpi-otp-private-key -h` for details and warnings. Aborting bootloader install.' /tmp/install.err")
+    machine.succeed("grep -Fqx 'services.rpiOtpDerivedKey: OTP derivation backend is not ready for scheme firmware-hmac-v1.' /tmp/install.err")
+    machine.succeed("grep -Fqx 'the rpi-fw-crypto HMAC API and uses OTP key slot 1 by default.' /tmp/install.err")
+    machine.succeed("grep -Fqx 'Aborting bootloader install.' /tmp/install.err")
     machine.fail("test -e /var/lib/rpi-boot/nixos/default/initrd")
   '';
 }

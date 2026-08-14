@@ -6,6 +6,8 @@
 }:
 
 let
+  otpDerivedKeyLib = import ../lib/rpi-otp-derived-key.nix { };
+
   evalConfig =
     modules:
     nixpkgs.lib.nixosSystem {
@@ -31,6 +33,11 @@ let
     assert !result.success;
     name;
 
+  expectValue =
+    name: value:
+    assert value;
+    name;
+
   raspberryPiBootloaderConfigFor = variant: {
     boot.loader.supportsInitrdSecrets = true;
     boot.loader.raspberry-pi.enable = true;
@@ -38,12 +45,194 @@ let
     boot.loader.raspberry-pi.variant = variant;
   };
   raspberryPiBootloaderConfig = raspberryPiBootloaderConfigFor "4";
+  unsafeSecretName = "../escape";
+  unsafePathComponent = otpDerivedKeyLib.pathComponentForName unsafeSecretName;
+  collidingSafeSecretName = unsafePathComponent;
 
   cases = [
+    (expectValue "dot-components-are-not-safe" (
+      !otpDerivedKeyLib.isSafePathComponent "."
+      && !otpDerivedKeyLib.isSafePathComponent ".."
+      && otpDerivedKeyLib.isSafePathComponent "normal-name"
+    ))
+    (expectValue "canonical-path-validation" (
+      otpDerivedKeyLib.isCanonicalAbsolutePath "/run/secrets/key"
+      && !otpDerivedKeyLib.isCanonicalAbsolutePath "/run/../etc/key"
+      && !otpDerivedKeyLib.isCanonicalAbsolutePath "/run/./key"
+      && !otpDerivedKeyLib.isCanonicalAbsolutePath "/run//key"
+      && !otpDerivedKeyLib.isCanonicalAbsolutePath "/run/key/"
+    ))
+    (expectValue "unsafe-default-path-is-contained" (
+      let
+        evaluated = evalConfig [
+          raspberryPiBootloaderConfig
+          {
+            services.rpiOtpDerivedKey = {
+              enable = true;
+              secrets."${unsafeSecretName}" = {
+                scheme = "firmware-hmac-v1";
+                format = "hex";
+              };
+            };
+          }
+        ];
+      in
+      evaluated.config.services.rpiOtpDerivedKey.secrets."${unsafeSecretName}".path
+      == "/run/rpi-otp-derived-key/${unsafePathComponent}"
+    ))
+    (expectValue "firmware-scheme-locks-raw-otp-api" (
+      let
+        evaluated = evalConfig [
+          raspberryPiBootloaderConfig
+          {
+            services.rpiOtpDerivedKey = {
+              enable = true;
+              secrets.key = {
+                scheme = "firmware-hmac-v1";
+                format = "hex";
+                path = "/run/key";
+              };
+            };
+          }
+        ];
+        lockOption = evaluated.config.hardware.raspberry-pi.config.all.options.lock_device_private_key;
+      in
+      lockOption.enable && lockOption.value == 1
+    ))
+    (expectValue "output-directory-permissions-are-creation-only" (
+      let
+        evaluated = evalConfig [
+          raspberryPiBootloaderConfig
+          {
+            services.rpiOtpDerivedKey = {
+              enable = true;
+              secrets.key = {
+                scheme = "firmware-hmac-v1";
+                format = "hex";
+                path = "/run/application-owned/key";
+              };
+            };
+          }
+        ];
+        directoryRule =
+          evaluated.config.systemd.tmpfiles.settings.rpi-otp-derived-key-output-dirs."/run/application-owned".d;
+      in
+      directoryRule.mode == ":0711" && directoryRule.user == ":root" && directoryRule.group == ":root"
+    ))
+    (expectValue "legacy-scheme-does-not-lock-raw-otp-api" (
+      let
+        evaluated = evalConfig [
+          raspberryPiBootloaderConfig
+          {
+            services.rpiOtpDerivedKey = {
+              enable = true;
+              secrets.key = {
+                scheme = "legacy-hkdf-v1";
+                format = "hex";
+                path = "/run/key";
+              };
+            };
+          }
+        ];
+      in
+      !(evaluated.config.hardware.raspberry-pi.config.all.options ? lock_device_private_key)
+    ))
     (expectFailure "enabled-with-no-secrets" [
       raspberryPiBootloaderConfig
       {
         services.rpiOtpDerivedKey.enable = true;
+      }
+    ])
+    (expectFailure "missing-required-scheme" [
+      raspberryPiBootloaderConfig
+      {
+        services.rpiOtpDerivedKey = {
+          enable = true;
+          secrets.bad = {
+            format = "hex";
+            path = "/run/bad-key";
+          };
+        };
+      }
+    ])
+    (expectFailure "non-canonical-parent-component" [
+      raspberryPiBootloaderConfig
+      {
+        services.rpiOtpDerivedKey = {
+          enable = true;
+          secrets.bad = {
+            scheme = "firmware-hmac-v1";
+            format = "hex";
+            path = "/run/../etc/bad-key";
+          };
+        };
+      }
+    ])
+    (expectFailure "non-canonical-current-component" [
+      raspberryPiBootloaderConfig
+      {
+        services.rpiOtpDerivedKey = {
+          enable = true;
+          secrets.bad = {
+            scheme = "firmware-hmac-v1";
+            format = "hex";
+            path = "/run/./bad-key";
+          };
+        };
+      }
+    ])
+    (expectFailure "duplicate-output-path" [
+      raspberryPiBootloaderConfig
+      {
+        services.rpiOtpDerivedKey = {
+          enable = true;
+          secrets.first = {
+            scheme = "firmware-hmac-v1";
+            format = "hex";
+            path = "/run/shared-key";
+          };
+          secrets.second = {
+            scheme = "firmware-hmac-v1";
+            format = "age";
+            path = "/run/shared-key";
+          };
+        };
+      }
+    ])
+    (expectFailure "nested-output-path" [
+      raspberryPiBootloaderConfig
+      {
+        services.rpiOtpDerivedKey = {
+          enable = true;
+          secrets.first = {
+            scheme = "firmware-hmac-v1";
+            format = "hex";
+            path = "/run/shared-key";
+          };
+          secrets.second = {
+            scheme = "firmware-hmac-v1";
+            format = "age";
+            path = "/run/shared-key/child";
+          };
+        };
+      }
+    ])
+    (expectFailure "persistent-salt-path-collision" [
+      raspberryPiBootloaderConfig
+      {
+        services.rpiOtpDerivedKey = {
+          enable = true;
+          secrets."${unsafeSecretName}" = {
+            scheme = "firmware-hmac-v1";
+            format = "hex";
+            path = "/run/unsafe-name-key";
+          };
+          secrets."${collidingSafeSecretName}" = {
+            scheme = "firmware-hmac-v1";
+            format = "hex";
+            path = "/run/colliding-safe-name-key";
+          };
+        };
       }
     ])
     (expectFailure "missing-raspberry-pi-variant" [
@@ -51,6 +240,7 @@ let
         services.rpiOtpDerivedKey = {
           enable = true;
           secrets.bad = {
+            scheme = "firmware-hmac-v1";
             format = "hex";
             path = "/run/bad-key";
           };
@@ -63,6 +253,7 @@ let
         services.rpiOtpDerivedKey = {
           enable = true;
           secrets.bad = {
+            scheme = "firmware-hmac-v1";
             format = "hex";
             path = "/run/bad-key";
           };
@@ -75,6 +266,7 @@ let
         services.rpiOtpDerivedKey = {
           enable = true;
           secrets.bad = {
+            scheme = "firmware-hmac-v1";
             format = "hex";
             path = "/run/bad-key";
             neededForBoot = true;
@@ -90,6 +282,7 @@ let
         services.rpiOtpDerivedKey = {
           enable = true;
           secrets.bad = {
+            scheme = "firmware-hmac-v1";
             format = "hex";
             path = "/var/lib/bad-key";
             neededForBoot = true;
@@ -105,6 +298,7 @@ let
         services.rpiOtpDerivedKey = {
           enable = true;
           secrets.bad = {
+            scheme = "firmware-hmac-v1";
             format = "hex";
             path = "/run/bad-key";
             owner = "alice";
@@ -121,6 +315,7 @@ let
         services.rpiOtpDerivedKey = {
           enable = true;
           secrets.bad = {
+            scheme = "firmware-hmac-v1";
             format = "hex";
             path = "/run/bad-key";
             group = "keys";

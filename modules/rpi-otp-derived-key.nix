@@ -17,6 +17,11 @@ let
   hasRaspberryPiVariantOption = options ? boot.loader.raspberry-pi.variant;
   hasRaspberryPiVariant =
     hasRaspberryPiVariantOption && options.boot.loader.raspberry-pi.variant.isDefined;
+  hasRaspberryPiConfigOption = lib.hasAttrByPath [
+    "hardware"
+    "raspberry-pi"
+    "config"
+  ] options;
   hasSupportedRaspberryPiVariant =
     hasRaspberryPiVariant
     && lib.elem config.boot.loader.raspberry-pi.variant supportedRaspberryPiVariants;
@@ -27,30 +32,31 @@ let
     "ed25519"
     "age"
   ];
-  isAbsolutePath = path: lib.hasPrefix "/" path;
+  schemes = [
+    "firmware-hmac-v1"
+    "legacy-hkdf-v1"
+  ];
   isRunPath = path: path == "/run" || lib.hasPrefix "/run/" path;
   isPathAtOrBelowDir = dir: path: path == dir || lib.hasPrefix "${dir}/" path;
-  shouldManageTmpfilesDir =
-    dir:
-    !(builtins.elem dir [
-      "/"
-      "/run"
-      "/tmp"
-      "/var"
-      "/var/lib"
-    ]);
-  absolutePathType = (lib.types.addCheck lib.types.str isAbsolutePath) // {
-    description = "absolute path";
-    name = "absolute path";
-  };
+  pathsOverlap = left: right: isPathAtOrBelowDir left right || isPathAtOrBelowDir right left;
+  canonicalAbsolutePathType =
+    (lib.types.addCheck lib.types.str otpDerivedKeyLib.isCanonicalAbsolutePath)
+    // {
+      description = "canonical absolute path without dot components or repeated separators";
+      name = "canonical absolute path";
+    };
   fileModeType = lib.types.strMatching "0[0-7]{3}";
   managedSaltLength = 32;
   otpHelperPackage =
     pkgs.rpi-otp-private-key or (pkgs.callPackage ../pkgs/raspberrypi/rpi-otp-private-key.nix { });
+  rpiUtilsPackage =
+    pkgs.raspberrypi-utils or (pkgs.callPackage ../pkgs/raspberrypi/raspberrypi-utils.nix { });
   modulePackage =
     pkgs.rpi-otp-derived-key or (pkgs.callPackage ../pkgs/raspberrypi/rpi-otp-derived-key.nix {
+      raspberrypi-utils = rpiUtilsPackage;
       rpi-otp-private-key = otpHelperPackage;
     });
+  moduleRpiFwCryptoPackage = modulePackage.rpiFwCryptoPackage or rpiUtilsPackage;
   defaultOtpHelperPackage = lib.optional (lib.meta.availableOn pkgs.stdenv.hostPlatform otpHelperPackage) otpHelperPackage;
   defaultOtpHelperRuntimePackages = [
     pkgs.gawk
@@ -65,6 +71,7 @@ let
     pkgs.age
     pkgs.coreutils
     pkgs.openssl
+    moduleRpiFwCryptoPackage
     pkgs.xxd
   ]
   ++ defaultOtpHelperRuntimePackages
@@ -74,6 +81,16 @@ let
     { config, ... }:
     {
       options = {
+        scheme = lib.mkOption {
+          type = lib.types.enum schemes;
+          example = "firmware-hmac-v1";
+          description = ''
+            Versioned derivation scheme for this secret. Use `firmware-hmac-v1`
+            for new deployments. `legacy-hkdf-v1` exists only to migrate keys
+            created by older versions of this module.
+          '';
+        };
+
         format = lib.mkOption {
           type = lib.types.enum formats;
           example = "age";
@@ -83,10 +100,10 @@ let
         };
 
         path = lib.mkOption {
-          type = absolutePathType;
-          default = "/run/rpi-otp-derived-key/${config._module.args.name}";
+          type = canonicalAbsolutePathType;
+          default = "/run/rpi-otp-derived-key/${otpDerivedKeyLib.pathComponentForName config._module.args.name}";
           description = ''
-            Path where the derived secret is written.
+            Canonical absolute path where the derived secret is written.
             Secrets with `neededForBoot = true` should keep this under `/run`.
           '';
         };
@@ -208,6 +225,7 @@ let
 
       cmd=(
         ${lib.getExe modulePackage}
+        --scheme ${lib.escapeShellArg secret.scheme}
         --format ${lib.escapeShellArg secret.format}
         --salt-file "$salt_file"
       )
@@ -250,25 +268,39 @@ let
   stage2SecretInstances = mkSecretInstances stage2Secrets;
   initrdSecretInstances = mkSecretInstances initrdSecrets;
   secretInstances = stage2SecretInstances // initrdSecretInstances;
+  secretInstanceValues = lib.attrValues secretInstances;
+  outputPaths = map (secret: secret.path) secretInstanceValues;
+  persistentSaltPaths = map (secret: secret.persistentSaltPath) secretInstanceValues;
+  outputPathHasCollision =
+    path: lib.length (lib.filter (otherPath: pathsOverlap path otherPath) outputPaths) > 1;
+  hasOutputPathCollision = lib.any outputPathHasCollision outputPaths;
+  hasPersistentSaltPathCollision =
+    lib.length (lib.unique persistentSaltPaths) != lib.length persistentSaltPaths;
+  usesOnlyFirmwareHmac = lib.all (secret: secret.scheme == "firmware-hmac-v1") secretInstanceValues;
   initrdBootSecrets = lib.mapAttrs' (
     _: secret: lib.nameValuePair secret.initrdSaltPath secret.persistentSaltPath
   ) initrdSecretInstances;
-  checkOtpProgrammedSnippet = ''
-        if ! ${lib.getExe otpHelperPackage} -c; then
-          cat >&2 <<'EOF'
-    services.rpiOtpDerivedKey: Raspberry Pi OTP private key is not programmed.
+  readinessSchemes = lib.unique (map (secret: secret.scheme) (lib.attrValues initrdSecretInstances));
+  mkOtpReadinessSnippet = scheme: ''
+    if ! ${lib.getExe modulePackage} \
+      --scheme ${lib.escapeShellArg scheme} \
+      --salt ${lib.escapeShellArg "rpi-otp-derived-key-readiness:${scheme}"} \
+      --length 1 \
+      >/dev/null
+    then
+      cat >&2 <<'EOF'
+    services.rpiOtpDerivedKey: OTP derivation backend is not ready for scheme ${scheme}.
 
-    Program the OTP private key before installing initrd OTP-derived secrets. One supported flow is:
+    Ensure the OTP device private key is programmed before installing initrd
+    OTP-derived secrets. firmware-hmac-v1 additionally requires firmware with
+    the rpi-fw-crypto HMAC API and uses OTP key slot 1 by default.
 
-      openssl ecparam -name prime256v1 -genkey -noout -out private_key.pem
-      openssl ec -in private_key.pem -text -noout | awk '/priv:/{flag=1; next} /pub:/{flag=0} flag' | tr -d ' \n:' | head -n1 > d.hex
-      rpi-otp-private-key -w "$(cat d.hex)"
-
-    Run `rpi-otp-private-key -h` for details and warnings. Aborting bootloader install.
+    Aborting bootloader install.
     EOF
-          exit 1
-        fi
+      exit 1
+    fi
   '';
+  checkOtpProgrammedSnippet = lib.concatMapStringsSep "\n" mkOtpReadinessSnippet readinessSchemes;
   initrdDeviceReadinessSnippet = ''
     if [[ -e /sys/firmware/devicetree/base/system/linux,revision ]]; then
       for _ in 1 2 3 4 5 6 7 8 9 10; do
@@ -297,28 +329,40 @@ let
   };
 
   managedOutputDirs = lib.unique (
-    lib.filter shouldManageTmpfilesDir (
-      lib.mapAttrsToList (_: secret: secret.outputDir) secretInstances
-    )
+    map (secret: secret.outputDir) (lib.attrValues stage2SecretInstances)
   );
-
-  tmpfilesRules = lib.unique (
-    [
-      "d /var/lib/rpi-otp-derived-key 0711 root root - -"
-      "d ${saltStateDir} 0700 root root - -"
-    ]
-    ++ map (dir: "d ${dir} 0711 root root - -") managedOutputDirs
+  outputDirTmpfilesSettings = lib.listToAttrs (
+    map (
+      dir:
+      lib.nameValuePair dir {
+        d = {
+          # The ':' prefix applies these values only when creating the directory.
+          # Existing application-owned directories keep their permissions and owner.
+          mode = ":0711";
+          user = ":root";
+          group = ":root";
+        };
+      }
+    ) managedOutputDirs
   );
+  tmpfilesRules = [
+    "d /var/lib/rpi-otp-derived-key 0711 root root - -"
+    "d ${saltStateDir} 0700 root root - -"
+  ];
 
   secretAssertions = lib.flatten (
     lib.mapAttrsToList (name: secret: [
       {
-        assertion = !isPathAtOrBelowDir saltStateDir secret.path;
-        message = "services.rpiOtpDerivedKey.secrets.${lib.strings.escapeNixIdentifier name}.path must not point inside the module-managed salt state directory.";
+        assertion = !pathsOverlap saltStateDir secret.path;
+        message = "services.rpiOtpDerivedKey.secrets.${lib.strings.escapeNixIdentifier name}.path must not overlap the module-managed salt state directory.";
       }
       {
-        assertion = !isPathAtOrBelowDir initrdSaltDir secret.path;
-        message = "services.rpiOtpDerivedKey.secrets.${lib.strings.escapeNixIdentifier name}.path must not point inside the module-managed initrd salt directory.";
+        assertion = !pathsOverlap initrdSaltDir secret.path;
+        message = "services.rpiOtpDerivedKey.secrets.${lib.strings.escapeNixIdentifier name}.path must not overlap the module-managed initrd salt directory.";
+      }
+      {
+        assertion = secret.path != "/";
+        message = "services.rpiOtpDerivedKey.secrets.${lib.strings.escapeNixIdentifier name}.path must name a file, not the filesystem root.";
       }
       {
         assertion = !secret.neededForBoot || isRunPath secret.path;
@@ -435,46 +479,67 @@ in
 
   };
 
-  config = lib.mkIf cfg.enable {
-    systemd.tmpfiles.rules = tmpfilesRules;
+  config = lib.mkMerge (
+    [
+      (lib.mkIf cfg.enable {
+        systemd.tmpfiles.rules = tmpfilesRules;
+        systemd.tmpfiles.settings.rpi-otp-derived-key-output-dirs = outputDirTmpfilesSettings;
 
-    system.build.rpiOtpDerivedKeyEnsureScripts = ensureScripts;
+        system.build.rpiOtpDerivedKeyEnsureScripts = ensureScripts;
 
-    assertions = [
-      {
-        assertion = hasSupportedRaspberryPiVariant;
-        message = ''
-          services.rpiOtpDerivedKey only supports Raspberry Pi Zero 2, 4, and 5.
-          Import a supported Raspberry Pi board module or set
-          boot.loader.raspberry-pi.variant to one of:
-          ${lib.concatStringsSep ", " supportedRaspberryPiVariants}
-        '';
-      }
-      {
-        assertion = cfg.secrets != { };
-        message = "services.rpiOtpDerivedKey.enable requires at least one secret in services.rpiOtpDerivedKey.secrets.";
-      }
-      {
-        assertion = !hasInitrdSecrets || config.boot.initrd.systemd.enable;
-        message = "services.rpiOtpDerivedKey.secrets.<name>.neededForBoot requires boot.initrd.systemd.enable = true.";
-      }
-      {
-        assertion = !hasInitrdSecrets || config.boot.loader.supportsInitrdSecrets;
-        message = "services.rpiOtpDerivedKey.secrets.<name>.neededForBoot requires a bootloader that supports native initrd secrets.";
-      }
+        assertions = [
+          {
+            assertion = hasSupportedRaspberryPiVariant;
+            message = ''
+              services.rpiOtpDerivedKey only supports Raspberry Pi Zero 2, 4, and 5.
+              Import a supported Raspberry Pi board module or set
+              boot.loader.raspberry-pi.variant to one of:
+              ${lib.concatStringsSep ", " supportedRaspberryPiVariants}
+            '';
+          }
+          {
+            assertion = cfg.secrets != { };
+            message = "services.rpiOtpDerivedKey.enable requires at least one secret in services.rpiOtpDerivedKey.secrets.";
+          }
+          {
+            assertion = !hasInitrdSecrets || config.boot.initrd.systemd.enable;
+            message = "services.rpiOtpDerivedKey.secrets.<name>.neededForBoot requires boot.initrd.systemd.enable = true.";
+          }
+          {
+            assertion = !hasInitrdSecrets || config.boot.loader.supportsInitrdSecrets;
+            message = "services.rpiOtpDerivedKey.secrets.<name>.neededForBoot requires a bootloader that supports native initrd secrets.";
+          }
+          {
+            assertion = !hasOutputPathCollision;
+            message = "services.rpiOtpDerivedKey secret output paths must be unique and must not contain another secret output path.";
+          }
+          {
+            assertion = !hasPersistentSaltPathCollision;
+            message = "services.rpiOtpDerivedKey secret names collide after conversion to persistent salt paths; rename one of the secrets.";
+          }
+        ]
+        ++ secretAssertions;
+
+        system.preSwitchChecks = preSwitchInitrdSaltCheck;
+
+        systemd.services = stage2SaltServices // stage2SecretServices;
+
+        boot.initrd.secrets = lib.mkIf hasInitrdSecrets initrdBootSecrets;
+
+        boot.initrd.systemd = lib.mkIf hasInitrdSecrets {
+          initrdBin = defaultInitrdPackages;
+          storePaths = map (source: { inherit source; }) initrdServiceStorePaths;
+          services = initrdSecretServices;
+        };
+      })
     ]
-    ++ secretAssertions;
-
-    system.preSwitchChecks = preSwitchInitrdSaltCheck;
-
-    systemd.services = stage2SaltServices // stage2SecretServices;
-
-    boot.initrd.secrets = lib.mkIf hasInitrdSecrets initrdBootSecrets;
-
-    boot.initrd.systemd = lib.mkIf hasInitrdSecrets {
-      initrdBin = defaultInitrdPackages;
-      storePaths = map (source: { inherit source; }) initrdServiceStorePaths;
-      services = initrdSecretServices;
-    };
-  };
+    ++ lib.optional hasRaspberryPiConfigOption (
+      lib.mkIf (cfg.enable && usesOnlyFirmwareHmac) {
+        hardware.raspberry-pi.config.all.options.lock_device_private_key = {
+          enable = lib.mkDefault true;
+          value = lib.mkDefault 1;
+        };
+      }
+    )
+  );
 }

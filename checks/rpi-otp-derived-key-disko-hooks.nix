@@ -1,4 +1,8 @@
-{ lib, pkgs, self }:
+{
+  lib,
+  pkgs,
+  self,
+}:
 
 let
   testSupport = import ./lib/rpi-otp-derived-key-test-support.nix {
@@ -40,6 +44,7 @@ let
                 fi
 
                 ${lib.getExe testPkgs.rpi-otp-derived-key-provision} stage \
+                  --scheme firmware-hmac-v1 \
                   --format hex \
                   --salt-file "${stagedSalt}" \
                   --out "${stagedKey}"
@@ -106,7 +111,7 @@ testPkgs.testers.runNixOSTest {
     machine.fail("test -e ${stagedSalt}")
     machine.fail("test -e ${stagedKey}")
 
-    machine.succeed("${lib.getExe testPkgs.rpi-otp-derived-key} --format hex --salt-file ${installedSalt} > /tmp/derived-luks.key")
+    machine.succeed("${lib.getExe testPkgs.rpi-otp-derived-key} --scheme firmware-hmac-v1 --format hex --salt-file ${installedSalt} > /tmp/derived-luks.key")
     machine.succeed("grep -Eq '^[0-9a-f]{64}$' /tmp/derived-luks.key")
     machine.succeed("cryptsetup open --test-passphrase --key-file /tmp/derived-luks.key ${luksPartition}")
   '';
