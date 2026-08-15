@@ -60,15 +60,38 @@ addEntry() {
 
     local kernel
     local initrd
+    local initrdSource
     kernel="$(readlink -f "$generationPath/kernel")"
-    initrd="$(readlink -f "$generationPath/initrd")"
+    initrdSource="$(readlink -f "$generationPath/initrd")"
 
     if test "1" = "@copyKernels@"; then
         copyToKernelsDir "$kernel" "$kernelsDir"; kernel=$result
-        copyToKernelsDir "$initrd" "$kernelsDir"; initrd=$result
     fi
 
-    appendInitrdSecrets "$generationPath" "$initrd" "$generationName"
+    local initrdSecrets
+    initrdSecrets="$(loadInitrdSecretsScript "$generationPath")"
+    if [ -n "$initrdSecrets" ]; then
+        initrdSecretsIdentity "$generationPath"
+        initrd="$kernelsDir/$(cleanName "$initrdSource").secrets-$result"
+        if ! materializeInitrdSecrets "$generationPath" "$initrdSource" "$initrd"; then
+            reportInitrdSecretsFailure "$generationName"
+            if [ "$generationName" = "default" ]; then
+                return 1
+            fi
+            rm -f -- \
+                "$kernelsDir/$generationName-system" \
+                "$kernelsDir/$generationName-init" \
+                "$kernelsDir/$generationName-cmdline.txt" \
+                "$kernelsDir/$generationName-initrd" \
+                "$kernelsDir/$generationName-kernel"
+            return 0
+        fi
+        filesCopied[$initrd]=1
+    elif test "1" = "@copyKernels@"; then
+        copyToKernelsDir "$initrdSource" "$kernelsDir"; initrd=$result
+    else
+        initrd="$initrdSource"
+    fi
 
     readlink -f "$generationPath" > "$kernelsDir/$generationName-system"
     readlink -f "$generationPath/init" > "$kernelsDir/$generationName-init"
@@ -89,7 +112,7 @@ removeObsolete() {
     local path="$1"
 
     # Remove obsolete files from $path and $path/old.
-    for fn in "$path"/*linux* "$path"/*initrd-initrd*; do
+    for fn in "$path"/*linux* "$path"/*initrd-initrd* "$path"/*.secrets-*; do
         if ! test "${filesCopied[$fn]}" = 1; then
             rm -vf -- "$fn"
         fi

@@ -1,5 +1,6 @@
-{ pkgs
-, firmwareBuilder
+{
+  pkgs,
+  firmwareBuilder,
 }:
 
 pkgs.replaceVarsWith {
@@ -16,6 +17,8 @@ pkgs.replaceVarsWith {
 
     inherit firmwareBuilder;
     copyKernels = true;
-    initrdSecrets = pkgs.writeText "raspberrypi-initrd-secrets.sh" (builtins.readFile ./initrd-secrets.sh);
+    initrdSecrets = pkgs.writeText "raspberrypi-initrd-secrets.sh" (
+      builtins.readFile ./initrd-secrets.sh
+    );
   };
 }

@@ -1,24 +1,30 @@
 # https://github.com/NixOS/nixpkgs/blob/nixos-unstable/pkgs/development/libraries/libraspberrypi/default.nix#L28
 # because libraspberrypi is outdated and deprecated
-{ lib, stdenv
-, fetchFromGitHub
-, cmake
-, dtc
+{
+  lib,
+  stdenv,
+  fetchFromGitHub,
+  cmake,
+  dtc,
+  gnutls,
+  ncurses,
 }:
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "raspberrypi-utils";
-  version = "unstable-2025-11-19";
+  version = "0-unstable-2026-08-04";
 
   src = fetchFromGitHub {
     owner = "raspberrypi";
     repo = "utils";
-    rev = "6e0779b1c552976e0da2374c0325a8c9c77b6010";
-    hash = "sha256-gzcQdchmYZ8NSGDnozUK3JgEQAO5b7GCOzQeRL0nDM8";
+    rev = "6fa7ec61e15c97f6cd79a4cc5a328b299b7d4ad9";
+    hash = "sha256-0opz6l9BiG0uX22TnJRlzqyrAgV4TYL5QA5KF1bxKVg=";
   };
 
   buildInputs = [
     dtc # dtmerge depends on libfdt
+    gnutls # rpifwcrypto depends on GnuTLS
+    ncurses
   ];
 
   nativeBuildInputs = [ cmake ];
@@ -27,7 +33,11 @@ stdenv.mkDerivation (finalAttrs: {
     description = "A collection of scripts and simple applications for Raspberry Pi hardware";
     homepage = "https://github.com/raspberrypi/utils";
     license = licenses.bsd3;
-    platforms = [ "armv6l-linux" "armv7l-linux" "aarch64-linux" ];
+    platforms = [
+      "armv6l-linux"
+      "armv7l-linux"
+      "aarch64-linux"
+    ];
     maintainers = with maintainers; [ kazenyuk ];
   };
 })

@@ -10,6 +10,37 @@ named `luks-key` and the LUKS key file is `/run/secrets/luks.key`.
 The hook pattern is covered by
 `.#checks.x86_64-linux.rpi-otp-derived-key-disko-hooks`.
 
+## Key and salt lifecycle
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant DiskoInstall@{ "type": "control" }
+    participant PreCreateHook@{ "type": "control" }
+    participant RaspberryPiOTP@{ "type": "entity" }
+    participant InstallerRun@{ "type": "entity" }
+    participant LUKSPartition@{ "type": "database" }
+    participant PostMountHook@{ "type": "control" }
+    participant TargetRoot@{ "type": "database" }
+    participant InitrdService@{ "type": "control" }
+
+    DiskoInstall->>PreCreateHook: Before formatting LUKS
+    PreCreateHook->>RaspberryPiOTP: Check OTP private key is programmed
+    PreCreateHook->>InstallerRun: Stage fresh salt and derived key in /run
+    PreCreateHook-->>DiskoInstall: Return key file path
+    DiskoInstall->>LUKSPartition: Format partition using staged key
+    DiskoInstall->>PostMountHook: After target root is mounted
+    PostMountHook->>TargetRoot: Install salt as 0400 root:root
+    PostMountHook->>InstallerRun: Remove staged salt and key
+
+    Note over InstallerRun,TargetRoot: The derived key is transient. Only the salt persists in the target root.
+
+    InitrdService->>TargetRoot: Read installed salt on later boots
+    InitrdService->>RaspberryPiOTP: Derive the same key from OTP private key + salt
+    InitrdService->>InstallerRun: Write boot-time key file in /run
+    InitrdService->>LUKSPartition: Unlock encrypted root
+```
+
 ```nix
 { config, disko, lib, pkgs, nixos-raspberrypi, ... }:
 let
@@ -32,6 +63,7 @@ in
   services.rpiOtpDerivedKey = {
     enable = true;
     secrets.luks-key = {
+      scheme = "firmware-hmac-v1";
       format = "hex";
       path = stagedKey;
       neededForBoot = true;
@@ -52,6 +84,7 @@ in
       fi
 
       ${lib.getExe rpiOtpProvision} stage \
+        --scheme firmware-hmac-v1 \
         --format hex \
         --salt-file "${stagedSalt}" \
         --out "${stagedKey}"
@@ -79,9 +112,20 @@ manual key enrollment or `disko-install --mode mount`. If installation fails
 after LUKS formatting but before the root filesystem hook copies the salt,
 reformat and reinstall; the matching salt may only exist in `/run`.
 
-`rpi-otp-derived-key-provision` checks that the OTP private key is programmed,
-creates the salt and derived key atomically, installs them as `0400 root:root`,
-and removes the staged files after the salt is copied. Keep a recovery
-passphrase or recovery key enrolled before relying on unattended unlock. For
-other disko layouts, attach the same two hooks to the LUKS node and the mounted
-root filesystem node.
+`rpi-otp-derived-key-provision` checks the selected derivation backend, creates
+the salt and derived key atomically, installs them as `0400 root:root`, and
+removes the staged files after the salt is copied. Back up the installed salt
+and keep a separate recovery passphrase or recovery key enrolled before relying
+on unattended unlock. Losing the salt or changing the derivation scheme changes
+the key.
+
+`firmware-hmac-v1` needs current Raspberry Pi firmware and keeps the raw OTP key
+out of the installer and initrd. For an existing volume enrolled by an older
+version, use `legacy-hkdf-v1` until you have unlocked it and enrolled the new
+scheme in another LUKS keyslot; never change schemes in place. Unattended unlock
+only resists boot-partition tampering when the boot environment is authenticated
+with secure boot. Raspberry Pi Zero 2 does not provide that authenticated-boot
+boundary.
+
+For other disko layouts, attach the same two hooks to the LUKS node and the
+mounted root filesystem node.

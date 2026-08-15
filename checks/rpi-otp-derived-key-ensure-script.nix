@@ -1,10 +1,14 @@
-{ lib, pkgs, self }:
+{
+  lib,
+  pkgs,
+  self,
+}:
 
 let
   testSupport = import ./lib/rpi-otp-derived-key-test-support.nix {
     inherit lib pkgs;
   };
-  inherit (testSupport) persistentSaltPathForName testPkgs;
+  inherit (testSupport) persistentSaltPathForName supportedRaspberryPiVariantModule testPkgs;
   unsafeSecretName = "secondary/key";
   unsafeSaltPath = persistentSaltPathForName unsafeSecretName;
 in
@@ -18,6 +22,7 @@ testPkgs.testers.runNixOSTest {
     in
     {
       imports = [
+        supportedRaspberryPiVariantModule
         self.nixosModules.rpi-otp-derived-key
       ];
 
@@ -26,10 +31,12 @@ testPkgs.testers.runNixOSTest {
       services.rpiOtpDerivedKey = {
         enable = true;
         secrets.age = {
+          scheme = "firmware-hmac-v1";
           format = "age";
           path = "/run/age-keys.txt";
         };
         secrets."${unsafeSecretName}" = {
+          scheme = "firmware-hmac-v1";
           format = "hex";
           path = "/run/secondary-key.txt";
         };

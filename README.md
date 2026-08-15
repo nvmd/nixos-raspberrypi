@@ -13,7 +13,7 @@ Partition provisioning is integrated with bootloader activation scripts, happeni
 Supported boot methods (configurable with `boot.loader.raspberry-pi.bootloader`):
 - `kernelboot` (legacy), default for RPi5
 - `uboot`, default bootloader for all other boards
-- `kernel`, new generation of `kernelboot`, supporting multiple NixOS generations (see #60), default for RPi5 sd-image/installer images, _recommended_ for new installations.
+- `kernel`, new generation of `kernelboot`, supporting multiple NixOS generations (see [#60](https://github.com/nvmd/nixos-raspberrypi/issues/60), default for RPi5 sd-image/installer images, _recommended_ for new installations.
 
 
 ## Provides vendor kernel packages with matched firmware
@@ -75,7 +75,6 @@ nixosConfigurations.rpi5-demo = nixos-raspberrypi.lib.nixosSystem {
       # list of modules
       imports = with nixos-raspberrypi.nixosModules; [
         raspberry-pi-5.base
-        raspberry-pi-5.page-size-16k
         raspberry-pi-5.display-vc4
         raspberry-pi-5.bluetooth
       ];
@@ -122,7 +121,7 @@ imports = with nixos-raspberrypi.nixosModules; [
   raspberry-pi-4.display-vc4
 
   # RPi5:
-  raspberry-pi-5.page-size-16k  # Recommended: optimizations and fixes for issues arising from 16k memory page size (only for systems running default rpi5 (bcm2712) kernel)
+  raspberry-pi-5.page-size-16k  # Optional memory optimization: use 16k pages instead of default 64k for jemalloc, saves memory, reduces fragmentation. May fix any issues caused by the memory page size discrepancy. May cause lots of rebuilds. (only for systems running default rpi5 (bcm2712) kernel with 16k memory page)
   # use one of following for the "PrimaryGPU" configuration:
   raspberry-pi-5.display-vc4  # "regular" display connected
   raspberry-pi-5.display-rp1  # for RP1-connected (DPI/composite/MIPI DSI) display
@@ -171,7 +170,7 @@ imports = with nixos-raspberrypi.nixosModules; [
   # Optional: All RPi and RPi-optimised packages to be available in `pkgs.rpi`
   nixpkgs-rpi
 
-  # Optonal: add overlays with optimised packages into the global scope
+  # Optional: add overlays with optimised packages into the global scope
   # provides: ffmpeg_{4,6,7}, kodi, libcamera, vlc, etc.
   # This overlay may cause lots of rebuilds (however many
   #  packages should be available from the binary cache)
@@ -196,15 +195,21 @@ See `nixosConfigurations.rpi{02,4,5}-installer` in `flake.nix`.
 SD image can be built with:
 
 ```
-nix build .#installerImages.rpi02
-nix build .#installerImages.rpi3
-nix build .#installerImages.rpi4
-nix build .#installerImages.rpi5
+# By accepting the flake configuration, you can trust our binary cache and 
+# avoid building the kernel package yourself.
+nix --accept-flake-config build .#installerImages.rpi02
+nix --accept-flake-config build .#installerImages.rpi3
+nix --accept-flake-config build .#installerImages.rpi4
+nix --accept-flake-config build .#installerImages.rpi5
 ```
 
 Randomly generated connection credentials will be displayed on the screen, once the system is booted.
 
 Network access to Raspberry Pi Zero2 (RPi02) boards is also possible via USB Gadget/Ethernet functionality.
+
+Installer images for Raspberry Pi Zero 2, 4, and 5 include `rpi-fw-crypto` and
+the deprecated `rpi-otp-private-key` compatibility helper for provisioning or
+checking OTP private key state on supported hardware.
 
 > [!TIP]
 > You can optionally replace `# YOUR SSH PUB KEY HERE #` in `custom-user-config`
@@ -250,11 +255,13 @@ An alternative ways to consume individual packages without overlays are:
 
 The flake provides Raspberry Pi OTP key utilities:
 
-- `rpi-otp-private-key` packages Raspberry Pi's `rpi-eeprom` helper for reading
-  or programming the OTP private key.
-- `rpi-otp-derived-key` derives deterministic key material from the OTP private
-  key with HKDF-SHA256 and can emit hex, binary, Ed25519 PEM, or age identity
-  output.
+- `raspberrypi-utils` includes `rpi-fw-crypto`, Raspberry Pi's firmware crypto
+  client. Its HMAC operation derives keys without returning the raw OTP private
+  key to userspace.
+- `rpi-otp-private-key` packages Raspberry Pi's deprecated `rpi-eeprom` helper.
+  It remains available for provisioning and explicit legacy-key migration.
+- `rpi-otp-derived-key` derives deterministic key material using a required,
+  versioned scheme and can emit hex, binary, Ed25519 PEM, or age identities.
 - `rpi-otp-derived-key-provision` stages OTP-derived secrets and installs their
   salts for install-time workflows.
 
@@ -278,22 +285,43 @@ environment.systemPackages = with pkgs; [
 ];
 ```
 
-Example:
+For a new enrollment, select the firmware-backed scheme explicitly:
 
 ```shell
-rpi-otp-derived-key --salt-file /etc/machine-id --format age
+rpi-otp-derived-key \
+  --scheme firmware-hmac-v1 \
+  --salt-file /etc/machine-id \
+  --format age
 ```
 
-The OTP private key and anything derived from it should be treated as secret
-material. These tools are intended for Raspberry Pi hardware with a programmed
-OTP private key.
+`firmware-hmac-v1` uses a versioned HMAC-SHA256 counter KDF through the firmware
+crypto service. `legacy-hkdf-v1` reproduces the original HKDF-SHA256 output but
+reads the raw OTP key; use it only to unlock or migrate an existing enrollment.
+The command requires `--scheme` because switching schemes changes every derived
+key. To migrate encrypted storage, keep a recovery passphrase, unlock with
+`legacy-hkdf-v1`, enroll the `firmware-hmac-v1` result in another LUKS keyslot,
+verify it, and only then remove the legacy keyslot.
+
+The firmware API requires current Raspberry Pi firmware and a programmed device
+private key; key slot 1 is used by default. With secure boot, set
+`lock_device_private_key=1` so the authenticated `config.txt` disables raw OTP
+reads while HMAC remains available. The module applies this setting by default
+when all configured secrets use `firmware-hmac-v1` and the board module exposes
+the corresponding firmware configuration option.
+
+This is defense in depth, not a hardware security module. Root-level code can
+still access the firmware mailbox or OTP hardware, and an unauthenticated initrd
+can request derived keys. Raspberry Pi Zero 2 supports firmware-derived keys but
+not Raspberry Pi secure boot, so unattended unlock on that model does not
+provide an authenticated-boot boundary. Keep recovery credentials and a backup
+of every salt; losing or changing a salt changes the derived key.
 
 ## OTP-derived secrets module
 
 `nixosModules.rpi-otp-derived-key` manages named derived-key outputs under
 `services.rpiOtpDerivedKey.secrets`. Each secret gets a persistent module-owned
 salt under `/var/lib/rpi-otp-derived-key/salt/`; losing that salt rotates the
-derived key material.
+derived key material. The module supports Raspberry Pi Zero 2, 4, and 5.
 
 ```nix
 {
@@ -302,6 +330,7 @@ derived key material.
   services.rpiOtpDerivedKey = {
     enable = true;
     secrets.my-app = {
+      scheme = "firmware-hmac-v1";
       format = "age";
       path = "/run/rpi-otp-derived-key/my-app";
       before = [ "my-app.service" ];
@@ -331,6 +360,7 @@ programmed.
   services.rpiOtpDerivedKey = {
     enable = true;
     secrets.luks-key = {
+      scheme = "firmware-hmac-v1";
       format = "hex";
       path = "/run/secrets/luks.key";
       neededForBoot = true;

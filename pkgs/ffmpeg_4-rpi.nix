@@ -1,7 +1,9 @@
-{ lib, fetchFromGitHub
-, callPackage
-, ffmpeg
-, ffmpegVariant ? "small"
+{
+  lib,
+  fetchFromGitHub,
+  callPackage,
+  ffmpeg,
+  ffmpegVariant ? "small",
 }:
 
 let
@@ -9,12 +11,13 @@ let
   ffmpegVersion = "4.4";
   rpiFfmpegSrc = fetchFromGitHub {
     owner = "jc-kynesim";
-    repo  = "rpi-ffmpeg";
-    rev   = "release/${ffmpegVersion}/rpi_import_1";
-    hash  = "sha256-n+0/S51WrogVkrpmngDRw/0EC46OsTIxegyrw6S+Xbk=";
+    repo = "rpi-ffmpeg";
+    rev = "release/${ffmpegVersion}/rpi_import_1";
+    hash = "sha256-n+0/S51WrogVkrpmngDRw/0EC46OsTIxegyrw6S+Xbk=";
   };
 
-in callPackage ./ffmpeg-rpi.nix {
+in
+callPackage ./ffmpeg-rpi.nix {
   inherit ffmpeg;
   version = ffmpegVersion;
   source = rpiFfmpegSrc;

@@ -11,7 +11,8 @@ let
       linuxPackages_rpi4 = final.linuxPackagesFor linux_rpi4;
       linuxPackages_rpi3 = final.linuxPackagesFor linux_rpi3;
       linuxPackages_rpi02 = final.linuxPackagesFor linux_rpi02;
-    } // (with firmware; {
+    }
+    // (with firmware; {
       # Matching versions of the firmware to the kernel:
       # - https://downloads.raspberrypi.com/raspios_arm64/release_notes.txt
       # - `extra/git_hash` https://github.com/raspberrypi/firmware/ matches
@@ -27,20 +28,57 @@ let
       raspberrypiWirelessFirmware = wFw;
     });
   };
-in final: prev: {
+in
+final: prev: {
 
   inherit (final.linuxAndFirmware.default)
-    linux_rpi5 linuxPackages_rpi5
-    linux_rpi4 linuxPackages_rpi4
-    linux_rpi3 linuxPackages_rpi3
-    linux_rpi02 linuxPackages_rpi02
-    raspberrypifw raspberrypiWirelessFirmware;
+    linux_rpi5
+    linuxPackages_rpi5
+    linux_rpi4
+    linuxPackages_rpi4
+    linux_rpi3
+    linuxPackages_rpi3
+    linux_rpi02
+    linuxPackages_rpi02
+    raspberrypifw
+    raspberrypiWirelessFirmware
+    ;
 
   linuxAndFirmware = prev.lib.mergeAttrsList [
 
-    { default = final.linuxAndFirmware.v6_12_75; }
+    { default = final.linuxAndFirmware.v6_18_42; }
 
-    { latest = final.linuxAndFirmware.v6_12_75; }
+    { latest = final.linuxAndFirmware.v6_18_42; }
+
+    (mkBundle final "v6_18_42" {
+      fw = final.raspberrypifw_20260806;
+      wFw = final.raspberrypiWirelessFirmware_20260321;
+    })
+
+    (mkBundle final "v6_18_39" {
+      fw = final.raspberrypifw_20260724;
+      wFw = final.raspberrypiWirelessFirmware_20260321;
+    })
+
+    (mkBundle final "v6_18_34" {
+      fw = final.raspberrypifw_20260521;
+      wFw = final.raspberrypiWirelessFirmware_20260321;
+    })
+
+    (mkBundle final "v6_18_33" {
+      fw = final.raspberrypifw_20260521;
+      wFw = final.raspberrypiWirelessFirmware_20260321;
+    })
+
+    (mkBundle final "v6_12_87" {
+      fw = final.raspberrypifw_20260408;
+      wFw = final.raspberrypiWirelessFirmware_20251008;
+    })
+
+    (mkBundle final "v6_12_85" {
+      fw = final.raspberrypifw_20260408;
+      wFw = final.raspberrypiWirelessFirmware_20251008;
+    })
 
     (mkBundle final "v6_12_75" {
       fw = final.raspberrypifw_20260408;

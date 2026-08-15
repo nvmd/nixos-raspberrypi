@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   # Default config.txt as provided with the official Raspberry Pi OS images
@@ -73,7 +78,7 @@
 
         # Enable audio (loads snd_bcm2835)
         audio = {
-          enable = true;
+          enable = lib.mkDefault true;
           value = "on";
         };
       };

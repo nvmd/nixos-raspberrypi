@@ -1,15 +1,15 @@
-{ lib
-, stdenvNoCC
-, fetchFromGitHub
-, makeWrapper
-, coreutils
-, gawk
-, gnugrep
-, gnused
-, which
-, xxd
-, libraspberrypi
-,
+{
+  lib,
+  stdenvNoCC,
+  fetchFromGitHub,
+  makeWrapper,
+  coreutils,
+  gawk,
+  gnugrep,
+  gnused,
+  which,
+  xxd,
+  libraspberrypi,
 }:
 
 stdenvNoCC.mkDerivation (finalAttrs: {
@@ -56,6 +56,10 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     homepage = "https://github.com/raspberrypi/rpi-eeprom";
     license = licenses.bsd3;
     mainProgram = "rpi-otp-private-key";
-    platforms = [ "armv6l-linux" "armv7l-linux" "aarch64-linux" ];
+    platforms = [
+      "armv6l-linux"
+      "armv7l-linux"
+      "aarch64-linux"
+    ];
   };
 })

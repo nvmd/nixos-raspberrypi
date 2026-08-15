@@ -1,10 +1,9 @@
-{ lib
-, writeShellApplication
-, coreutils
-, openssl
-, rpi-otp-private-key
-, rpi-otp-derived-key
-,
+{
+  lib,
+  writeShellApplication,
+  coreutils,
+  openssl,
+  rpi-otp-derived-key,
 }:
 
 writeShellApplication {
@@ -13,7 +12,6 @@ writeShellApplication {
   runtimeInputs = [
     coreutils
     openssl
-    rpi-otp-private-key
     rpi-otp-derived-key
   ];
 
@@ -28,7 +26,7 @@ writeShellApplication {
     usage() {
       cat <<'EOF'
     Usage:
-      rpi-otp-derived-key-provision stage --salt-file PATH --out PATH [--format FORMAT]
+      rpi-otp-derived-key-provision stage --scheme SCHEME --salt-file PATH --out PATH [--format FORMAT]
       rpi-otp-derived-key-provision install-salt --salt-file PATH --target-file PATH [--cleanup PATH ...]
 
     Provision Raspberry Pi OTP-derived secrets for install-time workflows.
@@ -43,6 +41,7 @@ writeShellApplication {
         staged files after the copy succeeds.
 
     Options:
+      --scheme SCHEME       Required derivation scheme for stage.
       --format FORMAT       Output format for stage. Defaults to hex.
       --salt-file PATH      Salt file to create/read.
       --out PATH            Output path for stage.
@@ -62,26 +61,29 @@ writeShellApplication {
 
     trap cleanup_tmp_paths EXIT
 
+    created_tmp_path=""
+
     ensure_parent_dir() {
       local path="$1"
       local dir
 
       dir="$(dirname -- "$path")"
-      install -d -m 0700 "$dir"
+      if [[ -e "$dir" || -L "$dir" ]]; then
+        [[ -d "$dir" ]] || die "parent path exists but is not a directory: $dir"
+      else
+        (umask 077; mkdir -p -- "$dir")
+      fi
     }
 
     mk_tmp_for() {
       local path="$1"
       local dir
       local base
-      local tmp_path
 
       dir="$(dirname -- "$path")"
       base="$(basename -- "$path")"
-      tmp_path="$(mktemp "$dir/.$base.tmp.XXXXXX")"
-      tmp_paths+=("$tmp_path")
-
-      printf '%s\n' "$tmp_path"
+      created_tmp_path="$(mktemp "$dir/.$base.tmp.XXXXXX")"
+      tmp_paths+=("$created_tmp_path")
     }
 
     set_secret_permissions() {
@@ -91,9 +93,16 @@ writeShellApplication {
       chmod 0400 "$path"
     }
 
-    ensure_otp_private_key() {
-      if ! rpi-otp-private-key -c >/dev/null; then
-        die "Raspberry Pi OTP private key is not programmed"
+    ensure_otp_derivation_ready() {
+      local scheme="$1"
+
+      if ! rpi-otp-derived-key \
+        --scheme "$scheme" \
+        --salt rpi-otp-derived-key-provision-readiness-probe \
+        --length 1 \
+        >/dev/null
+      then
+        die "Raspberry Pi OTP derivation backend is not ready for scheme $scheme"
       fi
     }
 
@@ -103,10 +112,12 @@ writeShellApplication {
 
       ensure_parent_dir "$salt_file"
 
-      if [[ -e "$salt_file" ]]; then
+      if [[ -e "$salt_file" || -L "$salt_file" ]]; then
+        [[ ! -L "$salt_file" ]] || die "salt path must not be a symbolic link: $salt_file"
         [[ -f "$salt_file" ]] || die "salt path exists but is not a regular file: $salt_file"
       else
-        tmp_path="$(mk_tmp_for "$salt_file")"
+        mk_tmp_for "$salt_file"
+        tmp_path="$created_tmp_path"
         openssl rand -out "$tmp_path" 32
         set_secret_permissions "$tmp_path"
         mv -n "$tmp_path" "$salt_file"
@@ -117,6 +128,7 @@ writeShellApplication {
     }
 
     stage_command() {
+      local scheme=""
       local format="hex"
       local salt_file=""
       local out=""
@@ -124,6 +136,11 @@ writeShellApplication {
 
       while [[ $# -gt 0 ]]; do
         case "$1" in
+          --scheme)
+            [[ $# -ge 2 ]] || die "--scheme requires an argument"
+            scheme="$2"
+            shift 2
+            ;;
           --format)
             [[ $# -ge 2 ]] || die "--format requires an argument"
             format="$2"
@@ -149,15 +166,18 @@ writeShellApplication {
         esac
       done
 
+      [[ -n "$scheme" ]] || die "stage requires --scheme"
       [[ -n "$salt_file" ]] || die "stage requires --salt-file"
       [[ -n "$out" ]] || die "stage requires --out"
 
-      ensure_otp_private_key
+      ensure_otp_derivation_ready "$scheme"
       create_salt_if_missing "$salt_file"
       ensure_parent_dir "$out"
 
-      tmp_path="$(mk_tmp_for "$out")"
+      mk_tmp_for "$out"
+      tmp_path="$created_tmp_path"
       rpi-otp-derived-key \
+        --scheme "$scheme" \
         --format "$format" \
         --salt-file "$salt_file" \
         > "$tmp_path"
@@ -202,14 +222,38 @@ writeShellApplication {
 
       [[ -n "$salt_file" ]] || die "install-salt requires --salt-file"
       [[ -n "$target_file" ]] || die "install-salt requires --target-file"
+      [[ ! -L "$salt_file" ]] || die "salt file must not be a symbolic link: $salt_file"
       [[ -f "$salt_file" ]] || die "salt file does not exist: $salt_file"
       [[ -r "$salt_file" ]] || die "cannot read salt file: $salt_file"
+      for cleanup_path in "''${cleanup_paths[@]}"; do
+        [[ "$cleanup_path" != "$target_file" ]] \
+          || die "refusing to clean up the installed target salt: $target_file"
+      done
 
       ensure_parent_dir "$target_file"
-      tmp_path="$(mk_tmp_for "$target_file")"
-      cp "$salt_file" "$tmp_path"
-      set_secret_permissions "$tmp_path"
-      mv -f "$tmp_path" "$target_file"
+
+      if [[ -e "$target_file" || -L "$target_file" ]]; then
+        [[ ! -L "$target_file" ]] || die "target salt must not be a symbolic link: $target_file"
+        [[ -f "$target_file" ]] || die "target salt exists but is not a regular file: $target_file"
+        [[ -r "$target_file" ]] || die "cannot read target salt: $target_file"
+        cmp -s -- "$salt_file" "$target_file" \
+          || die "refusing to replace an existing target with different salt material: $target_file"
+      else
+        mk_tmp_for "$target_file"
+        tmp_path="$created_tmp_path"
+        cp "$salt_file" "$tmp_path"
+        set_secret_permissions "$tmp_path"
+        mv -n "$tmp_path" "$target_file"
+
+        if [[ -e "$tmp_path" ]]; then
+          [[ ! -L "$target_file" && -f "$target_file" ]] \
+            || die "target salt appeared during installation and is not a regular file: $target_file"
+          cmp -s -- "$salt_file" "$target_file" \
+            || die "target salt appeared during installation with different salt material: $target_file"
+        fi
+      fi
+
+      set_secret_permissions "$target_file"
 
       for cleanup_path in "''${cleanup_paths[@]}"; do
         rm -f -- "$cleanup_path"
@@ -245,6 +289,10 @@ writeShellApplication {
     homepage = "https://github.com/nvmd/nixos-raspberrypi";
     license = licenses.mit;
     mainProgram = "rpi-otp-derived-key-provision";
-    platforms = [ "armv6l-linux" "armv7l-linux" "aarch64-linux" ];
+    platforms = [
+      "armv6l-linux"
+      "armv7l-linux"
+      "aarch64-linux"
+    ];
   };
 }

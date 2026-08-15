@@ -1,0 +1,67 @@
+name: "Update packages"
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 1" # 00:00 every Monday
+
+permissions:
+  contents: read
+
+concurrency:
+  group: update-packages
+  cancel-in-progress: false
+
+jobs:
+  nix-update:
+    runs-on: ubuntu-24.04-arm
+
+    permissions:
+      contents: write # push the update branch
+      pull-requests: write # open/update the PR
+
+    strategy:
+      # Keep updating the rest if one package fails
+      fail-fast: false
+      matrix:
+        include:
+          # Release-tagged packages: nix-update picks the newest stable tag
+          - attr: pisugar-power-manager-rs # github:PiSugar/pisugar-power-manager-rs (also bumps cargoHash)
+            args: ""
+          - attr: rpicam-apps # github:raspberrypi/rpicam-apps
+            args: ""
+
+          # Rolling vendor sources with no releases: track the default branch HEAD
+          # nix-update rewrites the version to `<unstable>-YYYY-MM-DD` + new rev/hash.
+          - attr: raspberrypi-utils # github:raspberrypi/utils
+            args: "--version=branch"
+
+          # - attr: raspberrypi-udev-rules
+          #   args: "--version=branch=pios/trixie"
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup-nix-action
+
+      - name: Run nix-update for ${{ matrix.attr }}
+        run: nix run nixpkgs#nix-update -- --flake ${{ matrix.args }} ${{ matrix.attr }}
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          branch: update-packages/${{ matrix.attr }}
+          delete-branch: true
+          commit-message: "${{ matrix.attr }}: update via nix-update"
+          title: "${{ matrix.attr }}: automated update"
+          body: |
+            Automated package update opened by the `Update packages` workflow.
+
+            - Package: `${{ matrix.attr }}`
+            - Tool: `nix-update --flake ${{ matrix.args }} ${{ matrix.attr }}`
+
+            Review the version/hash diff and let CI build before merging.
+
+            > [!NOTE]
+            > Because this PR is created with the default `GITHUB_TOKEN`, other
+            > workflows (e.g. CI) do not run on it automatically. Close/reopen the
+            > PR, push to its branch, or wire a PAT/GitHub App token to trigger them.

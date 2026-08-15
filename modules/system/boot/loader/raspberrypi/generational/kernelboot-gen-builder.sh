@@ -40,8 +40,17 @@ addEntry() {
     echo "$kernel" > "$genDir/kernel-link"
 
     copyForced "$kernel" "$genDir/kernel.img"
-    copyForced "$initrd" "$genDir/initrd"
-    appendInitrdSecrets "$generationPath" "$genDir/initrd" "$generationName"
+    if ! materializeInitrdSecrets "$generationPath" "$initrd" "$genDir/initrd"; then
+        reportInitrdSecretsFailure "$generationName"
+        if [ "$generationName" = "default" ]; then
+            return 1
+        fi
+
+        # Tell the parent builder not to publish an older generation whose
+        # required secrets could not be materialized.
+        : > "$genDir/.skip-generation"
+        return 0
+    fi
     echo "$(cat "$generationPath/kernel-params") init=$generationPath/init" > "$genDir/cmdline.txt"
 
     echo -n "device tree..."

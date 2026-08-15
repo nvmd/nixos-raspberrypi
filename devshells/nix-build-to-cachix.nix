@@ -1,8 +1,16 @@
-{ writeShellApplication, jq, cachix, ... }:
+{
+  writeShellApplication,
+  jq,
+  cachix,
+  ...
+}:
 
 writeShellApplication {
   name = "nix-build-to-cachix";
-  runtimeInputs = [ jq cachix ];
+  runtimeInputs = [
+    jq
+    cachix
+  ];
   text = ''
     set -euo pipefail
 

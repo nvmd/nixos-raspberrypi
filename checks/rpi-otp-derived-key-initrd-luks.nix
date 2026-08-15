@@ -1,4 +1,8 @@
-{ lib, pkgs, self }:
+{
+  lib,
+  pkgs,
+  self,
+}:
 
 let
   testSupport = import ./lib/rpi-otp-derived-key-test-support.nix {
@@ -73,6 +77,7 @@ testPkgs.testers.runNixOSTest {
     services.rpiOtpDerivedKey = {
       enable = true;
       secrets.luks = {
+        scheme = "firmware-hmac-v1";
         format = "hex";
         path = "/run/secrets/luks.key";
         neededForBoot = true;

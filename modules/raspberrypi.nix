@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   imports = [
@@ -28,19 +33,13 @@
     };
   };
 
-  # Workaround for `Couldn't write '33' to 'vm/mmap_rnd_bits': Invalid argument`, 
-  # both RPi4 and RPi5 seem to be affected, see:
-  # 1. https://github.com/NixOS/nixpkgs/issues/513512
-  # 2. https://github.com/NixOS/nixpkgs/commit/4971c9331a72deeda85ba8d8018a5b07ee6f1635
-  # RPi5 16k kernel should set ARM64_16K_PAGES in nixos config explicitly
-  # for the check from (2) to work, but the `31` still won't work, so set the
-  # value back to the default before the change in (2)
-  boot.kernel.sysctl."vm.mmap_rnd_bits" = 18;
-
   boot.consoleLogLevel = lib.mkDefault 7;
   # https://github.com/raspberrypi/firmware/issues/1539#issuecomment-784498108
   # https://github.com/RPi-Distro/pi-gen/blob/master/stage1/00-boot-files/files/cmdline.txt
-  boot.kernelParams = [ "console=serial0,115200n8" "console=tty1" ];
+  boot.kernelParams = [
+    "console=serial0,115200n8"
+    "console=tty1"
+  ];
 
   boot.initrd.availableKernelModules = [
     "xhci_pci"
@@ -62,8 +61,7 @@
   #     https://github.com/NixOS/nixpkgs/issues/154163#issuecomment-1350599022
   nixpkgs.overlays = [
     (final: super: {
-      makeModulesClosure = x:
-        super.makeModulesClosure (x // { allowMissing = true; });
+      makeModulesClosure = x: super.makeModulesClosure (x // { allowMissing = true; });
     })
   ];
 }
