@@ -52,6 +52,13 @@ nixConfig = {
 };
 ```
 
+### CI cache
+
+The build workflow uses the public `nixos-raspberrypi` Cachix cache in
+read-only mode. It requires no Cachix account, repository variables, or Actions
+secrets, and it never uploads build results. Cache misses, including outputs
+that exist only on a development branch, are built normally by the CI runner.
+
 ## Using the flake to create NixOS configuration
 
 There're helper functions intended to be used as a drop-in replacement for
@@ -195,7 +202,7 @@ See `nixosConfigurations.rpi{02,4,5}-installer` in `flake.nix`.
 SD image can be built with:
 
 ```
-# By accepting the flake configuration, you can trust our binary cache and 
+# By accepting the flake configuration, you can trust our binary cache and
 # avoid building the kernel package yourself.
 nix --accept-flake-config build .#installerImages.rpi02
 nix --accept-flake-config build .#installerImages.rpi3
