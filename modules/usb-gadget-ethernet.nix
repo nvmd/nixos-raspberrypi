@@ -8,6 +8,8 @@ let
   cfg = config.hardware.raspberry-pi.usb-gadget-ethernet;
 in
 {
+  imports = [ ./configtxt-config.nix ];
+
   options.hardware.raspberry-pi.usb-gadget-ethernet = {
     enable = lib.mkEnableOption "USB Gadget/Ethernet (Ethernet emulation over USB)" // {
       default = true;

@@ -218,6 +218,8 @@ let
 in
 
 {
+  imports = [ ../../../../configtxt-config.nix ];
+
   options = {
 
     boot.loader.raspberry-pi = {
@@ -397,10 +399,12 @@ in
           "4"
           "5"
         ];
+        default = "5";
         description = "";
       };
 
       ubootPackage = lib.mkOption {
+        description = "The U-Boot package to use.";
         default =
           {
             "0" = {
