@@ -6,13 +6,13 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "pisugar-power-manager-rs";
-  version = "2.3.3";
+  version = "2.3.4";
 
   src = fetchFromGitHub {
     owner = "PiSugar";
     repo = "pisugar-power-manager-rs";
     rev = "v${version}";
-    sha256 = "sha256-UmiaSQhIIIZawJH+O3Sc4bS5Jr4zayJMSdJeoUhBS5w=";
+    sha256 = "sha256-d3DXKO71WTj/FA6OnYsTmkOEhT5qTEPfSSKzlwzFi+Q=";
   };
 
   cargoHash = "sha256-8wp1RxeoAmPk8sMUy2UY+t0RhO/bpK2e322bmoA5ac4=";
