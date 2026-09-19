@@ -3,6 +3,13 @@
 [
   {
     # this release is untagged in the upstream
+    # matches unstable kernel `raspberrypi/linux` 6.18.52
+    version = "0-unstable-20260919";
+    rev = "bead686816848038563a542dc854346ab13253a2";
+    srcHash = "sha256-o8elbB6ooTuFEB+fd0gZlu+mGqNlKHQHy2va+bCEMv8=";
+  }
+  {
+    # this release is untagged in the upstream
     # matches unstable kernel `raspberrypi/linux` 6.18.42
     version = "0-unstable-20260806";
     rev = "2cfe163628eb33eed11c97bfe3fb8169755d7e7a";
