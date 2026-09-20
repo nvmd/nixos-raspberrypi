@@ -1,7 +1,7 @@
 [
   {
     modDirVersion = "6.18.52";
-    tag = "unstable_20260919";
+    tag = "unstable_20260915";
     rev = "4bb240615790ea5bd939484f4595b6952ac94ef4";
     srcHash = "sha256-aI1Rqihe3nV3th2/gEKS4Y1A9AClT9l5688WROiVRrM=";
   }
