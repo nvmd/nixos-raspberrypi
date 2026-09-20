@@ -4,7 +4,7 @@
   {
     # this release is untagged in the upstream
     # matches unstable kernel `raspberrypi/linux` 6.18.52
-    version = "0-unstable-20260919";
+    version = "0-unstable-20260915";
     rev = "bead686816848038563a542dc854346ab13253a2";
     srcHash = "sha256-o8elbB6ooTuFEB+fd0gZlu+mGqNlKHQHy2va+bCEMv8=";
   }
