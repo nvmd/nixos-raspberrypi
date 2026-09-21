@@ -5,11 +5,14 @@ on:
     branches:
       - main
       - develop
+      - rpi-otp-private-key
+      - topic/rpi-otp-private-key
 
   pull_request:
     branches:
       - main
       - develop
+      - rpi-otp-private-key
 
   workflow_dispatch:
 
@@ -21,7 +24,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        
+
       - name: Install Nix
         uses: ./.github/actions/setup-nix-action
 
