@@ -1,3 +1,4 @@
+{ ... }:
 {
   nix.settings.substituters = [
     "https://nixos-raspberrypi.cachix.org"
