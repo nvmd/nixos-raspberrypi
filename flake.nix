@@ -227,8 +227,14 @@
 
           # TIP: To create "regular" nixosConfigurations look for
           # `nixosSystem` and `nixosSystemFull` helpers in `lib/`
+          # `buildPlatform`, when non-null, cross-compiles the image from that
+          # build host (e.g. "x86_64-linux") to the aarch64 target, avoiding
+          # the need for binfmt/qemu emulation.
           mkNixOSRPiInstaller =
-            modules:
+            {
+              modules,
+              buildPlatform ? null,
+            }:
             self.lib.nixosInstaller {
               specialArgs = inputs // {
                 nixos-raspberrypi = self;
@@ -261,6 +267,9 @@
                   }
                 )
               ]
+              ++ nixpkgs.lib.optional (buildPlatform != null) {
+                nixpkgs.buildPlatform = buildPlatform;
+              }
               ++ modules;
             };
 
@@ -299,86 +308,68 @@
             }
           );
 
-        in
-        {
-
-          rpi02-installer = mkNixOSRPiInstaller [
-            (
-              {
-                config,
-                pkgs,
-                lib,
-                nixos-raspberrypi,
-                ...
-              }:
+          # Per-board hardware module imports, shared by the native and
+          # cross-compiled installer configurations below.
+          installerHwModules = {
+            rpi02 =
+              { nixos-raspberrypi, ... }:
               {
                 imports = with nixos-raspberrypi.nixosModules; [
                   # Hardware configuration
                   raspberry-pi-02.base
                   usb-gadget-ethernet
                 ];
-              }
-            )
-            custom-user-config
-          ];
-
-          rpi3-installer = mkNixOSRPiInstaller [
-            (
-              {
-                config,
-                pkgs,
-                lib,
-                nixos-raspberrypi,
-                ...
-              }:
+              };
+            rpi3 =
+              { nixos-raspberrypi, ... }:
               {
                 imports = with nixos-raspberrypi.nixosModules; [
                   # Hardware configuration
                   raspberry-pi-3.base
                 ];
-              }
-            )
-            custom-user-config
-          ];
-
-          rpi4-installer = mkNixOSRPiInstaller [
-            (
-              {
-                config,
-                pkgs,
-                lib,
-                nixos-raspberrypi,
-                ...
-              }:
+              };
+            rpi4 =
+              { nixos-raspberrypi, ... }:
               {
                 imports = with nixos-raspberrypi.nixosModules; [
                   # Hardware configuration
                   raspberry-pi-4.base
                 ];
-              }
-            )
-            custom-user-config
-          ];
-
-          rpi5-installer = mkNixOSRPiInstaller [
-            (
-              {
-                config,
-                pkgs,
-                lib,
-                nixos-raspberrypi,
-                ...
-              }:
+              };
+            rpi5 =
+              { nixos-raspberrypi, ... }:
               {
                 imports = with nixos-raspberrypi.nixosModules; [
                   # Hardware configuration
                   raspberry-pi-5.base
                   raspberry-pi-5.page-size-16k
                 ];
-              }
-            )
-            custom-user-config
-          ];
+              };
+          };
+
+          mkInstaller =
+            board: buildPlatform:
+            mkNixOSRPiInstaller {
+              inherit buildPlatform;
+              modules = [
+                installerHwModules.${board}
+                custom-user-config
+              ];
+            };
+
+        in
+        {
+
+          rpi02-installer = mkInstaller "rpi02" null;
+          rpi3-installer = mkInstaller "rpi3" null;
+          rpi4-installer = mkInstaller "rpi4" null;
+          rpi5-installer = mkInstaller "rpi5" null;
+
+          # Cross-compiled from x86_64-linux (no binfmt/qemu emulation needed)
+          rpi02-installer-cross = mkInstaller "rpi02" "x86_64-linux";
+          rpi3-installer-cross = mkInstaller "rpi3" "x86_64-linux";
+          rpi4-installer-cross = mkInstaller "rpi4" "x86_64-linux";
+          rpi5-installer-cross = mkInstaller "rpi5" "x86_64-linux";
 
         };
 
@@ -392,6 +383,20 @@
           rpi3 = mkImage nixos.rpi3-installer;
           rpi4 = mkImage nixos.rpi4-installer;
           rpi5 = mkImage nixos.rpi5-installer;
+        };
+
+      # Cross-compiled installer images (built on x86_64-linux for aarch64
+      # targets, no binfmt/qemu emulation needed).
+      installerImagesCross =
+        let
+          nixos = self.nixosConfigurations;
+          mkImage = nixosConfig: nixosConfig.config.system.build.sdImage;
+        in
+        {
+          rpi02 = mkImage nixos.rpi02-installer-cross;
+          rpi3 = mkImage nixos.rpi3-installer-cross;
+          rpi4 = mkImage nixos.rpi4-installer-cross;
+          rpi5 = mkImage nixos.rpi5-installer-cross;
         };
 
     };
