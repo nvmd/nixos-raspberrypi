@@ -9,6 +9,8 @@ let
   cfg = config.hardware.raspberry-pi.bluetooth;
 in
 {
+  imports = [ ./configtxt-config.nix ];
+
   options.hardware.raspberry-pi.bluetooth = {
     enable = lib.mkEnableOption "Raspberry Pi Bluetooth support" // {
       default = true;
