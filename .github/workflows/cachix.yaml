@@ -1,12 +1,15 @@
-name: Build and Push to cachix
+name: Build with upstream Cachix
 
 on:
   push:
   workflow_dispatch:
 
 concurrency:
-  group: build-to-cachix
+  group: build-with-upstream-cachix
   cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
   build-raspberrypi-kernel:
@@ -25,11 +28,8 @@ jobs:
       - uses: ./.github/actions/setup-nix-action
       - uses: cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71 # v17
         with:
-          name: "${{ secrets.CACHIX_CACHE_NAME }}"
-          # # if you chose signing key for write access
-          # signingkey: "${{ secrets.cachix_signing_key }}"
-          # # if you chose api tokens for write access or if you have a private cache
-          authtoken: ${{ secrets.cachix_auth_token }}
+          name: nixos-raspberrypi
+          skipPush: true
       - run: nix --accept-flake-config build .#packages.aarch64-linux.linux_rpi${{ matrix.version }}
       - run: nix --accept-flake-config build .#nixosConfigurations.rpi${{ matrix.version }}-installer.config.boot.kernelPackages.kernel
       - run: nix --accept-flake-config build .#nixosConfigurations.rpi${{ matrix.version }}-installer.config.boot.kernelPackages.kernel.modules
@@ -45,6 +45,11 @@ jobs:
           - raspberrypiWirelessFirmware # ~1 minutes
           - raspberrypi-utils # ~1 minutes
           - raspberrypi-udev-rules # ~1 minutes
+
+          # OTP-derived key utilities
+          - rpi-otp-private-key
+          - rpi-otp-derived-key
+          - rpi-otp-derived-key-provision
 
           # - pisugar3-kmod
           # - pisugar2-kmod
@@ -68,11 +73,8 @@ jobs:
       - uses: ./.github/actions/setup-nix-action
       - uses: cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71 # v17
         with:
-          name: "${{ secrets.CACHIX_CACHE_NAME }}"
-          # # if you chose signing key for write access
-          # signingkey: "${{ secrets.cachix_signing_key }}"
-          # # if you chose api tokens for write access or if you have a private cache
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          name: nixos-raspberrypi
+          skipPush: true
       - run: nix --accept-flake-config build .#packages.aarch64-linux.${{ matrix.package }}
 
   build-vendor-packages-2:
@@ -95,11 +97,8 @@ jobs:
       - uses: ./.github/actions/setup-nix-action
       - uses: cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71 # v17
         with:
-          name: "${{ secrets.CACHIX_CACHE_NAME }}"
-          # # if you chose signing key for write access
-          # signingkey: "${{ secrets.cachix_signing_key }}"
-          # # if you chose api tokens for write access or if you have a private cache
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          name: nixos-raspberrypi
+          skipPush: true
       - run: nix --accept-flake-config build .#packages.aarch64-linux.${{ matrix.package }}
 
   build-installer-system:
@@ -121,9 +120,6 @@ jobs:
       - uses: ./.github/actions/setup-nix-action
       - uses: cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71 # v17
         with:
-          name: "${{ secrets.CACHIX_CACHE_NAME }}"
-          # # if you chose signing key for write access
-          # signingkey: "${{ secrets.cachix_signing_key }}"
-          # # if you chose api tokens for write access or if you have a private cache
-          authtoken: ${{ secrets.cachix_auth_token }}
+          name: nixos-raspberrypi
+          skipPush: true
       - run: nix --accept-flake-config build .#nixosConfigurations.rpi${{ matrix.version }}-installer.config.system.build.toplevel
