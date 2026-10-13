@@ -8,6 +8,8 @@ let
   cfg = config.hardware.raspberry-pi.pisugar-3;
 in
 {
+  imports = [ ./configtxt-config.nix ];
+
   options.hardware.raspberry-pi.pisugar-3 = {
     enable = lib.mkEnableOption "PiSugar 3 battery module support" // {
       default = true;

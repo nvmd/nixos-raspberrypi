@@ -14,9 +14,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  format:
-    name: Check formatting
-    runs-on: ubuntu-latest
+  check:
+    name: Check flake
+    runs-on: ubuntu-24.04-arm
 
     steps:
       - name: Checkout repository
@@ -27,3 +27,6 @@ jobs:
 
       - name: Run formatter
         run: nix fmt . -- --ci
+
+      - name: Run checks
+        run: nix flake check
