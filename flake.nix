@@ -46,6 +46,7 @@
         "armv7l-linux"
         "armv6l-linux"
       ];
+      moduleCheckSystems = [ "x86_64-linux" ];
       allSystems = nixpkgs.lib.systems.flakeExposed;
       forSystems = systems: f: nixpkgs.lib.genAttrs systems (system: f system);
       mkRpiPkgs =
@@ -96,9 +97,16 @@
         // inputs
       );
 
+      checks = import ./checks {
+        inherit self nixpkgs;
+        inherit rpiSystems;
+        moduleSystems = moduleCheckSystems;
+      };
+
       nixosModules = {
         trusted-nix-caches = import ./modules/trusted-nix-caches.nix;
         nixpkgs-rpi = import ./modules/nixpkgs-rpi.nix;
+        rpi-otp-derived-key = import ./modules/rpi-otp-derived-key.nix;
 
         bootloader = import ./modules/system/boot/loader/raspberrypi;
         default = import ./modules/raspberrypi.nix;
@@ -181,6 +189,9 @@
 
           raspberrypi-utils = pkgs.raspberrypi-utils;
           raspberrypi-udev-rules = (pkgs.callPackage ./pkgs/raspberrypi/udev-rules.nix { });
+          rpi-otp-derived-key = pkgs.rpi-otp-derived-key;
+          rpi-otp-derived-key-provision = pkgs.rpi-otp-derived-key-provision;
+          rpi-otp-private-key = pkgs.rpi-otp-private-key;
           rpicam-apps = pkgs.rpicam-apps;
 
           vlc = pkgs.vlc;
