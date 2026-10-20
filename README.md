@@ -52,6 +52,13 @@ nixConfig = {
 };
 ```
 
+### CI cache
+
+The build workflow uses the public `nixos-raspberrypi` Cachix cache in
+read-only mode. It requires no Cachix account, repository variables, or Actions
+secrets, and it never uploads build results. Cache misses, including outputs
+that exist only on a development branch, are built normally by the CI runner.
+
 ## Using the flake to create NixOS configuration
 
 There're helper functions intended to be used as a drop-in replacement for
@@ -195,7 +202,7 @@ See `nixosConfigurations.rpi{02,4,5}-installer` in `flake.nix`.
 SD image can be built with:
 
 ```
-# By accepting the flake configuration, you can trust our binary cache and 
+# By accepting the flake configuration, you can trust our binary cache and
 # avoid building the kernel package yourself.
 nix --accept-flake-config build .#installerImages.rpi02
 nix --accept-flake-config build .#installerImages.rpi3
@@ -206,6 +213,10 @@ nix --accept-flake-config build .#installerImages.rpi5
 Randomly generated connection credentials will be displayed on the screen, once the system is booted.
 
 Network access to Raspberry Pi Zero2 (RPi02) boards is also possible via USB Gadget/Ethernet functionality.
+
+Installer images for Raspberry Pi Zero 2, 4, and 5 include `rpi-fw-crypto` and
+the deprecated `rpi-otp-private-key` compatibility helper for provisioning or
+checking OTP private key state on supported hardware.
 
 > [!TIP]
 > You can optionally replace `# YOUR SSH PUB KEY HERE #` in `custom-user-config`
@@ -246,6 +257,135 @@ An alternative ways to consume individual packages without overlays are:
 ```
 
 - to get it from `nixos-raspberrypi.legacyPackages.<system>`. Here all overlays are applied.
+
+## Raspberry Pi OTP key utilities
+
+The flake provides Raspberry Pi OTP key utilities:
+
+- `raspberrypi-utils` includes `rpi-fw-crypto`, Raspberry Pi's firmware crypto
+  client. Its HMAC operation derives keys without returning the raw OTP private
+  key to userspace.
+- `rpi-otp-private-key` packages Raspberry Pi's deprecated `rpi-eeprom` helper.
+  It remains available for provisioning and explicit legacy-key migration.
+- `rpi-otp-derived-key` derives deterministic key material using a required,
+  versioned scheme and can emit hex, binary, Ed25519 PEM, or age identities.
+- `rpi-otp-derived-key-provision` stages OTP-derived secrets and installs their
+  salts for install-time workflows.
+
+They can be consumed directly from the flake:
+
+```nix
+environment.systemPackages = [
+  nixos-raspberrypi.packages.aarch64-linux.rpi-otp-private-key
+  nixos-raspberrypi.packages.aarch64-linux.rpi-otp-derived-key
+  nixos-raspberrypi.packages.aarch64-linux.rpi-otp-derived-key-provision
+];
+```
+
+Or through the Raspberry Pi package overlay:
+
+```nix
+environment.systemPackages = with pkgs; [
+  rpi-otp-private-key
+  rpi-otp-derived-key
+  rpi-otp-derived-key-provision
+];
+```
+
+For a new enrollment, select the firmware-backed scheme explicitly:
+
+```shell
+rpi-otp-derived-key \
+  --scheme firmware-hmac-v1 \
+  --salt-file /etc/machine-id \
+  --format age
+```
+
+`firmware-hmac-v1` uses a versioned HMAC-SHA256 counter KDF through the firmware
+crypto service. `legacy-hkdf-v1` reproduces the original HKDF-SHA256 output but
+reads the raw OTP key; use it only to unlock or migrate an existing enrollment.
+The command requires `--scheme` because switching schemes changes every derived
+key. To migrate encrypted storage, keep a recovery passphrase, unlock with
+`legacy-hkdf-v1`, enroll the `firmware-hmac-v1` result in another LUKS keyslot,
+verify it, and only then remove the legacy keyslot.
+
+The firmware API requires current Raspberry Pi firmware and a programmed device
+private key; key slot 1 is used by default. With secure boot, set
+`lock_device_private_key=1` so the authenticated `config.txt` disables raw OTP
+reads while HMAC remains available. The module applies this setting by default
+when all configured secrets use `firmware-hmac-v1` and the board module exposes
+the corresponding firmware configuration option.
+
+This is defense in depth, not a hardware security module. Root-level code can
+still access the firmware mailbox or OTP hardware, and an unauthenticated initrd
+can request derived keys. Raspberry Pi Zero 2 supports firmware-derived keys but
+not Raspberry Pi secure boot, so unattended unlock on that model does not
+provide an authenticated-boot boundary. Keep recovery credentials and a backup
+of every salt; losing or changing a salt changes the derived key.
+
+## OTP-derived secrets module
+
+`nixosModules.rpi-otp-derived-key` manages named derived-key outputs under
+`services.rpiOtpDerivedKey.secrets`. Each secret gets a persistent module-owned
+salt under `/var/lib/rpi-otp-derived-key/salt/`; losing that salt rotates the
+derived key material. The module supports Raspberry Pi Zero 2, 4, and 5.
+
+```nix
+{
+  imports = [ nixos-raspberrypi.nixosModules.rpi-otp-derived-key ];
+
+  services.rpiOtpDerivedKey = {
+    enable = true;
+    secrets.my-app = {
+      scheme = "firmware-hmac-v1";
+      format = "age";
+      path = "/run/rpi-otp-derived-key/my-app";
+      before = [ "my-app.service" ];
+    };
+  };
+}
+```
+
+Supported formats are `hex`, `binary`, `ed25519`, and `age`. Stage-2 secrets
+are generated by oneshot systemd services before `sysinit.target`; use
+`secrets.<name>.before` to order consumers after the generated secret.
+
+For initrd consumers, set `neededForBoot = true`. This requires
+`boot.initrd.systemd.enable = true` and a bootloader with native initrd secret
+support, writes only to `/run/...` paths, and keeps the output owned by
+`root:root`. During `switch-to-configuration boot` or
+`switch-to-configuration switch`, the module generates the persistent salt
+before initrd secrets are appended and fails early if the OTP private key is not
+programmed.
+
+```nix
+{
+  imports = [ nixos-raspberrypi.nixosModules.rpi-otp-derived-key ];
+
+  boot.initrd.systemd.enable = true;
+
+  services.rpiOtpDerivedKey = {
+    enable = true;
+    secrets.luks-key = {
+      scheme = "firmware-hmac-v1";
+      format = "hex";
+      path = "/run/secrets/luks.key";
+      neededForBoot = true;
+      # LUKS is the consumer, so it owns the cryptsetup-specific ordering.
+      before = [ "cryptsetup-pre.target" ];
+    };
+  };
+
+  disko.devices.disk.nvme0-luks.content.partitions.luks.content = {
+    type = "luks";
+    name = "crypted";
+    settings.keyFile = "/run/secrets/luks.key";
+  };
+}
+```
+
+The module does not enroll existing LUKS devices by itself. For fresh disko
+installs, see [OTP-derived LUKS installs with disko](docs/rpi-otp-derived-key-disko.md).
 
 # Design goals
 
