@@ -31,6 +31,49 @@ Latest stable version compatible with the board is selected in the flake module 
 
 overlays, containing vendor, and optimized packages, like `libcamera`, `ffmpeg`, etc.
 
+# Quick start
+
+Build a ready-to-flash SD card installer image for your board, without writing
+any configuration. Requires Nix with flakes enabled
+(`experimental-features = nix-command flakes`).
+
+1. Clone the repository:
+
+   ```shell
+   git clone https://github.com/nvmd/nixos-raspberrypi.git
+   cd nixos-raspberrypi
+   ```
+
+2. Build the image for your board (`rpi4` / `rpi5`, also `rpi02` / `rpi3`):
+
+   - On an **aarch64 (ARM) machine** (e.g. another Raspberry Pi), build natively:
+
+     ```shell
+     nix build .#installerImages.rpi5    # or .rpi4
+     ```
+
+   - On a **non-ARM machine** (e.g. `x86_64-linux`), cross-compile — no QEMU /
+     binfmt emulation needed:
+
+     ```shell
+     nix build .#installerImagesCross.rpi5    # or .rpi4
+     ```
+
+     > [!NOTE]
+     > Cross-compiled artifacts are not in the binary cache, so the first build
+     > compiles the kernel and many packages from source and can take a while.
+
+3. Flash the resulting image to an SD card (the `result` symlink points at it):
+
+   ```shell
+   zstdcat result/sd-image/*.img.zst | sudo dd of=/dev/sdX bs=10MB status=progress conv=fsync
+   ```
+
+   Replace `/dev/sdX` with your SD card device. Boot the Pi from it; randomly
+   generated login credentials are shown on screen on first boot.
+
+See [Installer configurations](#installer-configurations) below for more detail.
+
 # Usage
 
 ## Adding flake input
@@ -202,6 +245,23 @@ nix --accept-flake-config build .#installerImages.rpi3
 nix --accept-flake-config build .#installerImages.rpi4
 nix --accept-flake-config build .#installerImages.rpi5
 ```
+
+These build natively for `aarch64-linux`, so on an `x86_64-linux` host they
+require either binfmt/QEMU emulation (`boot.binfmt.emulatedSystems`) or remote
+aarch64 builders.
+
+To build on an `x86_64-linux` host **without** any emulation, use the
+cross-compiled variants instead (build host `x86_64-linux`, target `aarch64`):
+
+```
+nix build .#installerImagesCross.rpi02
+nix build .#installerImagesCross.rpi3
+nix build .#installerImagesCross.rpi4
+nix build .#installerImagesCross.rpi5
+```
+
+Note: cross-compiled artifacts are not in the binary cache, so the first build
+compiles the kernel and many packages from source.
 
 Randomly generated connection credentials will be displayed on the screen, once the system is booted.
 
