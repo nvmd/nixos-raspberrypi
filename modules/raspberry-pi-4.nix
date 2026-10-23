@@ -18,7 +18,7 @@
 
   boot.kernelPackages =
     lib.mkDefault
-      nixos-raspberrypi.packages.${pkgs.stdenv.hostPlatform.system}.linuxPackages_rpi4;
+      nixos-raspberrypi.legacyPackages.${pkgs.stdenv.hostPlatform.system}.linuxPackages_rpi4;
   boot.initrd.availableKernelModules = [
     "nvme" # cm4 may have nvme drive connected with pcie
   ];
