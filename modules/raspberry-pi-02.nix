@@ -18,5 +18,5 @@
 
   boot.kernelPackages =
     lib.mkDefault
-      nixos-raspberrypi.packages.${pkgs.stdenv.hostPlatform.system}.linuxPackages_rpi02;
+      nixos-raspberrypi.legacyPackages.${pkgs.stdenv.hostPlatform.system}.linuxPackages_rpi02;
 }
