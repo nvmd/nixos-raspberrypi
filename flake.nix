@@ -392,5 +392,22 @@
           rpi5 = mkImage nixos.rpi5-installer;
         };
 
+      # `nix flake check`: evaluates a matrix of boards, bootloaders and
+      # optional modules, and, on aarch64-linux, tests what the bootloaders
+      # install to the firmware partition, see `checks/`
+      checks =
+        forSystems
+          [
+            "aarch64-linux"
+            "x86_64-linux"
+          ]
+          (
+            system:
+            import ./checks {
+              inherit self;
+              pkgs = nixpkgs.legacyPackages.${system};
+            }
+          );
+
     };
 }
