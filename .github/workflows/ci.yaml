@@ -27,3 +27,20 @@ jobs:
 
       - name: Run formatter
         run: nix fmt . -- --ci
+
+  flake-check:
+    name: Flake check
+    # aarch64, to run the bootloader tests too
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Nix
+        uses: ./.github/actions/setup-nix-action
+
+      # evaluates the configurations matrix and runs the bootloader tests,
+      # see `checks/`
+      - name: Run flake checks
+        run: nix --accept-flake-config flake check -L
