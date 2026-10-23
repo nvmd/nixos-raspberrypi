@@ -12,6 +12,34 @@ jobs:
       pull-requests: write
     runs-on: ubuntu-latest
     steps:
+      # Optional GitHub App token: PRs opened with the default GITHUB_TOKEN
+      # don't trigger CI, PRs opened with an app token do.
+      # To enable: create a GitHub App with read and write access to "Contents"
+      # and "Pull requests", install it on the repository, then set the
+      # `BOT_APP_CLIENT_ID` variable and the `BOT_APP_PRIVATE_KEY` secret.
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: app-token
+        if: vars.BOT_APP_CLIENT_ID != ''
+        with:
+          client-id: ${{ vars.BOT_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: DeterminateSystems/determinate-nix-action@e847f25223456b3058e12f7fc9d777b6a6f25060 # v3.23.2
       - uses: DeterminateSystems/update-flake-lock@da03c0f078bc4b2c37ee4f7e072d34bf8f188bb3 # v29
+        id: update
+        with:
+          token: ${{ steps.app-token.outputs.token || github.token }}
+      # Optional: merge the PR once its required checks pass.
+      # To enable: set the `BOT_AUTO_MERGE` variable to `true` and allow
+      # auto-merge in the repository settings, but only after requiring the CI
+      # checks on the target branch: without required checks there's nothing
+      # for auto-merge to wait for.
+      - name: Enable auto-merge
+        if: >-
+          vars.BOT_AUTO_MERGE == 'true' && steps.app-token.outputs.token != ''
+          && (steps.update.outputs.pull-request-operation == 'created'
+          || steps.update.outputs.pull-request-operation == 'updated')
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          PR_NUMBER: ${{ steps.update.outputs.pull-request-number }}
+        run: gh pr merge --auto --merge --repo "$GITHUB_REPOSITORY" "$PR_NUMBER"
