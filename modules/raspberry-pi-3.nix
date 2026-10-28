@@ -13,10 +13,10 @@
     bootloader = lib.mkDefault "uboot";
     firmwarePackage =
       lib.mkDefault
-        nixos-raspberrypi.packages.${pkgs.stdenv.hostPlatform.system}.raspberrypifw;
+        pkgs.raspberrypifw;
   };
 
   boot.kernelPackages =
     lib.mkDefault
-      nixos-raspberrypi.packages.${pkgs.stdenv.hostPlatform.system}.linuxPackages_rpi3;
+      pkgs.linuxPackages_rpi3;
 }
