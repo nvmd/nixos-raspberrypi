@@ -52,7 +52,7 @@ final: prev: {
 
     (mkBundle final "v6_18_59" {
       fw = final.raspberrypifw_20261027;
-      wFw = final.raspberrypiWirelessFirmware_20260321;
+      wFw = final.raspberrypiWirelessFirmware_20260710;
     })
 
     (mkBundle final "v6_18_52" {
