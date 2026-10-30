@@ -33,6 +33,36 @@ final: prev:
 prev.lib.mergeAttrsList (map (firmwareVersion prev) allFirmware)
 // {
 
+  raspberrypiWirelessFirmware_20260710 = prev.raspberrypiWirelessFirmware.overrideAttrs (old: {
+    version = "2026-07-10";
+    srcs = [
+      # https://github.com/RPi-Distro/bluez-firmware/commits/pios/trixie
+      # 1.2-13+rpt2 release – 20251002
+      (prev.fetchFromGitHub {
+        name = "bluez-firmware";
+        owner = "RPi-Distro";
+        repo = "bluez-firmware";
+        rev = "cdf61dc691a49ff01a124752bd04194907f0f9cd";
+        hash = "sha256-35pnbQV/zcikz9Vic+2a1QAS72riruKklV8JHboL9NY=";
+      })
+      # https://github.com/RPi-Distro/firmware-nonfree/commits/trixie
+      # 1:20260519-1~bpo13+1+rpt1 - 20260710
+      (prev.fetchFromGitHub {
+        name = "firmware-nonfree";
+        owner = "RPi-Distro";
+        repo = "firmware-nonfree";
+        rev = "3bab0f823f5b53150b76aab77093adef6655b920";
+        hash = "sha256-2DXj2esIix8YQwBf3IuzHwnUJ+yCANbRdpyS/DeB4XE=";
+      })
+    ];
+    # upstream moved the blobs to `debian/added-firmware`, which also holds other
+    # vendors' firmware, nixpkgs' `installPhase` reads the old path
+    postUnpack = ''
+      mkdir -p firmware-nonfree/debian/config/brcm80211
+      cp -r firmware-nonfree/debian/added-firmware/{brcm,cypress} firmware-nonfree/debian/config/brcm80211/
+    '';
+  });
+
   raspberrypiWirelessFirmware_20260321 = prev.raspberrypiWirelessFirmware.overrideAttrs (old: {
     version = "2026-03-21";
     srcs = [
