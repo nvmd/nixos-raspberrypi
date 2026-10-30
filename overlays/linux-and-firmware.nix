@@ -46,7 +46,7 @@ final: prev: {
 
   linuxAndFirmware = prev.lib.mergeAttrsList [
 
-    { default = final.linuxAndFirmware.v6_18_52; }
+    { default = final.linuxAndFirmware.v6_18_59; }
 
     { latest = final.linuxAndFirmware.v6_18_59; }
 
