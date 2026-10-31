@@ -187,15 +187,13 @@
 
           # see legacyPackages.<system>.linuxAndFirmware for other versions of
           # the bundle
+          # kernel package sets (`linuxPackages_rpi*`) aren't derivations, thus
+          # can't be here, see legacyPackages.<system>.linuxPackages_rpi*
           inherit (pkgs.linuxAndFirmware.default)
             linux_rpi5
-            linuxPackages_rpi5
             linux_rpi4
-            linuxPackages_rpi4
             linux_rpi3
-            linuxPackages_rpi3
             linux_rpi02
-            linuxPackages_rpi02
             raspberrypifw
             raspberrypiWirelessFirmware
             ;
@@ -393,6 +391,23 @@
           rpi4 = mkImage nixos.rpi4-installer;
           rpi5 = mkImage nixos.rpi5-installer;
         };
+
+      # `nix flake check`: evaluates a matrix of boards, bootloaders and
+      # optional modules, and, on aarch64-linux, tests what the bootloaders
+      # install to the firmware partition, see `checks/`
+      checks =
+        forSystems
+          [
+            "aarch64-linux"
+            "x86_64-linux"
+          ]
+          (
+            system:
+            import ./checks {
+              inherit self;
+              pkgs = nixpkgs.legacyPackages.${system};
+            }
+          );
 
     };
 }
