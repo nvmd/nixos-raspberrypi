@@ -90,6 +90,7 @@ in
                   str
                   bool
                 ];
+              description = "config.txt value.";
             };
           };
         };
@@ -105,6 +106,7 @@ in
                   bool
                 ]);
               default = null;
+              description = "Device tree parameter value.";
             };
           };
         };
@@ -114,6 +116,7 @@ in
             params = lib.mkOption {
               type = with lib.types; attrsOf (submodule dt-param);
               default = { };
+              description = "Device tree overlay parameters.";
             };
           };
         };
