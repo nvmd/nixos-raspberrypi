@@ -6,6 +6,7 @@
   fetchFromGitHub,
   cmake,
   dtc,
+  gnutls,
   ncurses,
 }:
 
@@ -22,6 +23,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   buildInputs = [
     dtc # dtmerge depends on libfdt
+    gnutls # rpifwcrypto depends on GnuTLS
     ncurses
   ];
 

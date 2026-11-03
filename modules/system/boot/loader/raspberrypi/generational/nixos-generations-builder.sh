@@ -1,6 +1,6 @@
 #! @bash@/bin/sh -e
 
-# shellcheck disable=SC3043,SC3044,SC3054
+# shellcheck shell=bash disable=SC2012,SC2239
 
 shopt -s nullglob
 
@@ -20,8 +20,14 @@ moveWBackup() {
         mv "$dst" "$dstBkp"
     fi
 
-    # Move $src as "new" $dst
-    mv "$src" "$dst"
+    # Move $src as "new" $dst, restoring the previous directory if the
+    # publication itself fails.
+    if ! mv "$src" "$dst"; then
+        if [ -e "$dstBkp" ]; then
+            mv "$dstBkp" "$dst"
+        fi
+        return 1
+    fi
 
     # Remove backup directory of the previous $dst
     rm -rf "$dstBkp"
@@ -36,25 +42,25 @@ addEntry() {
     local dst="$gensDir/$generationName"
 
     echo "* nixos generation '$generationName' -> $dst"
-    # Don't copy the files if $dst already exists, unless it's the default
-    # configuration.
-    # This means that we have to create $dst atomically to prevent partially
-    # copied generations if this script is ever interrupted.
-    #
-    # For "default" generation: make backup and then replace with the new
-    # "default", minimizing the time when where isn't any "default" generation
-    # directory
-    if ! [ -e $dst ] || [ "$generationName" = "default" ]; then
-        local dstTmp="$dst.tmp.$$"
-        mkdir -p "$dstTmp" || true
+    # Rebuild every retained generation from its immutable store initrd. This
+    # prevents an activation from retaining a stale or repeatedly-appended
+    # secret payload in an older generation.
+    local dstTmp
+    dstTmp="$(mktemp -d "$gensDir/.${generationName}.tmp.XXXXXX")"
 
-        @nixosGenBuilder@ -c "$generationPath" -n "$generationName" -d "$dstTmp"
-
-        # Move new generation on its place, backing up the previous version
-        # if it exists
-        # This may only happen when "$generationName" = "default"
-        moveWBackup "$dstTmp" "$dst"
+    if ! @nixosGenBuilder@ -c "$generationPath" -n "$generationName" -d "$dstTmp"; then
+        rm -rf -- "$dstTmp"
+        return 1
     fi
+
+    if [ -e "$dstTmp/.skip-generation" ]; then
+        rm -rf -- "$dstTmp"
+        return 0
+    fi
+
+    # Publish the complete generation directory only after its secret payload,
+    # kernel, command line and device trees have all been created successfully.
+    moveWBackup "$dstTmp" "$dst"
 
     activeGenerations["$generationName"]=1
 }
@@ -63,7 +69,7 @@ removeObsoleteGenerations() {
     local path="$1"
 
     echo "removing obsolete generations in $path..."
-    for gen in $path/*; do
+    for gen in "$path"/*; do
         if ! [ "${activeGenerations["$(basename "$gen")"]}" = 1 ]; then
             echo "* $gen is obsolete"
             rm -vrf "$gen"
@@ -93,7 +99,7 @@ addAllEntries() {
             link=/nix/var/nix/profiles/system-$generation-link
             addEntry "$link" "${generation}-default" "$gensDir"
             for specialisation in $(
-                ls /nix/var/nix/profiles/system-$generation-link/specialisation \
+                ls "/nix/var/nix/profiles/system-$generation-link/specialisation" \
                 | sort -n -r); do
                 link=/nix/var/nix/profiles/system-$generation-link/specialisation/$specialisation
                 addEntry "$link" "${generation}-${specialisation}" "$gensDir"
@@ -112,8 +118,10 @@ usage() {
 
 default=                # Default configuration
 numGenerations=0        # Number of other generations to keep (kernel, initrd, DTBs, overlays)
+boottarget=
+fwtarget=
 
-echo "$0: $@"
+echo "$0: $*"
 while getopts "c:b:g:f:" opt; do
     case "$opt" in
         c) default="$OPTARG" ;;
