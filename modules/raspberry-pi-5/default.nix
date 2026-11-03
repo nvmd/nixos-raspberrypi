@@ -13,12 +13,12 @@
     bootloader = lib.mkDefault "kernelboot";
     firmwarePackage =
       lib.mkDefault
-        nixos-raspberrypi.packages.${pkgs.stdenv.hostPlatform.system}.raspberrypifw;
+        pkgs.raspberrypifw;
   };
 
   boot.kernelPackages =
     lib.mkDefault
-      nixos-raspberrypi.packages.${pkgs.stdenv.hostPlatform.system}.linuxPackages_rpi5;
+      pkgs.linuxPackages_rpi5;
   boot.initrd.availableKernelModules = [
     "nvme" # nvme drive connected with pcie
   ];
