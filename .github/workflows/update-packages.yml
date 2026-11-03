@@ -40,6 +40,18 @@ jobs:
           #   args: "--version=branch=pios/trixie"
 
     steps:
+      # Optional GitHub App token: PRs opened with the default GITHUB_TOKEN
+      # don't trigger CI, PRs opened with an app token do.
+      # To enable: create a GitHub App with read and write access to "Contents"
+      # and "Pull requests", install it on the repository, then set the
+      # `BOT_APP_CLIENT_ID` variable and the `BOT_APP_PRIVATE_KEY` secret.
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: app-token
+        if: vars.BOT_APP_CLIENT_ID != ''
+        with:
+          client-id: ${{ vars.BOT_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup-nix-action
 
@@ -47,8 +59,10 @@ jobs:
         run: nix run nixpkgs#nix-update -- --flake ${{ matrix.args }} ${{ matrix.attr }}
 
       - name: Create pull request
+        id: create-pr
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
+          token: ${{ steps.app-token.outputs.token || github.token }}
           branch: update-packages/${{ matrix.attr }}
           delete-branch: true
           commit-message: "${{ matrix.attr }}: update via nix-update"
@@ -62,6 +76,21 @@ jobs:
             Review the version/hash diff and let CI build before merging.
 
             > [!NOTE]
-            > Because this PR is created with the default `GITHUB_TOKEN`, other
-            > workflows (e.g. CI) do not run on it automatically. Close/reopen the
-            > PR, push to its branch, or wire a PAT/GitHub App token to trigger them.
+            > If CI didn't run on this PR, it was opened with the default
+            > `GITHUB_TOKEN` (see `update-packages.yml` to set up an app token
+            > instead): close and reopen the PR, or push to its branch, to run CI.
+
+      # Optional: merge the PR once its required checks pass.
+      # To enable: set the `BOT_AUTO_MERGE` variable to `true` and allow
+      # auto-merge in the repository settings, but only after requiring the CI
+      # checks on the target branch: without required checks there's nothing
+      # for auto-merge to wait for.
+      - name: Enable auto-merge
+        if: >-
+          vars.BOT_AUTO_MERGE == 'true' && steps.app-token.outputs.token != ''
+          && (steps.create-pr.outputs.pull-request-operation == 'created'
+          || steps.create-pr.outputs.pull-request-operation == 'updated')
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          PR_NUMBER: ${{ steps.create-pr.outputs.pull-request-number }}
+        run: gh pr merge --auto --merge --repo "$GITHUB_REPOSITORY" "$PR_NUMBER"

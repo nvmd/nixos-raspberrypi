@@ -2,11 +2,27 @@ name: Build and Push to cachix
 
 on:
   push:
+    branches:
+      - main
+      - develop
+    tags:
+      - "v*"
+
+  # Build pull requests before they are merged. Pull requests from forks and
+  # Dependabot run without secrets, so their builds only read from the cache.
+  pull_request:
+    branches:
+      - main
+      - develop
+
   workflow_dispatch:
 
 concurrency:
-  group: build-to-cachix
-  cancel-in-progress: false
+  # Pushes share one queue, so that a build reuses what the previous one pushed
+  # to the cache. Each pull request has a queue of its own, where a new push
+  # cancels the build of the previous one.
+  group: ${{ github.event_name == 'pull_request' && format('build-to-cachix-pr-{0}', github.event.pull_request.number) || 'build-to-cachix' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build-raspberrypi-kernel:
@@ -25,7 +41,7 @@ jobs:
       - uses: ./.github/actions/setup-nix-action
       - uses: cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71 # v17
         with:
-          name: "${{ secrets.CACHIX_CACHE_NAME }}"
+          name: nixos-raspberrypi
           # # if you chose signing key for write access
           # signingkey: "${{ secrets.cachix_signing_key }}"
           # # if you chose api tokens for write access or if you have a private cache
@@ -68,7 +84,7 @@ jobs:
       - uses: ./.github/actions/setup-nix-action
       - uses: cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71 # v17
         with:
-          name: "${{ secrets.CACHIX_CACHE_NAME }}"
+          name: nixos-raspberrypi
           # # if you chose signing key for write access
           # signingkey: "${{ secrets.cachix_signing_key }}"
           # # if you chose api tokens for write access or if you have a private cache
@@ -95,7 +111,7 @@ jobs:
       - uses: ./.github/actions/setup-nix-action
       - uses: cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71 # v17
         with:
-          name: "${{ secrets.CACHIX_CACHE_NAME }}"
+          name: nixos-raspberrypi
           # # if you chose signing key for write access
           # signingkey: "${{ secrets.cachix_signing_key }}"
           # # if you chose api tokens for write access or if you have a private cache
@@ -121,9 +137,26 @@ jobs:
       - uses: ./.github/actions/setup-nix-action
       - uses: cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71 # v17
         with:
-          name: "${{ secrets.CACHIX_CACHE_NAME }}"
+          name: nixos-raspberrypi
           # # if you chose signing key for write access
           # signingkey: "${{ secrets.cachix_signing_key }}"
           # # if you chose api tokens for write access or if you have a private cache
           authtoken: ${{ secrets.cachix_auth_token }}
       - run: nix --accept-flake-config build .#nixosConfigurations.rpi${{ matrix.version }}-installer.config.system.build.toplevel
+
+  # The one status check to require in the branch rules, instead of each of
+  # the builds above
+  all-builds:
+    name: All builds passed
+    if: always()
+    needs:
+      - build-raspberrypi-kernel
+      - build-vendor-packages-1
+      - build-vendor-packages-2
+      - build-installer-system
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped')
+        run: exit 1
