@@ -106,7 +106,7 @@ in
 
     postFixup =
       let
-        armArch = if stdenv.isAarch64 then "arm64" else "arm";
+        armArch = if stdenv.hostPlatform.isAarch64 then "arm64" else "arm";
       in
       ''
         # Provide README together with overlays just like `raspberrypifw`

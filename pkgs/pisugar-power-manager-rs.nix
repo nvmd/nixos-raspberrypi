@@ -6,16 +6,16 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "pisugar-power-manager-rs";
-  version = "2.3.3";
+  version = "2.4.1";
 
   src = fetchFromGitHub {
     owner = "PiSugar";
     repo = "pisugar-power-manager-rs";
     rev = "v${version}";
-    sha256 = "sha256-UmiaSQhIIIZawJH+O3Sc4bS5Jr4zayJMSdJeoUhBS5w=";
+    sha256 = "sha256-irzyVKuOBBTpFD7ivgq720+OsesgcapCad446Dk2JWk=";
   };
 
-  cargoHash = "sha256-8wp1RxeoAmPk8sMUy2UY+t0RhO/bpK2e322bmoA5ac4=";
+  cargoHash = "sha256-qdx6341o7gluFyCkmF9iY8qqvgNieADYv0X+HkIn2lM=";
 
   postPatch = ''
     sed -e 's#.*replace-with.*##' -i .cargo/config.toml

@@ -77,7 +77,7 @@
           default = pkgs.mkShell {
             name = "nixos-raspberrypi";
             nativeBuildInputs = with pkgs; [
-              nil # lsp language server for nix
+              nixd # lsp language server for nix
               nixfmt-tree
               nix-output-monitor
               bash-language-server

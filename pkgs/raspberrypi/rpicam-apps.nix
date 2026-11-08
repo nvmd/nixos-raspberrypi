@@ -19,6 +19,10 @@
   libepoxy,
   libGL,
   libX11,
+  withWaylandPreview ? true,
+  wayland,
+  wayland-protocols,
+  wayland-scanner,
   withQtPreview ? true,
   qt5,
   withOpenCVPostProc ? true, # default=false
@@ -29,13 +33,13 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "rpicam-apps";
-  version = "1.12.0";
+  version = "1.13.0";
 
   src = fetchFromGitHub {
     owner = "raspberrypi";
     repo = "rpicam-apps";
     rev = "v${finalAttrs.version}";
-    hash = "sha256-u/VdAHCiXlc9MDHcVG2DPKqnQGEynlXIieHuAkcTarQ=";
+    hash = "sha256-JX/hPyDQ7SwhmDxb3PlzzaKaa2z4MBfwlxbIL5UrHwE=";
   };
 
   nativeBuildInputs = [
@@ -43,6 +47,7 @@ stdenv.mkDerivation (finalAttrs: {
     ninja
     pkg-config
   ]
+  ++ lib.optional withWaylandPreview wayland-scanner
   ++ lib.optional withQtPreview qt5.wrapQtAppsHook;
 
   buildInputs = [
@@ -67,6 +72,11 @@ stdenv.mkDerivation (finalAttrs: {
     libX11
     libGL
   ]
+  ++ lib.optionals withWaylandPreview [
+    libepoxy
+    wayland
+    wayland-protocols
+  ]
   ++ lib.optionals withOpenCVPostProc [ opencv ];
 
   # https://github.com/raspberrypi/rpicam-apps/blob/main/meson_options.txt
@@ -75,6 +85,7 @@ stdenv.mkDerivation (finalAttrs: {
     # preview
     (lib.mesonEnable "enable_drm" withDrmPreview)
     (lib.mesonEnable "enable_egl" withEglPreview)
+    (lib.mesonEnable "enable_wayland" withWaylandPreview)
     (lib.mesonEnable "enable_qt" withQtPreview)
     # postprocessing
     (lib.mesonEnable "enable_opencv" withOpenCVPostProc)

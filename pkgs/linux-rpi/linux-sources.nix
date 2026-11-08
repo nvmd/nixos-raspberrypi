@@ -1,8 +1,31 @@
 [
   {
+    modDirVersion = "6.18.59";
+    tag = "unstable_20261026";
+    rev = "9b488bc7a1e9b61713082f3e6c4361988d62f77b";
+    srcHash = "sha256-gG3qRFOJzrDH7vXWGgeWYyYupaxwmeZzqh47NursKLs=";
+  }
+  {
+    modDirVersion = "6.18.52";
+    tag = "unstable_20260915";
+    rev = "4bb240615790ea5bd939484f4595b6952ac94ef4";
+    srcHash = "sha256-aI1Rqihe3nV3th2/gEKS4Y1A9AClT9l5688WROiVRrM=";
+  }
+  {
+    modDirVersion = "6.18.42";
+    tag = "unstable_20260806";
+    rev = "8c0da7c3bb97a2e0aaa0d405d3052786c1469b35";
+    srcHash = "sha256-CMjVylJFgiX9TRQ+drFr/OicaKp0W7r0idIKdMSIuGA=";
+  }
+  {
+    # https://github.com/raspberrypi/linux/releases/tag/stable_20260724
+    modDirVersion = "6.18.39";
+    tag = "stable_20260724";
+    srcHash = "sha256-IT/SkF458oLmnFIPbN76Qp6s8KVxKQOC02XmN7NRdBc=";
+  }
+  {
     modDirVersion = "6.18.34";
-    tag = "unstable_20260604";
-    rev = "c8c7494100e99ee05b11aaa4f0588a223a63d1af";
+    tag = "stable_20260609";
     srcHash = "sha256-ok++36dh9o4e7AC5RErW00/r23rGxufe0PYXz5Dzy5U=";
   }
   {
