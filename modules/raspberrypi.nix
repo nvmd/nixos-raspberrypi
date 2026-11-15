@@ -47,6 +47,9 @@
     "usbhid"
     "usb_storage"
     "vc4"
+    # vc4 takes over the firmware framebuffer, but needs HDMI DDC (i2c) to bring
+    # up the display
+    "i2c_brcmstb"
     "pcie_brcmstb" # required for the pcie bus to work
     "reset-raspberrypi" # required for vl805 firmware to load
   ];
