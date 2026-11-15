@@ -37,10 +37,18 @@ let
           recursiveMerge pkgs [
             {
               # argsOverride = argsFor.argsOverride;
-              kernelPatches = with pkgs.kernelPatches; [
-                bridge_stp_helper
-                request_key_helper
-              ];
+              kernelPatches =
+                with pkgs.kernelPatches;
+                [
+                  bridge_stp_helper
+                  request_key_helper
+                ]
+                # linux-headers >= 7.3 use __u128 in arm64 UAPI headers, older
+                # kernel trees lack the matching typedef in tools/
+                # apply the same patch as nixos does https://github.com/NixOS/nixpkgs/pull/581990
+                ++ pkgs.lib.optional (
+                  pkgs.kernelPatches ? tools_128bit_types && pkgs.lib.versionOlder argsFor.modDirVersion "7.3"
+                ) tools_128bit_types;
               inherit rpiModel;
             }
             argsFor
