@@ -21,6 +21,10 @@ while getopts "c:d:r" opt; do
     esac
 done
 
+if [ ! -d "$target" ]; then
+       mkdir -p "$target"
+fi
+
 # Copy a file from the Nix store to $target.
 declare -A filesCopied
 
