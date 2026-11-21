@@ -3,6 +3,14 @@
 [
   {
     # this release is untagged in the upstream
+    # matches unstable kernel `raspberrypi/linux` 6.18.64
+    # see `extra/git_hash`
+    version = "0-unstable-20261118";
+    rev = "4a44943386efa917f012ec55aba8b51f750be0f7";
+    srcHash = "sha256-VySjjETM4oiVXxVURz4xw1SA9cq9QrDxqD7GTMWizwM=";
+  }
+  {
+    # this release is untagged in the upstream
     # matches unstable kernel `raspberrypi/linux` 6.18.59
     # see `extra/git_hash`
     version = "0-unstable-20261027";
