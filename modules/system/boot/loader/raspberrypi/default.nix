@@ -54,6 +54,7 @@ let
         path = pkgs.lib.makeBinPath [
           pkgs.coreutils
           pkgs.gnused
+          pkgs.jq
         ];
 
         # NixOS-generations -independent
@@ -77,9 +78,13 @@ let
         inherit (pkgs) bash;
         path = pkgs.lib.makeBinPath [
           pkgs.coreutils
+          pkgs.jq
         ];
 
         installDeviceTree = deviceTreeInstaller;
+        initrdSecrets = pkgs.writeText "raspberrypi-initrd-secrets.sh" (
+          builtins.readFile ./initrd-secrets.sh
+        );
       };
     }
   );
@@ -470,6 +475,7 @@ in
           }
         ];
       boot.loader.grub.enable = false;
+      boot.loader.supportsInitrdSecrets = true;
       boot.loader.raspberry-pi.firmwarePopulateCmd = populateCmds.${cfg.bootloader}.firmware;
       boot.loader.raspberry-pi.bootPopulateCmd = populateCmds.${cfg.bootloader}.boot;
     })
