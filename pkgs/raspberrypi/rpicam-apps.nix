@@ -38,7 +38,10 @@ stdenv.mkDerivation (finalAttrs: {
   src = fetchFromGitHub {
     owner = "raspberrypi";
     repo = "rpicam-apps";
-    rev = "v${finalAttrs.version}";
+    # v1.13.0 as tagged on 2026-08-07
+    # upstream re-created it on 2026-10-09 at a different commit (1cab820)
+    # preserve the exact version we've had
+    rev = "6fcb0a3810715d05f01e06acb5f8e18e7d3a29cd";
     hash = "sha256-JX/hPyDQ7SwhmDxb3PlzzaKaa2z4MBfwlxbIL5UrHwE=";
   };
 
