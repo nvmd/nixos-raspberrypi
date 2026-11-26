@@ -13,7 +13,7 @@
   ];
   # people say this module (imported by "sd-card/sd-image" above)
   # causes problems with linux-rpi
-  disabledModules = [ (modulesPath + "profiles/all-hardware.nix") ];
+  disabledModules = [ (modulesPath + "/profiles/all-hardware.nix") ];
 
   # boot.* stuff for rpi is already configured in rpi{4,5}.nix
   # and `bootloader-config`
