@@ -5,6 +5,13 @@
   lib,
   ...
 }:
+let
+  otpPrivateKeyVariants = [
+    "02"
+    "4"
+    "5"
+  ];
+in
 {
   # nixos' standard installer configuration as seen in
   # /installer/sd-card/sd-image-aarch64-installer.nix
@@ -23,7 +30,12 @@
   # so we don't want to provide the installation configuration.nix.
   installer.cloneConfig = false;
 
-  environment.systemPackages = with pkgs; [
-    raspberrypi-eeprom
-  ];
+  environment.systemPackages =
+    with pkgs;
+    [
+      raspberrypi-eeprom
+    ]
+    ++ lib.optionals (lib.elem config.boot.loader.raspberry-pi.variant otpPrivateKeyVariants) [
+      rpi-otp-private-key
+    ];
 }
