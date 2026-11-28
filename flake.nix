@@ -12,7 +12,7 @@
   };
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.11";
 
     argononed = {
       # url = "git+file:../argononed?shallow=1";
