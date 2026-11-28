@@ -100,13 +100,13 @@ final: prev: {
 
   libcamera_rpi = prev.libcamera.overrideAttrs (old: rec {
     pname = old.pname + "-rpi";
-    version = "0.7.0+rpt20260205";
+    version = "0.8.0+rpt20261104";
 
     src = prev.fetchFromGitHub {
       owner = "raspberrypi";
       repo = "libcamera";
       rev = "v${version}";
-      hash = "sha256-ZSKNeFDedqzcVxoLPap2dMjq+F3C1eQ+HikEKuGBOyM=";
+      hash = "sha256-mw712B2f6nAOdoulJESYIf7+vbLGIafsMX4XXfOP4LI=";
     };
 
     mesonFlags = old.mesonFlags ++ [
@@ -120,6 +120,15 @@ final: prev: {
       "-Dpycamera=enabled"
       (prev.lib.mesonEnable "libunwind" false)
       (prev.lib.mesonEnable "rpi-awb-nn" false) # needs tensorflow-lite
+      # feature options added in libcamera 0.7.1, unused by the rpi pipelines.
+      # Disable them regardless of the recipe's qcam/softisp toggles to keep
+      # the build minimal. Older recipes (nixos-26.05) don't set them at all,
+      # and meson's auto_features=enabled would make them required.
+      (prev.lib.mesonEnable "libdw" false)
+      (prev.lib.mesonEnable "softisp-gpu" false)
+      (prev.lib.mesonEnable "apps-output-dng" false)
+      (prev.lib.mesonEnable "cam-output-sdl2" false)
+      (prev.lib.mesonEnable "cam-jpeg" false)
     ];
 
     meta = old.meta // {
