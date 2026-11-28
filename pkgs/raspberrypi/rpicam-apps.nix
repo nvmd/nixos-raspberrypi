@@ -33,16 +33,15 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "rpicam-apps";
-  version = "1.13.0";
+  version = "1.15.0";
 
   src = fetchFromGitHub {
     owner = "raspberrypi";
     repo = "rpicam-apps";
-    # v1.13.0 as tagged on 2026-08-07
-    # upstream re-created it on 2026-10-09 at a different commit (1cab820)
-    # preserve the exact version we've had
-    rev = "6fcb0a3810715d05f01e06acb5f8e18e7d3a29cd";
-    hash = "sha256-JX/hPyDQ7SwhmDxb3PlzzaKaa2z4MBfwlxbIL5UrHwE=";
+    # v1.15.0 as tagged on 2026-11-04
+    # pin the commit, upstream has re-created tags before
+    rev = "213ea42f359dc77e5dd7a74db588c2166a1635d1";
+    hash = "sha256-emPjvey38bnxkj0s/DkKxEmiauCZQ8MyD3TfEHJbe7Y=";
   };
 
   nativeBuildInputs = [
